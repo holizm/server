@@ -1,1 +1,225 @@
+#!/usr/bin/env bash
 
+set -euo pipefail
+
+readonly red=$(tput setaf 1)
+readonly green=$(tput setaf 2)
+readonly cyan=$(tput setaf 6)
+readonly yellow=$(tput setaf 3)
+readonly reset=$(tput sgr0)
+
+readonly check=$'\xE2\x9C\x94'
+
+success() { printf "${green}%s${reset}\n" "$*"; }
+info() { printf "${cyan}%s${reset}\n" "$*"; }
+warning() { printf "${yellow}%s${reset}\n" "$*"; }
+error() { printf "${red}%s${reset}\n" "$*" >&2; exit 1; }
+
+updateApt() {
+    info "Updating apt ..."
+    apt-get update || error "Failed to update apt"
+    success "Updated apt"
+}
+
+install() {
+    local commandName="$1"
+    local installFunction="${2:-}"
+    if command -v "$commandName" &>/dev/null; then
+        success "$commandName $check"
+        return
+    fi
+    info "Installing $commandName ..."
+    if [[ -n "$installFunction" ]]; then
+        "$installFunction" || error "Failed to install $commandName"
+    else
+        apt-get install -y "$commandName" || error "Failed to install $commandName"
+    fi
+    success "Installed $commandName"
+}
+
+installCertbot() {
+    apt-get install -y certbot python3-certbot-nginx || error "Failed to install certbot"
+    success "Installed certbot"
+}
+
+installMicro() {
+    cd /usr/local/bin && curl -fsSL https://getmic.ro | bash || error "Failed to install Micro"
+    success "Installed Micro"
+}
+
+installAzCopy() {
+    curl -sSL -O https://packages.microsoft.com/config/ubuntu/24.04/packages-microsoft-prod.deb
+    dpkg -i packages-microsoft-prod.deb
+    rm packages-microsoft-prod.deb
+    apt-get update
+    apt-get install -y azcopy || error "Failed to install AzCopy"
+    success "Installed AzCopy"
+}
+
+installRclone() {
+    curl https://rclone.org/install.sh | bash
+    success "Installed Rclone"
+}
+
+installAzureCli() {
+    curl -sL https://aka.ms/InstallAzureCLIDeb | bash || error "Failed to install Azure CLI"
+    success "Installed Azure CLI"
+}
+
+installApache2Utils() {
+    apt-get install -y apache2-utils
+}
+
+installDocker() {
+    apt-get install -y apt-transport-https ca-certificates curl gnupg lsb-release
+    curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /usr/share/keyrings/dockerArchiveKeyring.gpg
+    echo "deb [arch=amd64 signed-by=/usr/share/keyrings/dockerArchiveKeyring.gpg] https://download.docker.com/linux/debian $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+    apt-get update
+    apt-get install -y docker-ce docker-ce-cli containerd.io || error "Failed to install Docker"
+    groupadd -f docker
+    usermod -aG docker "$USER"
+    success "Installed Docker"
+}
+
+installDockerCompose() {
+    mkdir -p /usr/local/bin
+    local latestVersion
+    latestVersion=$(curl -fsSL https://api.github.com/repos/docker/compose/releases/latest | grep -oP '"tag_name": "\K(.*?)(?=")')
+    if [[ -z "$latestVersion" ]]; then
+        error "Failed to fetch the latest Docker Compose version"
+    fi
+    curl -fsSL "https://github.com/docker/compose/releases/download/${latestVersion}/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+    chmod +x /usr/local/bin/docker-compose || error "Failed to install Docker Compose"
+    success "Installed Docker Compose $latestVersion"
+}
+
+installNginxFromOfficialSource() {
+    info "Installing NGINX from nginx.org ..."
+
+    apt-get install -y curl gnupg2 ca-certificates lsb-release debian-archive-keyring
+
+    curl -fsSL https://nginx.org/keys/nginx_signing.key | gpg --dearmor \
+        -o /usr/share/keyrings/nginxArchiveKeyring.gpg || error "Failed to import NGINX signing key"
+
+    echo "deb [signed-by=/usr/share/keyrings/nginxArchiveKeyring.gpg] \
+http://nginx.org/packages/debian $(lsb_release -cs) nginx" | tee /etc/apt/sources.list.d/nginx.list > /dev/null
+
+    tee /etc/apt/preferences.d/99nginx > /dev/null <<EOF
+Package: *
+Pin: origin nginx.org
+Pin-Priority: 900
+EOF
+
+    apt-get update
+    apt-get install -y nginx || error "Failed to install NGINX"
+    systemctl enable nginx
+    systemctl start nginx
+
+    success "Installed NGINX $(nginx -v 2>&1 | cut -d/ -f2)"
+}
+
+moveNginxDefaultSite() {
+    if mv /etc/nginx/sites-enabled/default /etc/nginx/sites-enabled-default-backup 2>/dev/null; then
+        success "Moved default Nginx site to backup"
+    else
+        warning "Default Nginx site was not found or already moved"
+    fi
+}
+
+registerGeshtCommands() {
+    if grep -q "gesht" /etc/environment; then
+        success "gesht commands $check"
+    else
+        info "Registering gesht commands ..."
+        chmod 644 /etc/environment
+        echo 'PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:~/gesht/server/commands"' | tee -a /etc/environment > /dev/null
+        success "Registered gesht commands"
+    fi
+    if grep -q "gesht" /etc/bash.bashrc; then
+        success "gesht commands $check"
+    else
+        info "Registering gesht commands ..."
+        chmod 644 /etc/bash.bashrc
+        echo 'PATH="${PATH}:/gesht/Server"' | tee -a /etc/bash.bashrc > /dev/null
+        success "Registered gesht commands"
+    fi
+}
+
+setTimeZone() {
+    if timedatectl | grep -q "Time zone: UTC"; then
+        success "Time Zone $check"
+        return
+    fi
+    info "Configuring Time Zone to UTC ..."
+    timedatectl set-timezone UTC || error "Failed to set time zone"
+    success "Configured Time Zone to UTC"
+}
+
+setSshPrompt() {
+    truncate -s 0 /etc/skel/.bashrc
+}
+
+givePermissionsForUser() {
+    usermod -aG docker $USER
+}
+
+addSbinToUserPath() {
+    local file="/etc/bash.bashrc"
+    local line='export PATH=$PATH:/usr/sbin'
+
+    if ! grep -Fxq "$line" "$file"; then
+        echo "$line" | tee -a "$file" > /dev/null
+        echo "/usr/sbin added to PATH in $file"
+    fi
+}
+
+configurePythonCore() {
+    scriptsPath="/gesht/Server/Scripts/Python"
+    sitePackages=$(python3 -m site --user-site)
+    mkdir -p "$sitePackages"
+    mkdir -p "$(dirname "$sitePackages")"
+    echo "$scriptsPath" > "$sitePackages/gesht-server.pth"
+    success "Configured Python core path on server"
+}
+
+addSsh() {
+    local line='Defaults env_keep += "SSH_AUTH_SOCK"'
+    if grep -Fxq "$line" /etc/sudoers; then
+        success "SSH_AUTH_SOCK is already preserved in sudoers."
+        return 0
+    fi
+    info "Adding SSH_AUTH_SOCK preservation to sudoers..."
+    (cp /etc/sudoers /etc/sudoers.bak && \
+     echo "$line" | tee -a /etc/sudoers >/dev/null && \
+     vi-cf /etc/sudoers) \
+    && success "Line added successfully!" \
+    || (error "Error! Restoring original sudoers." && mv /etc/sudoers.bak /etc/sudoers)
+}
+
+
+updateApt
+install git
+install curl
+install zip
+install unzip
+install rsync
+install jq
+install nginx installNginxFromOfficialSource
+install certbot installCertbot
+install micro installMicro
+install telnet
+install nethogs
+install htpasswd installApache2Utils
+install azcopy installAzCopy
+install az installAzureCli
+install rclone installRclone
+install docker installDocker
+install docker-compose installDockerCompose
+moveNginxDefaultSite
+registerGeshtCommands
+setTimeZone
+setSshPrompt
+givePermissionsForUser
+addSbinToUserPath
+configurePythonCore
+addSsh
