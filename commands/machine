@@ -1,0 +1,45 @@
+import { writeFile } from 'fs/promises'
+import { hostname } from 'os'
+import { runOnTerminal } from "../scripts/terminal"
+
+function getIp() {
+    return runOnTerminal("hostname -I | awk '{print $1}'")
+}
+
+function getOs() {
+    return runOnTerminal("lsb_release -d | awk -F'\t' '{print $2}'")
+}
+
+function getRam() {
+    return Number(runOnTerminal("free -m | awk '/^Mem:/{print $2}'"))
+}
+
+function getCpuCores() {
+    return Number(runOnTerminal("nproc"))
+}
+
+function getStorageCapacity() {
+    return Number(runOnTerminal("df / -h | awk 'NR==2 {print $2}' | sed 's/G//g'"))
+}
+
+function getStorageType() {
+    runOnTerminal("lsblk -dno rota | grep '^0$'")
+    return 'SSD'
+}
+
+function getUptimeInDays() {
+    return Number(runOnTerminal("uptime | grep -o '[0-9]* days' | cut -d' ' -f1"))
+}
+
+const data = {
+    ip: getIp(),
+    hostname: hostname(),
+    os: getOs(),
+    ram: getRam(),
+    cpuCores: getCpuCores(),
+    storageCapacity: getStorageCapacity(),
+    storageType: getStorageType(),
+    uptimeInDays: getUptimeInDays()
+}
+
+await writeFile(`${process.env.HOME}/machine.json`, JSON.stringify(data, null, 2))
