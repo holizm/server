@@ -1,0 +1,66 @@
+import fs from 'fs'
+import path from 'path'
+
+const getFilteredDirectories = (filterValue, exactMatch) => {
+    let entries = fs.readdirSync('.', { withFileTypes: true })
+        .filter(d => d.isDirectory())
+        .map(d => d.name)
+    if (filterValue) {
+        const cleaned = filterValue.split('/').join('')
+        if (exactMatch) {
+            entries = entries.filter(e => e === cleaned)
+        } else {
+            const regex = new RegExp(cleaned)
+            entries = entries.filter(e => regex.test(e))
+        }
+    }
+    return entries.sort()
+}
+
+const validateDepth = () => {
+    const cwd = process.cwd()
+    if (cwd === '/') {
+        error('Can not be executed from the root')
+        process.exit()
+    }
+    const depth = (cwd.match(/\//g) || []).length
+    if (depth !== 1) {
+        error('This command must be run from depth 1 (i.e. /Instance)')
+        process.exit()
+    }
+}
+
+const readTenants = () => {
+    const tenantsFile = 'Tenants'
+    if (!fs.existsSync(tenantsFile) || !fs.statSync(tenantsFile).isFile()) {
+        error('Tenants file not found in the current directory')
+        process.exit()
+    }
+    const content = fs.readFileSync(tenantsFile, 'utf8')
+    return content
+        .split('\n')
+        .map(l => l.trim())
+        .filter(l => l.length > 0)
+        .map(l => l.split(/\s+/))
+}
+
+validateDepth()
+
+const args = process.argv.slice(2)
+const filterValue = args[0] || ''
+const exactMatch = args.length > 1 && String(args[1]).toLowerCase() === 'only'
+const directories = getFilteredDirectories(filterValue, exactMatch)
+const tenants = readTenants()
+
+const baseDir = process.cwd()
+loadParams(baseDir)
+for (const directory of directories) {
+    const p = path.join(baseDir, directory)
+    process.chdir(p)
+    info(directory)
+    generateForDirectory(tenants)
+    process.chdir(baseDir)
+}
+
+extract()
+generateBackupAndRestore()
