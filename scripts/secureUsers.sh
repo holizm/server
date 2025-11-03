@@ -3,9 +3,15 @@
 sudo groupadd -f shared
 
 USERS_FILE="/gesth/users"
+KEYS_DIR="/gesth/keys"
 
 if [[ ! -f "$USERS_FILE" ]]; then
     echo "Error: User file '$USERS_FILE' not found!"
+    exit 1
+fi
+
+if [[ ! -d "$KEYS_DIR" ]]; then
+    echo "Error: Keys directory '$KEYS_DIR' not found!"
     exit 1
 fi
 
@@ -16,9 +22,19 @@ while IFS= read -r user; do
     fi
 
     if ! id "$user" >/dev/null 2>&1; then
-        sudo useradd -m -s /bin/bash -p "$(openssl passwd -6 'qD3jCRGAtQcaaLxasbPE')" "$user"
-        sudo passwd --expire "$user"
+        sudo useradd -m -s /bin/bash "$user"
+    fi
+    sudo usermod -aG shared "$user"
+
+    PUBKEY="$KEYS_DIR/$user.pub"
+    if [[ -f "$PUBKEY" ]]; then
+        sudo mkdir -p "/home/$user/.ssh"
+        sudo cp "$PUBKEY" "/home/$user/.ssh/authorized_keys"
+        sudo chown -R "$user:$user" "/home/$user/.ssh"
+        sudo chmod 700 "/home/$user/.ssh"
+        sudo chmod 600 "/home/$user/.ssh/authorized_keys"
+    else
+        echo "Warning: No public key for '$user' at '$PUBKEY'"
     fi
 
-    sudo usermod -aG shared "$user"
 done < "$USERS_FILE"
