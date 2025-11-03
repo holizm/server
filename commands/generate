@@ -1,22 +1,16 @@
 import fs from 'fs'
 import path from 'path'
 import { ensure } from "../scripts/ensure.js"
-import { isFile } from "../scripts/os.js"
+import {
+    getDirs,
+    isFile,
+} from "../scripts/os.js"
 
-const getFilteredDirectories = (filterValue, exactMatch) => {
-    let entries = fs.readdirSync('.', { withFileTypes: true })
-        .filter(d => d.isDirectory())
-        .map(d => d.name)
-    if (filterValue) {
-        const cleaned = filterValue.split('/').join('')
-        if (exactMatch) {
-            entries = entries.filter(e => e === cleaned)
-        } else {
-            const regex = new RegExp(cleaned)
-            entries = entries.filter(e => regex.test(e))
-        }
-    }
-    return entries.sort()
+const findDirectories = (filter, exact) => {
+    const dirs = getDirs(path)
+    if (!filter) return dirs.sort()
+    const f = filter.replaceAll('/', '')
+    return dirs.filter(d => exact ? d === f : d.includes(f)).sort()
 }
 
 const validateDepth = () => {
@@ -48,7 +42,7 @@ validateDepth()
 const args = process.argv.slice(2)
 const filterValue = args[0] || ''
 const exactMatch = args.length > 1 && String(args[1]).toLowerCase() === 'only'
-const directories = getFilteredDirectories(filterValue, exactMatch)
+const directories = findDirectories(filterValue, exactMatch)
 const tenants = readTenants()
 
 const baseDir = process.cwd()
