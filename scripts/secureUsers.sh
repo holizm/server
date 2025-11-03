@@ -1,6 +1,6 @@
 #!/bin/bash
 
-groupadd -f shared
+sudo groupadd -f shared
 
 USERS_FILE="/gesth/users"
 
@@ -14,10 +14,11 @@ while IFS= read -r user; do
         echo "Error: username '$user' has leading or trailing whitespace"
         continue
     fi
-    if id "$user" >/dev/null 2>&1; then
-    else
+
+    if ! id "$user" >/dev/null 2>&1; then
         sudo useradd -m -s /bin/bash -p "$(openssl passwd -6 'qD3jCRGAtQcaaLxasbPE')" "$user"
         sudo passwd --expire "$user"
     fi
+
     sudo usermod -aG shared "$user"
 done < "$USERS_FILE"
