@@ -15,9 +15,26 @@ if [[ ! -d "$KEYS_DIR" ]]; then
     exit 1
 fi
 
+checkUser() {
+    local user="$1"
+    if [[ "$user" == "root" ]]; then
+        echo "Error: username '$user' is not allowed (reserved name)"
+        return 1
+    fi
+    if [[ ! "$user" =~ ^[a-z]+$ ]]; then
+        echo "Error: username '$user' must contain only lowercase letters (a–z)"
+        return 1
+    fi
+    return 0
+}
+
 while IFS= read -r user; do
     if [[ "$user" =~ ^[[:space:]] || "$user" =~ [[:space:]]$ ]]; then
         echo "Error: username '$user' has leading or trailing whitespace"
+        continue
+    fi
+
+    if ! checkUser "$user"; then
         continue
     fi
 
