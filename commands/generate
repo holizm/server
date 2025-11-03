@@ -1,5 +1,7 @@
 import fs from 'fs'
 import path from 'path'
+import { ensure } from "../scripts/ensure.js"
+import { isFile } from "../scripts/os.js"
 
 const getFilteredDirectories = (filterValue, exactMatch) => {
     let entries = fs.readdirSync('.', { withFileTypes: true })
@@ -31,11 +33,8 @@ const validateDepth = () => {
 }
 
 const readTenants = () => {
-    const tenantsFile = 'Tenants'
-    if (!fs.existsSync(tenantsFile) || !fs.statSync(tenantsFile).isFile()) {
-        error('Tenants file not found in the current directory')
-        process.exit()
-    }
+    const tenantsFile = 'tenants'
+    ensure(isFile(tenantsFile), 'Tenants file not found in the current directory')
     const content = fs.readFileSync(tenantsFile, 'utf8')
     return content
         .split('\n')
