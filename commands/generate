@@ -1,10 +1,11 @@
-import fs from 'fs'
 import path from 'path'
 import { ensure } from "../scripts/ensure.js"
 import {
     getDirs,
     isFile,
+    readLines,
 } from "../scripts/os.js"
+import { errorAndExit } from "../scripts/logger.js"
 
 const findDirectories = (filter, exact) => {
     const dirs = getDirs(path)
@@ -16,8 +17,7 @@ const findDirectories = (filter, exact) => {
 const validateDepth = () => {
     const cwd = process.cwd()
     if (cwd === '/') {
-        error('Can not be executed from the root')
-        process.exit()
+        errorAndExit('Can not be executed from the root')
     }
     const depth = (cwd.match(/\//g) || []).length
     if (depth !== 1) {
@@ -29,12 +29,7 @@ const validateDepth = () => {
 const readTenants = () => {
     const tenantsFile = 'tenants'
     ensure(isFile(tenantsFile), 'Tenants file not found in the current directory')
-    const content = fs.readFileSync(tenantsFile, 'utf8')
-    return content
-        .split('\n')
-        .map(l => l.trim())
-        .filter(l => l.length > 0)
-        .map(l => l.split(/\s+/))
+    const tenants = readLines(tenantsFiles).map(l => l.split(/\s+/))
 }
 
 validateDepth()

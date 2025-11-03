@@ -10,3 +10,9 @@ export const getDirs = path => {
         .map(d => d.name)
 
 }
+
+export const readLines = file =>
+    fs.readFileSync(file, 'utf8')
+        .split(/\r?\n/)
+        .map(s => s.trim())
+        .filter(Boolean)
