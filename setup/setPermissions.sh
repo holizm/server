@@ -3,6 +3,8 @@ set -e
 
 BASE="/gesth"
 GROUP="shared"
+USERS_FILE="$BASE/users"
+KEYS_DIR="$BASE/keys"
 
 for dir in "$BASE" "$BASE/users" "$BASE/keys" "$BASE/server" "$BASE/fonts"; do
     if [[ -d "$dir" ]]; then
@@ -19,4 +21,22 @@ fi
 if [[ -f "$BASE/users" ]]; then
     sudo chown root:root "$BASE/users"
     sudo chmod 0640 "$BASE/users"
+fi
+
+if [[ -f "$USERS_FILE" && -d "$KEYS_DIR" ]]; then
+    while IFS= read -r user; do
+        [[ -z "$user" ]] && continue
+        if [[ "$user" =~ ^[[:space:]] || "$user" =~ [[:space:]]$ ]]; then
+            continue
+        fi
+        if [[ ! "$user" =~ ^[a-z]+$ ]]; then
+            continue
+        fi
+        PUB="$KEYS_DIR/$user.pub"
+        if [[ ! -f "$PUB" ]]; then
+            sudo touch "$PUB"
+            sudo chown root:root "$PUB"
+            sudo chmod 0640 "$PUB"
+        fi
+    done < "$USERS_FILE"
 fi
