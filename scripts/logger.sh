@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+[[ "${LOGGER_SH_LOADED:-}" == "1" ]] && return 0
+LOGGER_SH_LOADED=1
+
 readonly color_red=$(tput setaf 1)
 readonly color_green=$(tput setaf 2)
 readonly color_cyan=$(tput setaf 6)
