@@ -10,22 +10,6 @@ updateApt() {
     success "Updated apt"
 }
 
-install() {
-    local commandName="$1"
-    local installFunction="${2:-}"
-    if command -v "$commandName" &>/dev/null; then
-        success "$commandName $check_mark"
-        return
-    fi
-    info "Installing $commandName ..."
-    if [[ -n "$installFunction" ]]; then
-        "$installFunction" || error "Failed to install $commandName"
-    else
-        apt-get install -y "$commandName" || error "Failed to install $commandName"
-    fi
-    success "Installed $commandName"
-}
-
 installCertbot() {
     apt-get install -y certbot python3-certbot-nginx || error "Failed to install certbot"
     success "Installed certbot"
