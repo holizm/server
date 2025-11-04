@@ -105,7 +105,7 @@ registerGeshtCommands() {
     else
         info "Registering gesht commands ..."
         chmod 644 /etc/environment
-        echo 'PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:~/gesht/server/commands"' | tee -a /etc/environment > /dev/null
+        echo 'PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/gesht/server/commands"' | tee -a /etc/environment > /dev/null
         success "Registered gesht commands"
     fi
     if grep -q "gesht" /etc/bash.bashrc; then
@@ -113,7 +113,7 @@ registerGeshtCommands() {
     else
         info "Registering gesht commands ..."
         chmod 644 /etc/bash.bashrc
-        echo 'PATH="${PATH}:/gesht/Server"' | tee -a /etc/bash.bashrc > /dev/null
+        echo 'PATH="${PATH}:/gesht/server/commands"' | tee -a /etc/bash.bashrc > /dev/null
         success "Registered gesht commands"
     fi
 }
