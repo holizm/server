@@ -21,7 +21,7 @@ checkUser() {
         echo "Error: username '$user' is not allowed (reserved name)"
         return 1
     fi
-    if [[ ! "$user" =~ ^[a-z]+$ ]]; then
+    if [[ ! "$user" =~ ^[a-z0-9]+$ ]]; then
         echo "Error: username '$user' must contain only lowercase letters (a–z)"
         return 1
     fi
