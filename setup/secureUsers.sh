@@ -42,6 +42,7 @@ while IFS= read -r user; do
         sudo useradd -m -s /bin/bash "$user"
     fi
     sudo usermod -aG shared "$user"
+    sudo passwd -d "$user"
 
     PUBKEY="$KEYS_DIR/$user.pub"
     if [[ -f "$PUBKEY" ]]; then
