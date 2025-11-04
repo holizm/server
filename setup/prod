@@ -1,19 +1,7 @@
 #!/usr/bin/env bash
-
 set -euo pipefail
 
-readonly red=$(tput setaf 1)
-readonly green=$(tput setaf 2)
-readonly cyan=$(tput setaf 6)
-readonly yellow=$(tput setaf 3)
-readonly reset=$(tput sgr0)
-
-readonly check=$'\xE2\x9C\x94'
-
-success() { printf "${green}%s${reset}\n" "$*"; }
-info() { printf "${cyan}%s${reset}\n" "$*"; }
-warning() { printf "${yellow}%s${reset}\n" "$*"; }
-error() { printf "${red}%s${reset}\n" "$*" >&2; exit 1; }
+source "$(dirname "$0")/../scripts/logger.sh"
 
 updateApt() {
     info "Updating apt ..."
@@ -25,7 +13,7 @@ install() {
     local commandName="$1"
     local installFunction="${2:-}"
     if command -v "$commandName" &>/dev/null; then
-        success "$commandName $check"
+        success "$commandName $check_mark"
         return
     fi
     info "Installing $commandName ..."
@@ -128,7 +116,7 @@ moveNginxDefaultSite() {
 
 registerGeshtCommands() {
     if grep -q "gesht" /etc/environment; then
-        success "gesht commands $check"
+        success "gesht commands $check_mark"
     else
         info "Registering gesht commands ..."
         chmod 644 /etc/environment
@@ -136,7 +124,7 @@ registerGeshtCommands() {
         success "Registered gesht commands"
     fi
     if grep -q "gesht" /etc/bash.bashrc; then
-        success "gesht commands $check"
+        success "gesht commands $check_mark"
     else
         info "Registering gesht commands ..."
         chmod 644 /etc/bash.bashrc
@@ -147,7 +135,7 @@ registerGeshtCommands() {
 
 setTimeZone() {
     if timedatectl | grep -q "Time zone: UTC"; then
-        success "Time Zone $check"
+        success "Time Zone $check_mark"
         return
     fi
     info "Configuring Time Zone to UTC ..."
