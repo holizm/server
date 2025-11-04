@@ -5,6 +5,7 @@ BASE="/gesht"
 GROUP="shared"
 USERS_FILE="$BASE/users"
 KEYS_DIR="$BASE/keys"
+CMDS_DIR="$BASE/server/commands"
 
 for dir in "$BASE" "$BASE/users" "$BASE/keys" "$BASE/server" "$BASE/fonts"; do
     if [[ -d "$dir" ]]; then
@@ -39,4 +40,9 @@ if [[ -f "$USERS_FILE" && -d "$KEYS_DIR" ]]; then
             sudo chmod 0640 "$PUB"
         fi
     done < "$USERS_FILE"
+fi
+
+if [[ -d "$CMDS_DIR" ]]; then
+    mapfile -t files < <(find "$CMDS_DIR" -maxdepth 1 -type f)
+    if (( ${#files[@]} )); then sudo chmod 0755 "${files[@]}"; fi
 fi
