@@ -1,5 +1,5 @@
 # Listen on a non-standard port
-Port 43290
+Port 53292
 
 # Networking
 AddressFamily inet
