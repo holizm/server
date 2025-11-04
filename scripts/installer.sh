@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+source "$(dirname "$0")/logger.sh"
+
+install() {
+    local cmd_name="$1"
+    local pkg_or_func="${2:-}"
+    if command -v "$cmd_name" &>/dev/null; then
+        success "$cmd_name $check_mark"
+        return
+    fi
+    info "installing $cmd_name ..."
+    if [[ -n "$pkg_or_func" ]]; then
+        if declare -f "$pkg_or_func" &>/dev/null; then
+            "$pkg_or_func" || errorAndExit "failed to install $cmd_name"
+        else
+            sudo apt-get install -y "$pkg_or_func" || errorAndExit "failed to install $cmd_name"
+        fi
+    else
+        sudo apt-get install -y "$cmd_name" || errorAndExit "failed to install $cmd_name"
+    fi
+    success "installed $cmd_name"
+}

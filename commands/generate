@@ -23,8 +23,7 @@ const validateDepth = () => {
     }
     const depth = (cwd.match(/\//g) || []).length
     if (depth !== 1) {
-        error('This command must be run from depth 1 (i.e. /Instance)')
-        process.exit()
+        errorAndExit('This command must be run from depth 1 (i.e. /Instance)')
     }
 }
 
