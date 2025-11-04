@@ -30,7 +30,7 @@ if [[ -f "$USERS_FILE" && -d "$KEYS_DIR" ]]; then
         if [[ "$user" =~ ^[[:space:]] || "$user" =~ [[:space:]]$ ]]; then
             continue
         fi
-        if [[ ! "$user" =~ ^[a-z]+$ ]]; then
+        if [[ ! "$user" =~ ^[a-z0-9]+$ ]]; then
             continue
         fi
         PUB="$KEYS_DIR/$user.pub"
