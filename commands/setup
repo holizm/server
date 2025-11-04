@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
 source "$(dirname "$0")/../setup/prod"
-source "$(dirname "$0")/../setup/setPermissions.sh"
 source "$(dirname "$0")/../setup/secureUsers.sh"
+source "$(dirname "$0")/../setup/setPermissions.sh"
 source "$(dirname "$0")/../setup/includeUpdateTerminalTitleConfig.js"
