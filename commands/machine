@@ -1,37 +1,21 @@
 #!/usr/bin/env node
 
-import { writeFile } from 'fs'
+import { writeFileSync } from 'fs'
 import { hostname } from 'os'
 import { runOnTerminal } from "../scripts/terminal.js"
 
-function getIp() {
-    return runOnTerminal("hostname -I | awk '{print $1}'")
+const getIp = () => runOnTerminal("hostname -I | awk '{print $1}'").trim()
+const getOs = () => runOnTerminal("lsb_release -d | awk -F'\t' '{print $2}'").trim()
+const getRam = () => Number(runOnTerminal("free -m | awk '/^Mem:/{print $2}'").trim())
+const getCpuCores = () => Number(runOnTerminal("nproc").trim())
+const getStorageCapacity = () => Number(runOnTerminal("df -BG / | awk 'NR==2 {print $2}' | sed 's/G//g'").trim())
+const getStorageType = () => {
+    try {
+        const rota = runOnTerminal("lsblk -dno ROTA 2>/dev/null | head -n1").trim()
+        return rota === '0' ? 'SSD' : rota === '1' ? 'HDD' : 'Unknown'
+    } catch { return 'Unknown' }
 }
-
-function getOs() {
-    return runOnTerminal("lsb_release -d | awk -F'\t' '{print $2}'")
-}
-
-function getRam() {
-    return Number(runOnTerminal("free -m | awk '/^Mem:/{print $2}'"))
-}
-
-function getCpuCores() {
-    return Number(runOnTerminal("nproc"))
-}
-
-function getStorageCapacity() {
-    return Number(runOnTerminal("df / -h | awk 'NR==2 {print $2}' | sed 's/G//g'"))
-}
-
-function getStorageType() {
-    runOnTerminal("lsblk -dno rota | grep '^0$'")
-    return 'SSD'
-}
-
-function getUptimeInDays() {
-    return Number(runOnTerminal("uptime | grep -o '[0-9]* days' | cut -d' ' -f1"))
-}
+const getUptimeInDays = () => Number(runOnTerminal("awk '{print int($1/86400)}' /proc/uptime").trim())
 
 const data = {
     ip: getIp(),
@@ -44,4 +28,4 @@ const data = {
     uptimeInDays: getUptimeInDays()
 }
 
-await writeFile(`/gesht/machine.json`, JSON.stringify(data, null, 2))
+writeFileSync(`/gesht/machine.json`, JSON.stringify(data, null, 2))
