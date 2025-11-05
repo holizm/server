@@ -19,7 +19,7 @@ export const getDirs = path => {
 
 }
 
-export const readLines = file =>
+export const getLines = file =>
     fs.readFileSync(file, 'utf8')
         .split(/\r?\n/)
         .map(s => s.trim())

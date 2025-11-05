@@ -5,9 +5,10 @@ import { ensure } from "../scripts/ensure.js"
 import {
     getDirs,
     isFile,
-    readLines,
+    getLines,
 } from "../scripts/os.js"
 import { errorAndExit } from "../scripts/logger.js"
+import loadParams from "../scripts/loadParams.js"
 
 const findDirectories = (filter, exact) => {
     const dirs = getDirs(path)
@@ -30,7 +31,7 @@ const validateDepth = () => {
 const readTenants = () => {
     const tenantsFile = 'tenants'
     ensure(isFile(tenantsFile), 'Tenants file not found in the current directory')
-    const tenants = readLines(tenantsFile).map(l => l.split(/\s+/))
+    const tenants = getLines(tenantsFile).map(l => l.split(/\s+/))
 }
 
 validateDepth()
