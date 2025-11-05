@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { writeFileSync } from "fs"
+import { writeFileSync, readFileSync } from "fs"
 import { hostname } from "os"
 import { runOnTerminal } from "../scripts/terminal.js"
 
@@ -9,19 +9,16 @@ const getOs = () => runOnTerminal("lsb_release -d | awk -F'\t' '{print $2}'").tr
 const getRam = () => Number(runOnTerminal("free -m | awk '/^Mem:/{print $2}'").trim())
 const getCpuCores = () => Number(runOnTerminal("nproc").trim())
 const getStorageCapacity = () => Number(runOnTerminal("df -BG / | awk 'NR==2 {print $2}' | sed 's/G//g'").trim())
-
 const getStorageType = () => {
     try {
         const rota = runOnTerminal("lsblk -dno ROTA 2>/dev/null | head -n1").trim()
         return rota === "0" ? "SSD" : rota === "1" ? "HDD" : "Unknown"
-    } catch {
-        return "Unknown"
-    }
+    } catch { return "Unknown" }
 }
-
-const getUptimeInDays = () => Number(
-    runOnTerminal("awk '{print int($1/86400)}' /proc/uptime").trim()
-)
+const getUptimeInDays = () => {
+    const s = Number(readFileSync("/proc/uptime", "utf8").split(" ")[0])
+    return Math.floor(s / 86400)
+}
 
 const data = {
     ip: getIp(),
