@@ -22,8 +22,8 @@ const validateDepth = () => {
         errorAndExit('Can not be executed from the root')
     }
     const depth = (cwd.match(/\//g) || []).length
-    if (depth !== 1) {
-        errorAndExit('This command must be run from depth 1 (i.e. /Instance)')
+    if (depth !== 3) {
+        errorAndExit('This command must be run from depth 3 (i.e. ~/instance)')
     }
 }
 
