@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 
-import { writeFile } from 'fs/promises'
+import { writeFile } from 'fs'
 import { hostname } from 'os'
-import { runOnTerminal } from "../scripts/terminal"
+import { runOnTerminal } from "../scripts/terminal.js"
 
 function getIp() {
     return runOnTerminal("hostname -I | awk '{print $1}'")
@@ -44,4 +44,4 @@ const data = {
     uptimeInDays: getUptimeInDays()
 }
 
-await writeFile(`${process.env.HOME}/machine.json`, JSON.stringify(data, null, 2))
+await writeFile(`/gesht/machine.json`, JSON.stringify(data, null, 2))
