@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+HOME_DIR=$(getent passwd "${SUDO_USER:-$USER}" | cut -d: -f6)
+. "$HOME_DIR/core/scripts/installer.sh"
+
+install_node() {
+    sudo apt-get update -y
+    sudo apt-get install -y --no-install-recommends curl ca-certificates gnupg
+    curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
+    sudo apt-get install -y --no-install-recommends nodejs
+    node -v
+    npm -v
+}
+
+install node install_node
