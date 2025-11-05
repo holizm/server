@@ -3,7 +3,7 @@ import { execSync } from "child_process"
 import { error, warning } from "./Logger.js"
 import extract from "./Extract.js"
 import calculateSubdomain from "./calculateSubdomain.js"
-import getRandomAvailablePort from "./GetRandomAvailablePort.js"
+import getRandomPort from "./getRandomPort.js"
 import generateNginxConfig from "./GenerateNginxConfig.js"
 import generateDockerCompose from "./GenerateDockerCompose.js"
 
@@ -22,7 +22,7 @@ export default params => {
         process,
         role,
     } = params
-    getRandomAvailablePort(params)
+    getRandomPort(params)
     extract(params)
     if (process === "common") return
     if (process.includes("backup")) return
@@ -34,8 +34,8 @@ export default params => {
         if (!env.KeycloakIssuer) env.KeycloakIssuer = "https://accounts.example.com/realm/Production"
         generateDockerCompose("MultitenantSite")
     } else if (process === "Accounts") {
-        getRandomAvailablePort(`${instance}AccountsDatabaseRandomPort`)
-        getRandomAvailablePort(`${instance}AccountsAdminerRandomPort`)
+        getRandomPort(`${instance}AccountsDatabaseRandomPort`)
+        getRandomPort(`${instance}AccountsAdminerRandomPort`)
         generateDockerCompose("Accounts")
     } else if (process === "Search") {
         generateDockerCompose("Search")
