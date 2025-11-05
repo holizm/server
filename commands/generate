@@ -9,6 +9,7 @@ import {
 } from "../scripts/os.js"
 import { errorAndExit } from "../scripts/logger.js"
 import loadParams from "../scripts/loadParams.js"
+import { info } from "../scripts/logger.js"
 
 const findDirectories = (filter, exact) => {
     const dirs = getDirs(path)
