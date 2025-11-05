@@ -30,7 +30,7 @@ const validateDepth = () => {
 const readTenants = () => {
     const tenantsFile = 'tenants'
     ensure(isFile(tenantsFile), 'Tenants file not found in the current directory')
-    const tenants = readLines(tenantsFiles).map(l => l.split(/\s+/))
+    const tenants = readLines(tenantsFile).map(l => l.split(/\s+/))
 }
 
 validateDepth()
