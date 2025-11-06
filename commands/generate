@@ -45,12 +45,16 @@ const directories = findDirectories(filterValue, exactMatch)
 const tenants = readTenants()
 
 const baseDir = process.cwd()
-loadParams(baseDir)
+const params = loadParams(baseDir)
+params.baseDir = baseDir
 for (const directory of directories) {
     const p = path.join(baseDir, directory)
     process.chdir(p)
     info(directory)
-    generateForDirectory(tenants)
+    generateForDirectory({
+        ...params,
+        tenants,
+    })
     process.chdir(baseDir)
 }
 

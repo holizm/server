@@ -1,7 +1,7 @@
 import fs from "fs"
 import { execSync } from "child_process"
-import { error, warning } from "./Logger.js"
-import extract from "./Extract.js"
+import { error, warning } from "./logger.js"
+import extract from "./extract.js"
 import calculateSubdomain from "./calculateSubdomain.js"
 import getRandomPort from "./getRandomPort.js"
 import generateNginxConfig from "./generateNginxConfig.js"
@@ -17,7 +17,7 @@ const isFile = p => {
 
 export default params => {
     const {
-        tenant,
+        tenants,
         instance,
         process,
         role,

@@ -1,7 +1,9 @@
-import fs from "fs"
 import path from "path"
-import { info } from "./Logger.js"
-import { getContent, isFile } from "./os.js"
+import { info } from "./logger.js"
+import {
+    getContent,
+    isFile,
+} from "./os.js"
 
 export default params => {
     const {
