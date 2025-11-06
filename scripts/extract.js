@@ -1,75 +1,72 @@
 #!/usr/bin/env node
-import fs from "fs"
 import path from "path"
-import { error, success } from "../scripts/logger.js"
-
-const readValueIfExists = p => (fs.existsSync(p) && fs.statSync(p).isFile() ? fs.readFileSync(p, "utf8").trim() : null)
+import {
+    errorAndExit,
+    success,
+} from "../scripts/logger.js"
+import { getContent } from "./os.js"
 
 export default params => {
     const {
         baseDir,
     } = params
     if (baseDir === "/") {
-        error("Can not be executed from the root")
-        process.exit(1)
+        errorAndExit("Can not be executed from the root")
     }
 
     const depth = (baseDir.match(/\//g) || []).length
     if (depth > 4) {
-        error(`You are ${depth} levels deep. This command can only be executed for the first and second levels of depth. That is, from ~/instance, or ~/instance/process.`)
-        process.exit(1)
+        errorAndExit(`You are ${depth} levels deep. This command can only be executed for the first and second levels of depth. That is, from ~/instance, or ~/instance/process.`)
     }
 
-    const org = readValueIfExists("./Org") || readValueIfExists("../Org")
-    if (!org || !/^[A-Z]/.test(org)) {
-        error("Invalid organization. Organization name should start with an uppercase letter.")
-        process.exit(1)
+    const org = getContent("./org") || getContent("../org")
+    if (!org || !/^[a-z]/.test(org)) {
+        errorAndExit("Invalid organization. Organization name should start with an lowercase letter.")
     }
 
     const parts = baseDir.split("/")
     const instance = parts[1] || ""
-    if (!instance || !/^[A-Z]/.test(instance)) {
-        error("Invalid instance. Instance name should start with an uppercase letter.")
-        process.exit(1)
+    if (!instance || !/^[a-z]/.test(instance)) {
+        errorAndExit("Invalid instance. Instance name should start with an lowercase letter.")
     }
 
     let repo = instance
-    const repoOverride = readValueIfExists("./Repo") || readValueIfExists("../Repo")
+    const repoOverride = getContent("./repo") || getContent("../repo")
     if (repoOverride) repo = repoOverride
-    if (!repo || !/^[A-Z]/.test(repo)) {
-        error("Invalid repository. Repository name should start with an uppercase letter.")
-        process.exit(1)
+    if (!repo || !/^[a-z]/.test(repo)) {
+        errorAndExit("Invalid repository. Repository name should start with an lowercase letter.")
     }
 
-    const processName = path.posix.basename(baseDir)
-    const role = (processName.includes("Panel") || processName.includes("Api")) && !processName.includes("Site") ? processName.replace("Panel", "").replace("Api", "") : null
-    const githubImageName = readValueIfExists("./GitHubImageName")
-    const githubImageNameOrProcess = githubImageName || processName
+    const process = path.posix.basename(baseDir)
+    const role = (process.includes("Panel") || process.includes("Api")) && !process.includes("Site") ? process.replace("Panel", "").replace("Api", "") : null
+    const githubImageName = getContent("./gitHubImageName")
+    const githubImageNameOrProcess = githubImageName || process
 
-    env.organization = org
-    env.repository = repo
-    env.instance = instance
-    env.process = processName
-    env.role = role ? role : ""
-    env.gitHubImageName = githubImageName || ""
-    env.lowercaseGitHubImageName = (githubImageName || "").toLowerCase()
-    env.gitHubImageNameOrProcess = githubImageNameOrProcess
-    env.lowercaseGitHubImageNameOrProcess = githubImageNameOrProcess.toLowerCase()
-    env.lowercaseOrg = org.toLowerCase()
-    env.lowercaseRepo = repo.toLowerCase()
-    env.lowercaseInstance = instance.toLowerCase()
-    env.lowercaseProcess = processName.toLowerCase()
-    env.lowercaseRole = role ? role.toLowerCase() : ""
-    env.instancePath = `/${instance}`
-    env.processPath = `/${instance}/${processName}`
-    env.originalProcessPath = `/${repo}/${processName}`
-    env.level = depth === 1 ? "Instance" : "Process"
+    params.org = org
+    params.repo = repo
+    params.instance = instance
+    params.process = process
+    params.role = role ? role : ""
+    params.gitHubImageName = githubImageName || ""
+    params.lowercaseGitHubImageName = (githubImageName || "").toLowerCase()
+    params.gitHubImageNameOrProcess = githubImageNameOrProcess
+    params.lowercaseGitHubImageNameOrProcess = githubImageNameOrProcess.toLowerCase()
+    params.lowercaseOrg = org.toLowerCase()
+    params.lowercaseRepo = repo.toLowerCase()
+    params.lowercaseInstance = instance.toLowerCase()
+    params.lowercaseProcess = process.toLowerCase()
+    params.lowercaseRole = role ? role.toLowerCase() : ""
+    params.instancePath = `/${instance}`
+    params.processPath = `/${instance}/${process}`
+    params.originalProcessPath = `/${repo}/${process}`
+    params.level = depth === 1 ? "Instance" : "Process"
 
     success(`Organization: ${org}`)
     success(`Repository: ${repo}`)
     success(`Instance: ${instance}`)
-    success(`Process: ${processName}`)
+    success(`Process: ${process}`)
     success(`Role: ${role}`)
-    success(`ProcessPath=${env.processPath}`)
-    success(`OriginalProcessPath=${env.originalProcessPath}`)
+    success(`ProcessPath=${params.processPath}`)
+    success(`OriginalProcessPath=${params.originalProcessPath}`)
+    return params
 }
