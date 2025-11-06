@@ -13,7 +13,7 @@ export const getContent = path => {
 }
 
 export const getDirs = path => {
-    return fs.readdirSync('.', { withFileTypes: true })
+    return fs.readdirSync(path || '.', { withFileTypes: true })
         .filter(d => d.isDirectory())
         .map(d => d.name)
 

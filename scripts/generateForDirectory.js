@@ -18,15 +18,19 @@ const isFile = p => {
 export default params => {
     const {
         tenants,
-        instance,
-        process,
         role,
     } = params
     getRandomPort(params)
-    extract(params)
+    params = extract(params)
+    const {
+        process,
+        instance,
+    } = params
     if (process === "common") return
     if (process.includes("backup")) return
+    console.log(params.subdomain)
     calculateSubdomain(params)
+    console.log(params.subdomain)
     env[`${instance}${process}Port`] = env.RandomPort
     env.DockerImageName = `ghcr.io/${env.LowercaseOrg}/${env.LowercaseRepo}/${env.LowercaseGitHubImageNameOrProcess}:latest`
     if ((process.includes("Site") && !process.includes("Api")) || isFile("./Site")) {

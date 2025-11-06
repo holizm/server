@@ -1,6 +1,5 @@
 #!/usr/bin/env node
 
-import path from 'path'
 import { ensure } from "../scripts/ensure.js"
 import {
     getDirs,
@@ -13,7 +12,7 @@ import { info } from "../scripts/logger.js"
 import generateForDirectory from "../scripts/generateForDirectory.js"
 
 const findDirectories = (filter, exact) => {
-    const dirs = getDirs(path)
+    const dirs = getDirs()
     if (!filter) return dirs.sort()
     const f = filter.replaceAll('/', '')
     return dirs.filter(d => exact ? d === f : d.includes(f)).sort()
@@ -49,7 +48,7 @@ const params = loadParams(baseDir)
 params.baseDir = baseDir
 params.home = process.env.HOME
 for (const directory of directories) {
-    const p = path.join(baseDir, directory)
+    const p = `${baseDir}/${directory}`
     process.chdir(p)
     info(directory)
     generateForDirectory({

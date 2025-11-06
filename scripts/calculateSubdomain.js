@@ -7,9 +7,11 @@ import {
 
 export default params => {
     const {
-        process
+        baseDir,
+        home,
+        process,
     } = params
-    const subdomainFile = path.join(process.cwd(), "subdomain")
+    const subdomainFile = `${baseDir}/subdomain`
     let subdomain = ""
     if (isFile(subdomainFile)) {
         subdomain = getContent(subdomainFile).trim()
@@ -34,6 +36,7 @@ export default params => {
     } else if (process === "storage") {
         subdomain = "storage"
     }
-    info(`Subdomain is ${process.env.Subdomain}`)
+    info(`Subdomain is ${subdomain}`)
+    params.subdomain = subdomain
     return subdomain === "" ? "" : `${subdomain.toLowerCase()}.`
 }
