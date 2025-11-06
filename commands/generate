@@ -5,6 +5,7 @@ import {
     getDirs,
     isFile,
     getLines,
+    isDev,
 } from "../scripts/os.js"
 import { errorAndExit } from "../scripts/logger.js"
 import loadParams from "../scripts/loadParams.js"
@@ -48,6 +49,7 @@ const baseDir = process.cwd()
 const params = loadParams(baseDir)
 params.baseDir = baseDir
 params.home = process.env.HOME
+params.isDev = isDev()
 for (const directory of directories) {
     const p = `${baseDir}/${directory}`
     process.chdir(p)

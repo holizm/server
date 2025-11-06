@@ -81,18 +81,23 @@ export default params => {
         params.domain = domain
         params.locales = locales
         params.defaultLocale = defaultLocale
-        for (const cfg of ["HttpsRedirect", "Certificate", "Listen", "Proxy"]) generateNginxConfig({
+        for (const cfg of [
+            "httpsRedirect",
+            "certificate",
+            "listen",
+            "proxy"
+        ]) generateNginxConfig({
             ...params,
             file: cfg
         })
-        if (isFile("./HasBasicAuth")) {
+        if (isFile("./hasBasicAuth")) {
             execSync(
-                `htpasswd -b -c /${instance}/${process}/BasicAuth "${params.basicAuthUsername}" "${params.basicAuthPassword}"`,
+                `htpasswd -b -c /${instance}/${process}/basicAuth "${params.basicAuthUsername}" "${params.basicAuthPassword}"`,
                 { stdio: "inherit", shell: "/bin/bash" }
             )
             generateNginxConfig({
                 ...params,
-                file: "BasicAuth"
+                file: "basicAuth"
             })
         }
         if ((process.includes("Site") && !process.includes("Api")) || isFile("./Site")) {

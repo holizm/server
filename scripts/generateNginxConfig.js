@@ -10,14 +10,14 @@ const expandEnv = s => {
 
 export default params => {
     const includes = [
-        "Certificate",
-        "Compression",
-        "HttpsRedirect",
-        "MultitenantWwwRedirect",
-        "Listen",
-        "Proxy",
-        "MultitenantCacheConfig",
-        "MultitenantCacheUsage"
+        "certificate",
+        "compression",
+        "httpsRedirect",
+        "multitenantWwwRedirect",
+        "listen",
+        "proxy",
+        "multitenantCacheConfig",
+        "multitenantCacheUsage"
     ]
     const {
         file,
@@ -44,7 +44,7 @@ export default params => {
     params.nginxParamsUpgrade = "$nginxParamsUpgrade"
     params.nginxParamsRequestMethod = "$nginxParamsRequestMethod"
     params.nginxParamsUpstream = "$nginxParamsUpstream"
-    const sourceDirectory = "/gesht/server/nginx"
+    const sourceDirectory = "/gesht/server/webServer"
     const sourceFile = path.join(sourceDirectory, file)
     const tempFile = `${nginxFilePath}.temp`
     fs.mkdirSync(path.dirname(nginxFilePath), { recursive: true })
