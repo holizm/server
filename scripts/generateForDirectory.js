@@ -4,8 +4,8 @@ import { error, warning } from "./Logger.js"
 import extract from "./Extract.js"
 import calculateSubdomain from "./calculateSubdomain.js"
 import getRandomPort from "./getRandomPort.js"
-import generateNginxConfig from "./GenerateNginxConfig.js"
-import generateDockerCompose from "./GenerateDockerCompose.js"
+import generateNginxConfig from "./generateNginxConfig.js"
+import generateCompose from "./generateCompose.js"
 
 const isFile = p => {
     try {
@@ -32,26 +32,26 @@ export default params => {
     if ((process.includes("Site") && !process.includes("Api")) || isFile("./Site")) {
         if (!env.AuthSecret) env.AuthSecret = "auth_secret"
         if (!env.KeycloakIssuer) env.KeycloakIssuer = "https://accounts.example.com/realm/Production"
-        generateDockerCompose("MultitenantSite")
+        generateCompose("MultitenantSite")
     } else if (process === "Accounts") {
         getRandomPort(`${instance}AccountsDatabaseRandomPort`)
         getRandomPort(`${instance}AccountsAdminerRandomPort`)
-        generateDockerCompose("Accounts")
+        generateCompose("Accounts")
     } else if (process === "Search") {
-        generateDockerCompose("Search")
+        generateCompose("Search")
     } else if (process === "Crawl") {
-        generateDockerCompose("Crawl")
+        generateCompose("Crawl")
     } else if (process === "Push") {
-        generateDockerCompose("Push")
+        generateCompose("Push")
     } else if (process.includes("Panel")) {
-        generateDockerCompose("Panel")
+        generateCompose("Panel")
     } else if (process.includes("Api")) {
-        generateDockerCompose("Api")
+        generateCompose("Api")
     } else if (process === "Databases") {
         if (isFile(`/${instance}/Databases/Mongo`)) {
-            generateDockerCompose("MongoDatabases")
+            generateCompose("MongoDatabases")
         } else {
-            generateDockerCompose("Databases")
+            generateCompose("Databases")
         }
     }
     for (const tenant of tenants) {
