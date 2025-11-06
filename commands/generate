@@ -33,6 +33,7 @@ const readTenants = () => {
     const tenantsFile = 'tenants'
     ensure(isFile(tenantsFile), 'Tenants file not found in the current directory')
     const tenants = getLines(tenantsFile).map(l => l.split(/\s+/))
+    return tenants
 }
 
 validateDepth()

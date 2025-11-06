@@ -4,7 +4,7 @@ import { error, warning } from "./logger.js"
 import extract from "./extract.js"
 import calculateSubdomain from "./calculateSubdomain.js"
 import getRandomPort from "./getRandomPort.js"
-import generateNginxConfig from "./generateNginxConfig.js"
+import generateNginxConfig from './generateNginxConfig.js'
 import generateCompose from "./generateCompose.js"
 
 const isFile = p => {
@@ -31,11 +31,11 @@ export default params => {
     console.log(params.subdomain)
     calculateSubdomain(params)
     console.log(params.subdomain)
-    env[`${instance}${process}Port`] = env.RandomPort
-    env.DockerImageName = `ghcr.io/${env.LowercaseOrg}/${env.LowercaseRepo}/${env.LowercaseGitHubImageNameOrProcess}:latest`
+    params[`${instance}${process}Port`] = params.randomPort
+    params.dockerImageName = `ghcr.io/${params.lowercaseOrg}/${params.lowercaseRepo}/${params.lowercaseGitHubImageNameOrProcess}:latest`
     if ((process.includes("Site") && !process.includes("Api")) || isFile("./Site")) {
-        if (!env.AuthSecret) env.AuthSecret = "auth_secret"
-        if (!env.KeycloakIssuer) env.KeycloakIssuer = "https://accounts.example.com/realm/Production"
+        if (!params.authSecret) params.authSecret = "auth_secret"
+        if (!params.keycloakIssuer) params.keycloakIssuer = "https://accounts.example.com/realm/Production"
         generateCompose("MultitenantSite")
     } else if (process === "Accounts") {
         getRandomPort(`${instance}AccountsDatabaseRandomPort`)
@@ -61,10 +61,10 @@ export default params => {
     for (const tenant of tenants) {
         let tenantName, domain, locales, defaultLocale, roles
         if (tenant.length === 5) {
-            ;[tenantName, domain, locales, defaultLocale, roles] = tenant
+            [tenantName, domain, locales, defaultLocale, roles] = tenant
             roles = `${roles}`.split(",")
         } else if (tenant.length === 4) {
-            ;[tenantName, domain, locales, defaultLocale] = tenant
+            [tenantName, domain, locales, defaultLocale] = tenant
             roles = []
         } else {
             error(`Incomplete tenant line: ${tenant.join(" ")}`)
@@ -77,55 +77,106 @@ export default params => {
             else if (roles.length && roles.includes(role)) generateNginx = true
             if (!generateNginx) continue
         }
-        env.Tenant = tenantName
-        env.Domain = domain
-        env.Locales = locales
-        env.DefaultLocale = defaultLocale
-        for (const cfg of ["HttpsRedirect", "Certificate", "Listen", "Proxy"]) generateNginxConfig(cfg)
+        params.tenant = tenantName
+        params.domain = domain
+        params.locales = locales
+        params.defaultLocale = defaultLocale
+        for (const cfg of ["HttpsRedirect", "Certificate", "Listen", "Proxy"]) generateNginxConfig({
+            ...params,
+            file: cfg
+        })
         if (isFile("./HasBasicAuth")) {
             execSync(
-                `htpasswd -b -c /${instance}/${process}/BasicAuth "${env.BasicAuthUsername}" "${env.BasicAuthPassword}"`,
+                `htpasswd -b -c /${instance}/${process}/BasicAuth "${params.basicAuthUsername}" "${params.basicAuthPassword}"`,
                 { stdio: "inherit", shell: "/bin/bash" }
             )
-            generateNginxConfig("BasicAuth")
+            generateNginxConfig({
+                ...params,
+                file: "BasicAuth"
+            })
         }
         if ((process.includes("Site") && !process.includes("Api")) || isFile("./Site")) {
-            generateNginxConfig("MultitenantWwwRedirect")
-            generateNginxConfig("Compression")
+            generateNginxConfig({
+                ...params,
+                file: "MultitenantWwwRedirect"
+            })
+            generateNginxConfig({
+                ...params,
+                file: "Compression"
+            })
             if (isFile("./WithCache")) {
-                generateNginxConfig("MultitenantCacheConfig")
-                generateNginxConfig("MultitenantCacheUsage")
-                generateNginxConfig("MultitenantSiteWithCache")
+                generateNginxConfig({
+                    ...params,
+                    file: "MultitenantCacheConfig"
+                })
+                generateNginxConfig({
+                    ...params,
+                    file: "MultitenantCacheUsage"
+                })
+                generateNginxConfig({
+                    ...params,
+                    file: "MultitenantSiteWithCache"
+                })
                 fs.mkdirSync("Cache", { recursive: true })
                 fs.chmodSync("Cache", 0o777)
             } else {
-                generateNginxConfig("MultitenantSite")
+                generateNginxConfig({
+                    ...params,
+                    file: "MultitenantSite"
+                })
             }
         } else if (process === "Accounts") {
-            generateNginxConfig("MultitenantAccounts")
+            generateNginxConfig({
+                ...params,
+                file: "MultitenantAccounts"
+            })
         } else if (process === "Search") {
-            generateNginxConfig("MultitenantSearch")
+            generateNginxConfig({
+                ...params,
+                file: "MultitenantSearch"
+            })
         } else if (process === "Push") {
-            generateNginxConfig("MultitenantPush")
+            generateNginxConfig({
+                ...params,
+                file: "MultitenantPush"
+            })
         } else if (process === "Crawl") {
-            generateNginxConfig("MultitenantCrawl")
+            generateNginxConfig({
+                ...params,
+                file: "MultitenantCrawl"
+            })
         } else if (process.includes("Panel")) {
-            generateNginxConfig("MultitenantApiAndPanel")
+            generateNginxConfig({
+                ...params,
+                file: "MultitenantApiAndPanel"
+            })
         } else if (process.includes("Api")) {
-            generateNginxConfig("MultitenantApiAndPanel")
+            generateNginxConfig({
+                ...params,
+                file: "MultitenantApiAndPanel"
+            })
         } else if (process === "Databases") {
             if (isFile(`/${instance}/Databases/Mongo`)) {
-                generateNginxConfig("MultitenantMongoDatabases")
+                generateNginxConfig({
+                    ...params,
+                    file: "MultitenantMongoDatabases"
+                })
             } else {
-                generateNginxConfig("MultitenantDatabases")
+                generateNginxConfig({
+                    ...params,
+                    file: "MultitenantDatabases"
+                })
             }
         } else if (process === "Storage") {
             const result = execSync(
                 `cat /${instance}/SiteApi/docker-compose.yml | grep :5000 | cut -d ':' -f2 | cut -d '-' -f2`,
                 { encoding: "utf8", shell: "/bin/bash" }
             ).trim()
-            env.RandomPort = result
-            generateNginxConfig("MultitenantStorage")
+            params.randomPort = result
+            generateNginxConfig({
+                ...params,
+                file: "MultitenantStorage"
+            })
         } else {
             warning(`${process} is unknown`)
         }
