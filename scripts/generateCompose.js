@@ -28,6 +28,7 @@ export default params => {
     getFileAndParams(params)
     const {
         file,
+        home,
         isDev,
         processPath,
     } = params
