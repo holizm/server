@@ -1,32 +1,32 @@
 services:
     api:
-        image: $DockerImageName
-        container_name: $Instance$Process
-        hostname: $Instance$Process
-        working_dir: /$Repository/$Process
+        image: $dockerImageName
+        container_name: ${instance}${process}
+        hostname: ${instance}${process}
+        working_dir: /${repo}/${process}
         environment:
-            - Organization=$Organization
-            - Repository=$Repository
-            - Instance=$Instance
-            - Process=$Process
-            - ApiOrganization=${Organization}
-            - ApiRepository=${Repository}
-            - ApiInstance=${Instance}
-            - ApiProcess=${Process}
-            - ApiProcessPath=${ProcessPath}
+            - org=${org}
+            - repo=${repo}
+            - instance=${instance}
+            - process=${process}
+            - apiOrg=${org}
+            - apiRepo=${repo}
+            - apiInstance=${instance}
+            - apiProcess=${process}
+            - apiProcessPath=${ProcessPath}
         volumes:
-            - /$Instance/Storage:/Storage
-            - /$Instance/Tenants:/$Repository/Common/Tenants
-            - /$Instance/Common/PublicSettings.json:/$Repository/$GitHubImageNameOrProcess/PublicSettings.json
-            - /$Instance/Common/Settings.json:/$Repository/$GitHubImageNameOrProcess/Settings.json
-            - /$Instance/Common/ConnectionStrings.json:/$Repository/$GitHubImageNameOrProcess/ConnectionStrings.json
-            - /$Instance/$Process/SettingsOverride.json:/$Repository/$GitHubImageNameOrProcess/SettingsOverride.json
+            - /${instance}/storage:/storage
+            - /${instance}/tenants:/${repo}/common/tenants
+            - /${instance}/common/publicSettings.json:/${repo}/${gitHubImageNameOrProcess}/publicSettings.json
+            - /${instance}/common/privateSettings.json:/${repo}/${gitHubImageNameOrProcess}/privateSettings.json
+            - /${instance}/common/connectionStrings.json:/${repo}/${gitHubImageNameOrProcess}/connectionStrings.json
+            - /${instance}/${process}/settingsOverride.json:/${repo}/${gitHubImageNameOrProcess}/settingsOverride.json
         ports:
-            - 127.0.0.1:$RandomPort:5000
+            - 127.0.0.1:${randomPort}:5000
         restart: always
         networks:
-            - ${Instance}Network
+            - ${instance}Network
 networks:
-    ${Instance}Network:
-        name: ${Instance}Network
+    ${instance}Network:
+        name: ${instance}Network
         driver: bridge

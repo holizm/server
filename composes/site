@@ -1,31 +1,31 @@
 services:
     site:
-        image: $DockerImageName
-        container_name: $Instance$Process
-        hostname: $Instance$Process
+        image: $dockerImageName
+        container_name: ${instance}${process}
+        hostname: ${instance}${process}
         environment:
-            - AUTH_SECRET=$AuthSecret
-            - KEYCLOAK_CLIENT_SECRET=$KeycloakClientSecret
-            - KEYCLOAK_ISSUER=$KeycloakIssuer
+            - AUTH_SECRET=${authSecret}
+            - KEYCLOAK_CLIENT_SECRET=${keycloakClientSecret}
+            - KEYCLOAK_ISSUER=${keycloakIssuer}
             - PROTOCOL_HEADER=x-forwarded-proto
             - HOST_HEADER=x-forwarded-host
-            - Organization=$Organization
-            - Repository=$Repository
-            - Instance=$Instance
-            - Process=$Process
+            - org=${org}
+            - repo=${repo}
+            - instance=${instance}
+            - process=${process}
         volumes:
-            - /$Instance/Tenants:/$Repository/$GitHubImageNameOrProcess/dist/Tenants
-            - /$Instance/Common/PrivateSettings.json:/$Repository/$GitHubImageNameOrProcess/PrivateSettings.json
-            - /$Instance/Common/PublicSettings.json:/$Repository/$GitHubImageNameOrProcess/dist/PublicSettings.json
-            - /$Instance/$Process/SettingsOverride.json:/$Repository/$GitHubImageNameOrProcess/dist/SettingsOverride.json
-            - /$Instance/$Process:/NginxCache
-            - /HolismHolding/Server/Machine.json:/Machine.json
+            - /${instance}/tenants:/${repo}/${gitHubImageNameOrProcess}/dist/tenants
+            - /${instance}/common/privateSettings.json:/${repo}/${gitHubImageNameOrProcess}/privateSettings.json
+            - /${instance}/common/publicSettings.json:/${repo}/${gitHubImageNameOrProcess}/dist/publicSettings.json
+            - /${instance}/${process}/settingsOverride.json:/${repo}/${gitHubImageNameOrProcess}/dist/settingsOverride.json
+            - /${instance}/${process}:/nginxCache
+            - ${environmentRoot}/server/machine.json:/machine.json
         ports:
-            - 127.0.0.1:$RandomPort:3000
+            - 127.0.0.1:${randomPort}:3000
         restart: always
         networks:
-            - ${Instance}Network
+            - ${instance}Network
 networks:
-    ${Instance}Network:
-        name: ${Instance}Network
+    ${instance}Network:
+        name: ${instance}Network
         driver: bridge

@@ -1,19 +1,19 @@
 services:
     database:
         image: mongo:latest
-        container_name: ${Instance}Databases
-        hostname: ${Instance}Databases
+        container_name: ${instance}Databases
+        hostname: ${instance}Databases
         volumes:
-            - /${Instance}/Databases/Data:/data/db
+            - /${instance}/databases/data:/data/db
         environment:
-            - MONGO_INITDB_ROOT_USERNAME=$${Process}User
-            - MONGO_INITDB_ROOT_PASSWORD=$${Process}Password
+            - MONGO_INITDB_ROOT_USERNAME=${process}User
+            - MONGO_INITDB_ROOT_PASSWORD=${process}Password
         ports:
-            - $$Process:27017
+            - ${process}:27017
         logging:
             driver: none
         networks:
-            - ${Instance}Network
+            - ${instance}Network
         # command: ["--replSet", "rs0"]
         restart: always
         healthcheck:
@@ -23,6 +23,6 @@ services:
             retries: 5
 
 networks:
-    ${Instance}Network:
-        name: ${Instance}Network
+    ${instance}Network:
+        name: ${instance}Network
         driver: bridge

@@ -1,4 +1,5 @@
 import fs from 'fs'
+import path from 'path'
 import { runOnTerminal } from './terminal.js'
 
 export const isFile = path => {
