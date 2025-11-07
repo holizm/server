@@ -63,7 +63,6 @@ export default params => {
     params.originalProcessPath = `${home}/${repo}/${process}`
     params.level = depth === 1 ? "instance" : "process"
 
-    divide()
     success(`Organization: ${org}`)
     success(`Repository: ${repo}`)
     success(`Instance: ${instance}`)

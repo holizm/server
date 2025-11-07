@@ -1,20 +1,22 @@
 #!/usr/bin/env node
 
-import { ensure } from "../scripts/ensure.js"
+import { ensure } from '../scripts/ensure.js'
 import {
     getDirs,
     isFile,
     getLines,
     isDev,
-} from "../scripts/os.js"
-import { errorAndExit } from "../scripts/logger.js"
-import loadParams from "../scripts/loadParams.js"
-import { info } from "../scripts/logger.js"
-import generateForDirectory from "../scripts/generateForDirectory.js"
-import extract from "../scripts/extract.js"
+} from '../scripts/os.js'
+import { divide, errorAndExit } from '../scripts/logger.js'
+import loadParams from '../scripts/loadParams.js'
+import { info } from '../scripts/logger.js'
+import generateForDirectory from '../scripts/generateForDirectory.js'
+import extract from '../scripts/extract.js'
+
+const excludedDirs = ['NA', '.vscode']
 
 const findDirectories = (filter, exact) => {
-    const dirs = getDirs()
+    const dirs = getDirs().filter(d => !excludedDirs.includes(d))
     if (!filter) return dirs.sort()
     const f = filter.replaceAll('/', '')
     return dirs.filter(d => exact ? d === f : d.includes(f)).sort()
@@ -54,7 +56,9 @@ params.isDev = isDev()
 for (const directory of directories) {
     const p = `${baseDir}/${directory}`
     process.chdir(p)
+    divide()
     info(directory)
+    divide()
     generateForDirectory({
         ...params,
         tenants,
