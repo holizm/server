@@ -1,5 +1,6 @@
-import fs from "fs"
-import path from "path"
+import fs from 'fs'
+import path from 'path'
+import { replaceVariables } from './os.js'
 
 const getFileAndParams = params => {
     const {
@@ -72,23 +73,17 @@ const getFileAndParams = params => {
     }
 }
 
-const replaceVariables = s => {
-    if (typeof s !== "string") return s
-    s = s.replace(/\$\{([A-Za-z_][A-Za-z0-9_]*)\}/g, (m, v) => (process.env[v] !== undefined ? String(process.env[v]) : m))
-    s = s.replace(/\$([A-Za-z_][A-Za-z0-9_]*)/g, (m, v) => (process.env[v] !== undefined ? String(process.env[v]) : m))
-    return s
-}
-
 export default params => {
+    getFileAndParams(params)
     const includes = [
-        "certificate",
-        "compression",
-        "httpsRedirect",
-        "multitenantWwwRedirect",
-        "listen",
-        "proxy",
-        "multitenantCacheConfig",
-        "multitenantCacheUsage"
+        'certificate',
+        'compression',
+        'httpsRedirect',
+        'multitenantWwwRedirect',
+        'listen',
+        'proxy',
+        'multitenantCacheConfig',
+        'multitenantCacheUsage'
     ]
     const {
         file,
@@ -102,12 +97,12 @@ export default params => {
         processPath,
         locales,
     } = params
-    const localesList = locales.split(",").map(s => s.trim()).filter(Boolean)
-    const localesRegex = localesList.join("|")
+    const localesList = locales.split(',').map(s => s.trim()).filter(Boolean)
+    const localesRegex = localesList.join('|')
     const isAnInclude = includes.includes(file)
-    const cleanedFileName = isAnInclude ? file.replace("Multitenant", "") : ""
+    const cleanedFileName = isAnInclude ? file.replace('Multitenant', '') : ''
     const nginxFilePath = isAnInclude ? `${processPath}/nginx/${tenant}/${cleanedFileName}` : `${processPath}/nginx/${tenant}/${subdomain}${domain}.conf`
-    const sourceDirectory = `${isDev ? home : "/gesht"}/server/webServer`
+    const sourceDirectory = `${isDev ? home : '/gesht'}/server/webServer`
     const sourceFile = path.join(sourceDirectory, file)
     const tempFile = `${nginxFilePath}.temp`
     replaceVariables(getContent(sourceFile))
