@@ -23,51 +23,7 @@ export default params => {
     calculateSubdomain(params)
     params[`${instance}${pascalize(process)}Port`] = params.randomPort
     params.dockerImageName = `ghcr.io/${params.lowercaseOrg}/${params.lowercaseRepo}/${params.lowercaseGitHubImageNameOrProcess}:latest`
-    if (process === 'site' || isFile('./site')) {
-        if (!params.authSecret) params.authSecret = 'auth_secret'
-        if (!params.keycloakIssuer) params.keycloakIssuer = 'https://accounts.example.com/realm/production'
-        generateCompose({
-            ...params,
-            file: 'site',
-        })
-    } else if (process === 'accounts') {
-        getRandomPort(`${instance}AccountsDatabaseRandomPort`)
-        getRandomPort(`${instance}AccountsAdminerRandomPort`)
-        generateCompose({
-            ...params,
-            file: 'accounts',
-        })
-    } else if (process === 'search') {
-        generateCompose({
-            ...params,
-            file: 'search',
-        })
-    } else if (process === 'crawl') {
-        generateCompose({
-            ...params,
-            file: 'crawl',
-        })
-    } else if (process === 'push') {
-        generateCompose({
-            ...params,
-            file: 'push',
-        })
-    } else if (process.endsWith('Panel')) {
-        generateCompose({
-            ...params,
-            file: 'panel',
-        })
-    } else if (process.endsWith('Api')) {
-        generateCompose({
-            ...params,
-            file: 'api',
-        })
-    } else if (process === 'databases') {
-        generateCompose({
-            ...params,
-            file: 'databases',
-        })
-    }
+    generateCompose(params)
     for (const tenant of tenants) {
         let tenantName, domain, locales, defaultLocale, roles
         if (tenant.length === 5) {
