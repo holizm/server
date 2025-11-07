@@ -5,14 +5,8 @@ import extract from './extract.js'
 import calculateSubdomain from './calculateSubdomain.js'
 import getRandomPort from './getRandomPort.js'
 import generateNginxConfig from './generateNginxConfig.js'
-import generateCompose {
-    ...params,
-        file: from './g,
-} enerateCompose.{
-    ...params,
-        file: js'
-            ,
-} import { isFile } from './os.js'
+import generateCompose from './generateCompose.js'
+import { isFile } from './os.js'
 import pascalize from './pascalize.js'
 
 export default params => {
@@ -58,12 +52,12 @@ export default params => {
             ...params,
             file: 'push',
         })
-    } else if (process.includes('panel')) {
+    } else if (process.endsWith('Panel')) {
         generateCompose({
             ...params,
             file: 'panel',
         })
-    } else if (process.includes('api')) {
+    } else if (process.endsWith('Api')) {
         generateCompose({
             ...params,
             file: 'api',
@@ -166,12 +160,12 @@ export default params => {
                 ...params,
                 file: 'crawl'
             })
-        } else if (process.includes('panel')) {
+        } else if (process.endsWith('panel')) {
             generateNginxConfig({
                 ...params,
                 file: 'apiAndPanel'
             })
-        } else if (process.includes('api')) {
+        } else if (process.endsWith('api')) {
             generateNginxConfig({
                 ...params,
                 file: 'apiAndPanel'

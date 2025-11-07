@@ -1,0 +1,12 @@
+services:
+    search:
+        image: getmeili/meilisearch:latest
+        container_name: ${Instance}Search
+        hostname: ${Instance}Search
+        ports:
+            - 127.0.0.1:$RandomPort:7700
+        environment:
+            - MEILI_MASTER_KEY=$SearchMasterKey
+        volumes:
+            - /$Instance/Search/Databases:/meili_data
+        restart: always

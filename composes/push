@@ -1,0 +1,9 @@
+services:
+    accounts:
+        image: holism/push
+        container_name: Push
+        working_dir: /HolismHolding/Push
+        ports:
+            - 127.0.0.1:${RandomPort}:3000
+        restart: always
+        command: node Server.js

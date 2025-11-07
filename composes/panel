@@ -1,0 +1,22 @@
+services:
+    panel:
+        image: $DockerImageName
+        container_name: $Instance$Process
+        hostname: $Instance$Process
+        environment:
+            - Organization=$Organization
+            - Repository=$Repository
+            - Instance=$Instance
+            - Process=$Process
+        volumes:
+            - /$Instance/Common/PublicSettings.json:/$Repository/$GitHubImageNameOrProcess/Settings.json
+            - /$Instance/$Process/SettingsOverride.json:/$Repository/$GitHubImageNameOrProcess/SettingsOverride.json
+        ports:
+            - 127.0.0.1:$RandomPort:3000
+        restart: always
+        networks:
+            - ${Instance}Network
+networks:
+    ${Instance}Network:
+        name: ${Instance}Network
+        driver: bridge

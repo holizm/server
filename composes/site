@@ -1,0 +1,31 @@
+services:
+    site:
+        image: $DockerImageName
+        container_name: $Instance$Process
+        hostname: $Instance$Process
+        environment:
+            - AUTH_SECRET=$AuthSecret
+            - KEYCLOAK_CLIENT_SECRET=$KeycloakClientSecret
+            - KEYCLOAK_ISSUER=$KeycloakIssuer
+            - PROTOCOL_HEADER=x-forwarded-proto
+            - HOST_HEADER=x-forwarded-host
+            - Organization=$Organization
+            - Repository=$Repository
+            - Instance=$Instance
+            - Process=$Process
+        volumes:
+            - /$Instance/Tenants:/$Repository/$GitHubImageNameOrProcess/dist/Tenants
+            - /$Instance/Common/PrivateSettings.json:/$Repository/$GitHubImageNameOrProcess/PrivateSettings.json
+            - /$Instance/Common/PublicSettings.json:/$Repository/$GitHubImageNameOrProcess/dist/PublicSettings.json
+            - /$Instance/$Process/SettingsOverride.json:/$Repository/$GitHubImageNameOrProcess/dist/SettingsOverride.json
+            - /$Instance/$Process:/NginxCache
+            - /HolismHolding/Server/Machine.json:/Machine.json
+        ports:
+            - 127.0.0.1:$RandomPort:3000
+        restart: always
+        networks:
+            - ${Instance}Network
+networks:
+    ${Instance}Network:
+        name: ${Instance}Network
+        driver: bridge

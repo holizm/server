@@ -41,7 +41,7 @@ export default params => {
     }
 
     const process = depth === 4 ? path.posix.basename(directoryPath) : "NA"
-    const role = (process.includes("Panel") || process.includes("Api")) && !process.includes("Site") ? process.replace("Panel", "").replace("Api", "") : null
+    const role = ((process.endsWith("Panel") || process.endsWith("Api")) && process !== 'site') ? process.replace("Panel", "").replace("Api", "") : null
     const githubImageName = getContent("./gitHubImageName")
     const githubImageNameOrProcess = githubImageName || process
 
