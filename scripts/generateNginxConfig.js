@@ -1,7 +1,78 @@
 import fs from "fs"
 import path from "path"
 
-const expandEnv = s => {
+const getFileAndParams = params => {
+    const {
+        tenants,
+        process,
+        isDev,
+        home,
+    } = params
+    for (const tenant of tenants) {
+        let tenantName, domain, locales, defaultLocale, roles
+        if (tenant.length === 5) {
+            [tenantName, domain, locales, defaultLocale, roles] = tenant
+            roles = `${roles}`.split(',')
+        } else if (tenant.length === 4) {
+            [tenantName, domain, locales, defaultLocale] = tenant
+            roles = []
+        } else {
+            error(`Incomplete tenant line: ${tenant.join(' ')}`)
+            continue
+        }
+        if (process.endsWith('Panel') || process.endsWith('Api')) {
+            let generateNginx = false
+            if (process === 'siteApi') generateNginx = true
+            else if (role === 'admin' || role === 'site') generateNginx = true
+            else if (roles.length && roles.includes(role)) generateNginx = true
+            if (!generateNginx) continue
+        }
+        params.tenant = tenantName
+        params.domain = domain
+        params.locales = locales
+        params.defaultLocale = defaultLocale
+        for (const cfg of [
+            'httpsRedirect',
+            'certificate',
+            'listen',
+            'proxy'
+        ]) params.file = cfg
+        if (isFile('./hasBasicAuth')) {
+            execSync(
+                `htpasswd -b -c /${instance}/${process}/basicAuth '${params.basicAuthUsername}' '${params.basicAuthPassword}'`,
+                { stdio: 'inherit', shell: '/bin/bash' }
+            )
+            params.file = 'basicAuth'
+        }
+        if (process === 'site' || isFile('./site')) {
+            params.file = 'wwwRedirect'
+            params.file = 'compression'
+            if (isFile('./withCache')) {
+                params.file = 'cacheConfig'
+                params.file = 'cacheUsage'
+                params.file = 'siteWithCache'
+                fs.mkdirSync('cache', { recursive: true })
+                fs.chmodSync('cache', 0o777)
+            } else {
+                params.file = 'site'
+            }
+        } else if (process.endsWith('panel')) {
+            params.file = 'apiAndPanel'
+        } else if (process.endsWith('api')) {
+            params.file = 'apiAndPanel'
+        } else if (process === 'storage') {
+            const result = runOnTerminal(
+                `cat /${instance}/siteApi/compose.yaml | grep :5000 | cut -d ':' -f2 | cut -d '-' -f2`,
+            ).trim()
+            params.randomPort = result
+            params.file = 'storage'
+        } else {
+            params.file = process
+        }
+    }
+}
+
+const replaceVariables = s => {
     if (typeof s !== "string") return s
     s = s.replace(/\$\{([A-Za-z_][A-Za-z0-9_]*)\}/g, (m, v) => (process.env[v] !== undefined ? String(process.env[v]) : m))
     s = s.replace(/\$([A-Za-z_][A-Za-z0-9_]*)/g, (m, v) => (process.env[v] !== undefined ? String(process.env[v]) : m))
@@ -36,32 +107,10 @@ export default params => {
     const isAnInclude = includes.includes(file)
     const cleanedFileName = isAnInclude ? file.replace("Multitenant", "") : ""
     const nginxFilePath = isAnInclude ? `${processPath}/nginx/${tenant}/${cleanedFileName}` : `${processPath}/nginx/${tenant}/${subdomain}${domain}.conf`
-    params.nginxFilePath = nginxFilePath
-    params.nginxParamsServerName = "$nginxParamsServerName"
-    params.nginxParamsRequestUri = "$nginxParamsRequestUri"
-    params.nginxParamsHost = "$nginxParamsHost"
-    params.nginxParamsScheme = "$nginxParamsScheme"
-    params.nginxParamsFor = "$nginxParamsFor"
-    params.nginxParamsPort = "$nginxParamsPort"
-    params.nginxParamsUpgrade = "$nginxParamsUpgrade"
-    params.nginxParamsRequestMethod = "$nginxParamsRequestMethod"
-    params.nginxParamsUpstream = "$nginxParamsUpstream"
     const sourceDirectory = `${isDev ? home : "/gesht"}/server/webServer`
     const sourceFile = path.join(sourceDirectory, file)
     const tempFile = `${nginxFilePath}.temp`
-    fs.mkdirSync(path.dirname(nginxFilePath), { recursive: true })
-    const first = expandEnv(fs.readFileSync(sourceFile, "utf8"))
-    fs.writeFileSync(tempFile, first, "utf8")
-    params.nginxParamsServerName = "$server_name"
-    params.nginxParamsRequestUri = "$request_uri"
-    params.nginxParamsHost = "$host"
-    params.nginxParamsScheme = "$scheme"
-    params.nginxParamsFor = "$proxy_add_x_forwarded_for"
-    params.nginxParamsPort = "$proxy_port"
-    params.nginxParamsUpgrade = "$http_upgrade"
-    params.nginxParamsRequestMethod = "$request_method"
-    params.nginxParamsUpstream = "$upstream_cache_status"
-    const final = expandEnv(fs.readFileSync(tempFile, "utf8"))
-    fs.writeFileSync(nginxFilePath, final, "utf8")
+    replaceVariables(getContent(sourceFile))
+    replaceVariables(getContent(tempFile))
     fs.unlinkSync(tempFile)
 }
