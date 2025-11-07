@@ -11,6 +11,7 @@ import { errorAndExit } from "../scripts/logger.js"
 import loadParams from "../scripts/loadParams.js"
 import { info } from "../scripts/logger.js"
 import generateForDirectory from "../scripts/generateForDirectory.js"
+import extract from "../scripts/extract.js"
 
 const findDirectories = (filter, exact) => {
     const dirs = getDirs()
@@ -61,5 +62,5 @@ for (const directory of directories) {
     process.chdir(baseDir)
 }
 
-extract()
-generateBackupAndRestore()
+extract(params)
+generateBackupAndRestore(params)
