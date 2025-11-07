@@ -22,7 +22,7 @@ const formatError = (err) => {
     return out
 }
 
-const log = (color, ...args) => {
+const log = (color, toStderr, ...args) => {
     const stack = getStack()
     const colorCodeStart = color
     const colorCodeReset = '\x1b[0m'
@@ -35,23 +35,29 @@ const log = (color, ...args) => {
             return String(arg)
         }
     }).join(" ")
-    console.log(`${colorCodeStart}${message}${colorCodeReset}`)
+
+    const output = `${colorCodeStart}${message}${colorCodeReset}`
+    if (toStderr) {
+        console.error(output)
+    } else {
+        console.log(output)
+    }
 }
 
 export const success = (...args) => {
-    log('\x1b[32m', ...args)
+    log('\x1b[32m', false, ...args)
 }
 
 export const info = (...args) => {
-    log('\x1b[36m', ...args)
+    log('\x1b[36m', false, ...args)
 }
 
 export const warning = (...args) => {
-    log('\x1b[33m', ...args)
+    log('\x1b[33m', false, ...args)
 }
 
 export const error = (...args) => {
-    log('\x1b[31m', ...args)
+    log('\x1b[31m', true, ...args)
 }
 
 export const errorAndExit = (...args) => {
@@ -64,14 +70,15 @@ export const check = (...args) => {
     log('\x1b[32m', ...args, checkMark)
 }
 
-export const divide = () => {
-    console.log()
-    console.log('\x1b[35m----------\x1b[0m')
-    console.log()
+export const divide = (toStderr) => {
+    const func = toStderr ? console.error : console.log
+    func()
+    func('\x1b[35m----------\x1b[0m')
+    func()
 }
 
 export const dividedError = (...args) => {
-    divide()
+    divide(true)
     error(...args)
-    divide()
+    divide(true)
 }
