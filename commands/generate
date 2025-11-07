@@ -55,6 +55,8 @@ params.home = process.env.HOME
 params.isDev = isDev()
 for (const directory of directories) {
     const p = `${baseDir}/${directory}`
+    params.directory = directory
+    params.directoryPath = p
     process.chdir(p)
     divide()
     info(directory)
