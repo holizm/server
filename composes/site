@@ -1,8 +1,8 @@
 services:
     site:
-        image: $dockerImageName
-        container_name: ${instance}${process}
-        hostname: ${instance}${process}
+        image: ${dockerImageName}
+        container_name: ${instance}${pascalizedProcess}
+        hostname: ${instance}${pascalizedProcess}
         environment:
             - AUTH_SECRET=${authSecret}
             - KEYCLOAK_CLIENT_SECRET=${keycloakClientSecret}

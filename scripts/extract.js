@@ -6,6 +6,7 @@ import {
     success,
 } from "../scripts/logger.js"
 import { getContent } from "./os.js"
+import pascalize from "./pascalize.js"
 
 export default params => {
     const {
@@ -59,6 +60,7 @@ export default params => {
     params.lowercaseInstance = instance.toLowerCase()
     params.lowercaseProcess = process.toLowerCase()
     params.lowercaseRole = role ? role.toLowerCase() : ""
+    params.pascalizedProcess = pascalize(params.process)
     params.instancePath = `${home}/${instance}`
     params.processPath = `${home}/${instance}/${process}`
     params.originalProcessPath = `${home}/${repo}/${process}`

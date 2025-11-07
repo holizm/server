@@ -1,8 +1,8 @@
 services:
     api:
-        image: $dockerImageName
-        container_name: ${instance}${process}
-        hostname: ${instance}${process}
+        image: ${dockerImageName}
+        container_name: ${instance}${pascalizedProcess}
+        hostname: ${instance}${pascalizedProcess}
         working_dir: /${repo}/${process}
         environment:
             - org=${org}
