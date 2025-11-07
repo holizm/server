@@ -1,5 +1,5 @@
 server {
     listen 80;
-    server_name $subdomain$domain;
-    return 301 https://$nginxParamsServerName$nginxParamsRequestUri;
+    server_name ${subdomain}${domain};
+    return 301 https://$server_name$request_uri;
 }

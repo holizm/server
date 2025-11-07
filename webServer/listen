@@ -1,2 +1,2 @@
 listen 443 http2 ssl;
-server_name $subdomain$domain;
+server_name ${subdomain}${domain};
