@@ -13,7 +13,15 @@ import { info } from '../scripts/logger.js'
 import generateForDirectory from '../scripts/generateForDirectory.js'
 import extract from '../scripts/extract.js'
 
-const excludedDirs = ['NA', '.vscode']
+const excludedDirs = [
+    '.vscode',
+    'backup',
+    'backupDirectory',
+    'common',
+    'NA',
+]
+
+const getDepth = path => (path.match(/\//g) || []).length
 
 const findDirectories = (filter, exact) => {
     const dirs = getDirs().filter(d => !excludedDirs.includes(d))
@@ -22,12 +30,13 @@ const findDirectories = (filter, exact) => {
     return dirs.filter(d => exact ? d === f : d.includes(f)).sort()
 }
 
-const validateDepth = () => {
-    const cwd = process.cwd()
-    if (cwd === '/') {
+const validateDepth = params => {
+    const { baseDir } = params
+    if (baseDir === '/') {
         errorAndExit('Can not be executed from the root')
     }
-    const depth = (cwd.match(/\//g) || []).length
+    const depth = getDepth(baseDir)
+    params.depth = depth
     if (depth !== 3) {
         errorAndExit('This command must be run from depth 3 (i.e. ~/instance)')
     }
@@ -35,31 +44,31 @@ const validateDepth = () => {
 
 const readTenants = () => {
     const tenantsFile = 'tenants'
-    ensure(isFile(tenantsFile), 'Tenants file not found in the current directory')
+    ensure(isFile(tenantsFile), 'Tenants file not found in the current directoryName')
     const tenants = getLines(tenantsFile).map(l => l.split(/\s+/))
     return tenants
 }
+const baseDir = process.cwd()
+const params = loadParams(baseDir)
+params.baseDir = baseDir
+params.home = process.env.HOME
+params.isDev = isDev()
 
-validateDepth()
+validateDepth(params)
 
 const args = process.argv.slice(2)
 const filterValue = args[0] || ''
 const exactMatch = args.length > 1 && String(args[1]).toLowerCase() === 'only'
 const directories = findDirectories(filterValue, exactMatch)
 const tenants = readTenants()
-
-const baseDir = process.cwd()
-const params = loadParams(baseDir)
-params.baseDir = baseDir
-params.home = process.env.HOME
-params.isDev = isDev()
-for (const directory of directories) {
-    const p = `${baseDir}/${directory}`
-    params.directory = directory
+for (const directoryName of directories) {
+    const p = `${baseDir}/${directoryName}`
+    params.directoryName = directoryName
     params.directoryPath = p
+    params.depth = getDepth(params.directoryPath)
     process.chdir(p)
     divide()
-    info(directory)
+    info(directoryName)
     divide()
     generateForDirectory({
         ...params,

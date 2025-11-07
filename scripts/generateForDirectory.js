@@ -19,8 +19,6 @@ export default params => {
         process,
         instance,
     } = params
-    if (process === 'common') return
-    if (process.includes('backup')) return
     calculateSubdomain(params)
     params[`${instance}${process}Port`] = params.randomPort
     params.dockerImageName = `ghcr.io/${params.lowercaseOrg}/${params.lowercaseRepo}/${params.lowercaseGitHubImageNameOrProcess}:latest`

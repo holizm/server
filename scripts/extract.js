@@ -9,14 +9,15 @@ import { getContent } from "./os.js"
 
 export default params => {
     const {
-        baseDir,
+        depth,
+        directoryPath,
         home,
     } = params
-    if (baseDir === "/") {
+
+    if (directoryPath === "/") {
         errorAndExit("Can not be executed from the root")
     }
 
-    const depth = (baseDir.match(/\//g) || []).length
     if (depth > 4) {
         errorAndExit(`You are ${depth} levels deep. This command can only be executed for the first and second levels of depth. That is, from ~/instance, or ~/instance/process.`)
     }
@@ -26,7 +27,7 @@ export default params => {
         errorAndExit("Invalid organization. Organization name should start with an lowercase letter.")
     }
 
-    const parts = baseDir.split("/")
+    const parts = directoryPath.split("/")
     const instance = parts[3] || ""
     if (!instance || !/^[a-z]/.test(instance)) {
         errorAndExit("Invalid instance. Instance name should start with an lowercase letter.")
@@ -39,7 +40,7 @@ export default params => {
         errorAndExit("Invalid repository. Repository name should start with an lowercase letter.")
     }
 
-    const process = depth === 4 ? path.posix.basename(baseDir) : "NA"
+    const process = depth === 4 ? path.posix.basename(directoryPath) : "NA"
     const role = (process.includes("Panel") || process.includes("Api")) && !process.includes("Site") ? process.replace("Panel", "").replace("Api", "") : null
     const githubImageName = getContent("./gitHubImageName")
     const githubImageNameOrProcess = githubImageName || process
