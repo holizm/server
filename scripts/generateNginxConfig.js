@@ -21,7 +21,9 @@ export default params => {
     ]
     const {
         file,
+        home,
         instance,
+        isDev,
         process,
         tenant,
         domain,
@@ -44,7 +46,7 @@ export default params => {
     params.nginxParamsUpgrade = "$nginxParamsUpgrade"
     params.nginxParamsRequestMethod = "$nginxParamsRequestMethod"
     params.nginxParamsUpstream = "$nginxParamsUpstream"
-    const sourceDirectory = "/gesht/server/webServer"
+    const sourceDirectory = `${isDev ? home : "/gesht"}/server/webServer`
     const sourceFile = path.join(sourceDirectory, file)
     const tempFile = `${nginxFilePath}.temp`
     fs.mkdirSync(path.dirname(nginxFilePath), { recursive: true })
