@@ -20,7 +20,7 @@ export default params => {
         instance,
     } = params
     calculateSubdomain(params)
-    params[`${instance}${process}Port`] = params.randomPort
+    params[`${instance}${pascalize(process)}Port`] = params.randomPort
     params.dockerImageName = `ghcr.io/${params.lowercaseOrg}/${params.lowercaseRepo}/${params.lowercaseGitHubImageNameOrProcess}:latest`
     if ((process.includes('Site') && !process.includes('Api')) || isFile('./Site')) {
         if (!params.authSecret) params.authSecret = 'auth_secret'
