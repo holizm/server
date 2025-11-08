@@ -55,3 +55,17 @@ export const isDev = () => {
     return false
 }
 
+export const remove = p => {
+    try {
+        const st = fs.lstatSync(p, { throwIfNoEntry: false })
+        if (!st) return false
+        if (st.isDirectory() && !st.isSymbolicLink()) {
+            fs.rmSync(p, { recursive: true, force: true })
+        } else {
+            fs.rmSync(p, { force: true })
+        }
+        return true
+    } catch {
+        return false
+    }
+}

@@ -1,7 +1,7 @@
 import fs from 'fs'
-import path from 'path'
 import {
-    getContent,
+    isFile,
+    remove,
     replaceVariables,
 } from './os.js'
 
@@ -31,14 +31,16 @@ const generate = params => {
     const localesList = locales.split(',').map(s => s.trim()).filter(Boolean)
     const localesRegex = localesList.join('|')
     const isAnInclude = includes.includes(file)
-    const cleanedFileName = isAnInclude ? file.replace('Multitenant', '') : ''
-    const nginxFilePath = isAnInclude ? `${processPath}/nginx/${tenant}/${cleanedFileName}` : `${processPath}/nginx/${tenant}/${subdomain}${domain}.conf`
-    const sourceDirectory = `${isDev ? home : '/gesht'}/server/webServer`
-    const sourceFile = path.join(sourceDirectory, file)
+    const nginxFilePath = isAnInclude
+        ?
+        `${processPath}/nginx/${tenant}/${file}`
+        :
+        `${processPath}/nginx/${tenant}/${subdomain}${domain}.conf`
+    const sourceFile = `${isDev ? home : '/gesht'}/server/webServer/${file}`
     const tempFile = `${nginxFilePath}.temp`
-    replaceVariables(getContent(sourceFile))
-    replaceVariables(getContent(tempFile))
-    fs.unlinkSync(tempFile)
+    replaceVariables(sourceFile, tempFile, params)
+    replaceVariables(tempFile, nginxFilePath, params)
+    remove(tempFile)
 }
 
 export default params => {
@@ -121,12 +123,12 @@ export default params => {
                     file: 'site',
                 })
             }
-        } else if (process.endsWith('panel')) {
+        } else if (process.endsWith('Panel')) {
             generate({
                 ...params,
                 file: 'apiAndPanel',
             })
-        } else if (process.endsWith('api')) {
+        } else if (process.endsWith('Panel')) {
             generate({
                 ...params,
                 file: 'apiAndPanel',

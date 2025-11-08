@@ -12,6 +12,7 @@ import loadParams from '../scripts/loadParams.js'
 import { info } from '../scripts/logger.js'
 import generateForDirectory from '../scripts/generateForDirectory.js'
 import extract from '../scripts/extract.js'
+import { clear } from '../scripts/terminal.js'
 
 const excludedDirs = [
     '.vscode',
@@ -20,6 +21,8 @@ const excludedDirs = [
     'common',
     'NA',
 ]
+
+clear()
 
 const getDepth = path => (path.match(/\//g) || []).length
 
