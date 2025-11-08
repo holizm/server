@@ -1,22 +1,22 @@
-include ${environmentRoot}/${instance}/${process}/nginx/${tenant}/httpsRedirect;
-include ${environmentRoot}/${instance}/${process}/nginx/${tenant}/wwwRedirect;
-include ${environmentRoot}/${instance}/${process}/nginx/${tenant}/cacheConfig;
+include ${home}/${instance}/${process}/nginx/${tenant}/httpsRedirect;
+include ${home}/${instance}/${process}/nginx/${tenant}/wwwRedirect;
+include ${home}/${instance}/${process}/nginx/${tenant}/cacheConfig;
 
 server
 {
-    include ${environmentRoot}/${instance}/${process}/nginx/${tenant}/compression;
-    include ${environmentRoot}/${instance}/${process}/nginx/${tenant}/listen;
+    include ${home}/${instance}/${process}/nginx/${tenant}/compression;
+    include ${home}/${instance}/${process}/nginx/${tenant}/listen;
 
     proxy_buffers 4 16k;
     proxy_buffer_size 16k;
 
-    include ${environmentRoot}/${instance}/${process}/nginx/${tenant}/certificate;
+    include ${home}/${instance}/${process}/nginx/${tenant}/certificate;
 
     location /
     {
         proxy_pass http://localhost:${randomPort};
-        include ${environmentRoot}/${instance}/${process}/nginx/${tenant}/proxy;
-        include ${environmentRoot}/${instance}/${process}/nginx/${tenant}/cacheUsage;
+        include ${home}/${instance}/${process}/nginx/${tenant}/proxy;
+        include ${home}/${instance}/${process}/nginx/${tenant}/cacheUsage;
     }
 
     location ~ ^/(${localesRegex})(/|$)
@@ -24,7 +24,7 @@ server
         rewrite ^/(${localesRegex})/(.*)$ /$2?locale=$1 break;
         rewrite ^/(${localesRegex})$ /?locale=$1 break;
         proxy_pass http://localhost:${randomPort};
-        include ${environmentRoot}/${instance}/${process}/nginx/${tenant}/proxy;
-        include ${environmentRoot}/${instance}/${process}/nginx/${tenant}/cacheUsage;
+        include ${home}/${instance}/${process}/nginx/${tenant}/proxy;
+        include ${home}/${instance}/${process}/nginx/${tenant}/cacheUsage;
     }
 }

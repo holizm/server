@@ -10,7 +10,7 @@ server
     listen 443 http2 ssl;
     server_name www.${subdomain}${domain};
 
-    include ${environmentRoot}/${instance}/${process}/nginx/${tenant}/certificate;
+    include ${home}/${instance}/${process}/nginx/${tenant}/certificate;
 
     return 301 https://${subdomain}${domain}$NginxParamsRequestUri;
 }

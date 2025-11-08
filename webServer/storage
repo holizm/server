@@ -13,11 +13,11 @@
 #                       'args="$args" '
 #                       'status=$status';
 
-include ${environmentRoot}/${instance}/${process}/nginx/${tenant}/httpsRedirect;
+include ${home}/${instance}/${process}/nginx/${tenant}/httpsRedirect;
 
 server {
-    include ${environmentRoot}/${instance}/${process}/nginx/${tenant}/listen;
-    include ${environmentRoot}/${instance}/${process}/nginx/${tenant}/certificate;
+    include ${home}/${instance}/${process}/nginx/${tenant}/listen;
+    include ${home}/${instance}/${process}/nginx/${tenant}/certificate;
 
     location ~ \.webp$ {
         add_header X-IMAGE "true";
@@ -68,7 +68,7 @@ server {
         proxy_set_header Host $host;
         proxy_pass http://localhost:${randomPort};
         add_header Cache-Control "public, max-age=31536000, immutable";
-        include ${environmentRoot}/${instance}/${process}/nginx/${tenant}/proxy;
+        include ${home}/${instance}/${process}/nginx/${tenant}/proxy;
     }
 
     location @audioApi {
@@ -76,7 +76,7 @@ server {
         proxy_set_header Host $host;
         proxy_pass http://localhost:${randomPort};
         add_header Cache-Control "public, max-age=31536000, immutable";
-        include ${environmentRoot}/${instance}/${process}/nginx/${tenant}/proxy;
+        include ${home}/${instance}/${process}/nginx/${tenant}/proxy;
     }
 
     location @videoApi {
@@ -84,7 +84,7 @@ server {
         proxy_set_header Host $host;
         proxy_pass http://localhost:${randomPort};
         add_header Cache-Control "public, max-age=31536000, immutable";
-        include ${environmentRoot}/${instance}/${process}/nginx/${tenant}/proxy;
+        include ${home}/${instance}/${process}/nginx/${tenant}/proxy;
     }
 
     location @fileApi {
@@ -92,7 +92,7 @@ server {
         proxy_set_header Host $host;
         proxy_pass http://localhost:${randomPort};
         add_header Cache-Control "public, max-age=31536000, immutable";
-        include ${environmentRoot}/${instance}/${process}/nginx/${tenant}/proxy;
+        include ${home}/${instance}/${process}/nginx/${tenant}/proxy;
     }
 
     location = /robots.txt {
