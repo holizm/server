@@ -7,12 +7,16 @@ import {
     getLines,
     isDev,
 } from '../scripts/os.js'
-import { divide, errorAndExit } from '../scripts/logger.js'
+import {
+    divide,
+    errorAndExit,
+} from '../scripts/logger.js'
 import loadParams from '../scripts/loadParams.js'
 import { info } from '../scripts/logger.js'
 import generateForDirectory from '../scripts/generateForDirectory.js'
 import extract from '../scripts/extract.js'
 import { clear } from '../scripts/terminal.js'
+import generateBackupAndRestore from '../scripts/generateBackupAndRestore.js'
 
 const excludedDirs = [
     '.vscode',
@@ -81,5 +85,6 @@ for (const directoryName of directories) {
     process.chdir(baseDir)
 }
 
+divide()
 extract(params)
 generateBackupAndRestore(params)

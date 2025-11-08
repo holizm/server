@@ -1,2 +1,2 @@
 auth_basic "Restricted Access";
-auth_basic_user_file /${instance}/${process}/basicAuth;
+auth_basic_user_file ${environmentRoot}/${instance}/${process}/basicAuth;

@@ -41,7 +41,7 @@ services:
             - MYSQL_USER=$accountsMariaUser
             - MYSQL_PASSWORD=$accountsMariaPassword
         volumes:
-            - /${instance}/accounts/databases:/var/lib/mysql
+            - ${environmentRoot}/${instance}/accounts/databases:/var/lib/mysql
         logging:
             driver: none
         restart: always

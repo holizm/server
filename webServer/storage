@@ -13,11 +13,11 @@
 #                       'args="$args" '
 #                       'status=$status';
 
-include /${instance}/${process}/nginx/${tenant}/httpsRedirect;
+include ${environmentRoot}/${instance}/${process}/nginx/${tenant}/httpsRedirect;
 
 server {
-    include /${instance}/${process}/nginx/${tenant}/listen;
-    include /${instance}/${process}/nginx/${tenant}/certificate;
+    include ${environmentRoot}/${instance}/${process}/nginx/${tenant}/listen;
+    include ${environmentRoot}/${instance}/${process}/nginx/${tenant}/certificate;
 
     location ~ \.webp$ {
         add_header X-IMAGE "true";
@@ -25,7 +25,7 @@ server {
         proxy_intercept_errors on;
         error_page 404 = @imageApi;
         default_type image/webp;
-        root /${instance}/storage/${tenant};
+        root ${environmentRoot}/${instance}/storage/${tenant};
     }
 
     location ~ \.mp3$ {
@@ -34,7 +34,7 @@ server {
         proxy_intercept_errors on;
         error_page 404 = @audioApi;
         default_type audio/mpeg;
-        root /${instance}/storage/${tenant};
+        root ${environmentRoot}/${instance}/storage/${tenant};
     }
 
     location ~ \.mp4$ {
@@ -43,7 +43,7 @@ server {
         proxy_intercept_errors on;
         error_page 404 = @videoApi;
         default_type video/mp4;
-        root /${instance}/storage/${tenant};
+        root ${environmentRoot}/${instance}/storage/${tenant};
     }
 
     location ~ \.[^/]+$ {
@@ -53,7 +53,7 @@ server {
         error_page 404 = @fileApi;
         default_type application/octet-stream;
         add_header Access-Control-Allow-Origin *;
-        root /${instance}/storage/${tenant};
+        root ${environmentRoot}/${instance}/storage/${tenant};
     }
 
     location ~ ^[^.]+$ {
@@ -68,7 +68,7 @@ server {
         proxy_set_header Host $host;
         proxy_pass http://localhost:${randomPort};
         add_header Cache-Control "public, max-age=31536000, immutable";
-        include /${instance}/${process}/nginx/${tenant}/proxy;
+        include ${environmentRoot}/${instance}/${process}/nginx/${tenant}/proxy;
     }
 
     location @audioApi {
@@ -76,7 +76,7 @@ server {
         proxy_set_header Host $host;
         proxy_pass http://localhost:${randomPort};
         add_header Cache-Control "public, max-age=31536000, immutable";
-        include /${instance}/${process}/nginx/${tenant}/proxy;
+        include ${environmentRoot}/${instance}/${process}/nginx/${tenant}/proxy;
     }
 
     location @videoApi {
@@ -84,7 +84,7 @@ server {
         proxy_set_header Host $host;
         proxy_pass http://localhost:${randomPort};
         add_header Cache-Control "public, max-age=31536000, immutable";
-        include /${instance}/${process}/nginx/${tenant}/proxy;
+        include ${environmentRoot}/${instance}/${process}/nginx/${tenant}/proxy;
     }
 
     location @fileApi {
@@ -92,7 +92,7 @@ server {
         proxy_set_header Host $host;
         proxy_pass http://localhost:${randomPort};
         add_header Cache-Control "public, max-age=31536000, immutable";
-        include /${instance}/${process}/nginx/${tenant}/proxy;
+        include ${environmentRoot}/${instance}/${process}/nginx/${tenant}/proxy;
     }
 
     location = /robots.txt {

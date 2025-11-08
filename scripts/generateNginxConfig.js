@@ -128,7 +128,7 @@ export default params => {
                 ...params,
                 file: 'apiAndPanel',
             })
-        } else if (process.endsWith('Panel')) {
+        } else if (process.endsWith('Api')) {
             generate({
                 ...params,
                 file: 'apiAndPanel',
