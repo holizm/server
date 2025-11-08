@@ -4,7 +4,7 @@ services:
         container_name: ${instance}Databases
         hostname: ${instance}Databases
         volumes:
-            - ${environmentRoot}/${instance}/databases/data:/data/db
+            - ${home}/${instance}/databases/data:/data/db
         environment:
             - MONGO_INITDB_ROOT_USERNAME=${databasesUser}
             - MONGO_INITDB_ROOT_PASSWORD=${databasesPassword}

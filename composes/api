@@ -14,12 +14,12 @@ services:
             - apiInstance=${instance}
             - apiProcess=${process}
         volumes:
-            - ${environmentRoot}/${instance}/storage:/storage
-            - ${environmentRoot}/${instance}/tenants:/${repo}/common/tenants
-            - ${environmentRoot}/${instance}/common/publicSettings.json:/${repo}/${gitHubImageNameOrProcess}/publicSettings.json
-            - ${environmentRoot}/${instance}/common/privateSettings.json:/${repo}/${gitHubImageNameOrProcess}/privateSettings.json
-            - ${environmentRoot}/${instance}/common/connectionStrings.json:/${repo}/${gitHubImageNameOrProcess}/connectionStrings.json
-            - ${environmentRoot}/${instance}/${process}/settingsOverride.json:/${repo}/${gitHubImageNameOrProcess}/settingsOverride.json
+            - ${home}/${instance}/storage:/storage
+            - ${home}/${instance}/tenants:/${repo}/common/tenants
+            - ${home}/${instance}/common/publicSettings.json:/${repo}/${gitHubImageNameOrProcess}/publicSettings.json
+            - ${home}/${instance}/common/privateSettings.json:/${repo}/${gitHubImageNameOrProcess}/privateSettings.json
+            - ${home}/${instance}/common/connectionStrings.json:/${repo}/${gitHubImageNameOrProcess}/connectionStrings.json
+            - ${home}/${instance}/${process}/settingsOverride.json:/${repo}/${gitHubImageNameOrProcess}/settingsOverride.json
         ports:
             - 127.0.0.1:${randomPort}:5000
         restart: always

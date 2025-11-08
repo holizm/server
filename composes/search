@@ -8,5 +8,5 @@ services:
         environment:
             - MEILI_MASTER_KEY=${searchMasterKey}
         volumes:
-            - ${environmentRoot}/${instance}/search/databases:/meili_data
+            - ${home}/${instance}/search/databases:/meili_data
         restart: always

@@ -14,12 +14,12 @@ services:
             - instance=${instance}
             - process=${process}
         volumes:
-            - ${environmentRoot}/${instance}/tenants:/${repo}/${gitHubImageNameOrProcess}/dist/tenants
-            - ${environmentRoot}/${instance}/common/privateSettings.json:/${repo}/${gitHubImageNameOrProcess}/privateSettings.json
-            - ${environmentRoot}/${instance}/common/publicSettings.json:/${repo}/${gitHubImageNameOrProcess}/dist/publicSettings.json
-            - ${environmentRoot}/${instance}/${process}/settingsOverride.json:/${repo}/${gitHubImageNameOrProcess}/dist/settingsOverride.json
-            - ${environmentRoot}/${instance}/${process}:/nginxCache
-            - ${environmentRoot}/server/machine.json:/machine.json
+            - ${home}/${instance}/tenants:/${repo}/${gitHubImageNameOrProcess}/dist/tenants
+            - ${home}/${instance}/common/privateSettings.json:/${repo}/${gitHubImageNameOrProcess}/privateSettings.json
+            - ${home}/${instance}/common/publicSettings.json:/${repo}/${gitHubImageNameOrProcess}/dist/publicSettings.json
+            - ${home}/${instance}/${process}/settingsOverride.json:/${repo}/${gitHubImageNameOrProcess}/dist/settingsOverride.json
+            - ${home}/${instance}/${process}:/nginxCache
+            - ${home}/server/machine.json:/machine.json
         ports:
             - 127.0.0.1:${randomPort}:3000
         restart: always
