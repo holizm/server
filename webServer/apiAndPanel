@@ -1,0 +1,19 @@
+include /${instance}/${process}/nginx/${tenant}/httpsRedirect;
+
+server {
+    include /${instance}/${process}/nginx/${tenant}/listen;
+
+    client_max_body_size 0;
+
+    include /${instance}/${process}/nginx/${tenant}/certificate;
+
+    location / {
+        proxy_pass http://localhost:${randomPort};
+        include /${instance}/${process}/nginx/${tenant}/proxy;
+    }
+
+    location = /robots.txt {
+        default_type text/plain;
+        return 200 "User-agent: *\nDisallow: /";
+    }
+}
