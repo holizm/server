@@ -1,0 +1,4 @@
+gzip on;
+gzip_vary on;
+gzip_comp_level 7;
+gzip_types text/plain text/css text/javascript image/svg+xml image/x-icon application/javascript application/x-javascript text/xml application/xml application/xml+rss application/json;
