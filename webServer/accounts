@@ -1,0 +1,21 @@
+include /${instance}/${process}/nginx/${tenant}/httpsRedirect;
+
+server {
+    include /${instance}/${process}/nginx/${tenant}/listen;
+
+    include /${instance}/${process}/nginx/${tenant}/certificate;
+
+    location /js/keycloak.js {
+        root /gesth/server/temp;
+        index keycloak.js;
+    }
+
+    location / {
+        proxy_pass http://localhost:${randomPort};
+        include /${instance}/${process}/nginx/${tenant}/proxy;
+    }
+
+    proxy_busy_buffers_size   512k;
+    proxy_buffers             4 512k;
+    proxy_buffer_size         256k;
+}
