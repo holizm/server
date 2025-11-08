@@ -1,0 +1,102 @@
+# https://storage.example.com/container/guid/width?/height?
+# /instance/storage/container/guid.webp
+# /instance/storage/container/guid/width.web
+# /instance/storage/container/guid/width/height.webp
+# /instance/storage/container/video-guid.mp4
+# /instance/storage/container/audio-guid.mp3
+# /instance/storage/container/file-name.extension
+
+# log_format rewriteLog '$remote_addr - $time_local '
+#                       '"$request" '
+#                       'request_uri="$request_uri" '
+#                       'uri="$uri" '
+#                       'args="$args" '
+#                       'status=$status';
+
+include /${instance}/${process}/nginx/${tenant}/httpsRedirect;
+
+server {
+    include /${instance}/${process}/nginx/${tenant}/listen;
+    include /${instance}/${process}/nginx/${tenant}/certificate;
+
+    location ~ \.webp$ {
+        add_header X-IMAGE "true";
+        add_header Cache-Control "public, max-age=31536000, immutable";
+        proxy_intercept_errors on;
+        error_page 404 = @imageApi;
+        default_type image/webp;
+        root /${instance}/storage/${tenant};
+    }
+
+    location ~ \.mp3$ {
+        add_header X-AUDIO "true";
+        add_header Cache-Control "public, max-age=31536000, immutable";
+        proxy_intercept_errors on;
+        error_page 404 = @audioApi;
+        default_type audio/mpeg;
+        root /${instance}/storage/${tenant};
+    }
+
+    location ~ \.mp4$ {
+        add_header X-VIDEO "true";
+        add_header Cache-Control "public, max-age=31536000, immutable";
+        proxy_intercept_errors on;
+        error_page 404 = @videoApi;
+        default_type video/mp4;
+        root /${instance}/storage/${tenant};
+    }
+
+    location ~ \.[^/]+$ {
+        add_header X-FILE "true";
+        add_header Cache-Control "public, max-age=31536000, immutable";
+        proxy_intercept_errors on;
+        error_page 404 = @fileApi;
+        default_type application/octet-stream;
+        add_header Access-Control-Allow-Origin *;
+        root /${instance}/storage/${tenant};
+    }
+
+    location ~ ^[^.]+$ {
+        add_header X-HAS-EXTENSION "false";
+        add_header X-ADDING-EXTENSION "true";
+        rewrite ^(.*)$ $1.webp last;
+        # access_log /var/log/nginx/rewrite.log rewriteLog;
+    }
+
+    location @imageApi {
+        rewrite ^(.*).webp$ /image/resize$1 break;
+        proxy_set_header Host $host;
+        proxy_pass http://localhost:${randomPort};
+        add_header Cache-Control "public, max-age=31536000, immutable";
+        include /${instance}/${process}/nginx/${tenant}/proxy;
+    }
+
+    location @audioApi {
+        rewrite ^(.*)$ /audio/stream$1 break;
+        proxy_set_header Host $host;
+        proxy_pass http://localhost:${randomPort};
+        add_header Cache-Control "public, max-age=31536000, immutable";
+        include /${instance}/${process}/nginx/${tenant}/proxy;
+    }
+
+    location @videoApi {
+        rewrite ^(.*)$ /video/stream$1 break;
+        proxy_set_header Host $host;
+        proxy_pass http://localhost:${randomPort};
+        add_header Cache-Control "public, max-age=31536000, immutable";
+        include /${instance}/${process}/nginx/${tenant}/proxy;
+    }
+
+    location @fileApi {
+        rewrite ^(.*)$ /file/get$1 break;
+        proxy_set_header Host $host;
+        proxy_pass http://localhost:${randomPort};
+        add_header Cache-Control "public, max-age=31536000, immutable";
+        include /${instance}/${process}/nginx/${tenant}/proxy;
+    }
+
+    location = /robots.txt {
+        default_type text/plain;
+        return 200 "User-agent: *\nDisallow: /image/\nDisallow: /property/";
+    }
+}
