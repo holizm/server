@@ -6,8 +6,8 @@ services:
         volumes:
             - ${environmentRoot}/${instance}/databases/data:/data/db
         environment:
-            - MONGO_INITDB_ROOT_USERNAME=${process}User
-            - MONGO_INITDB_ROOT_PASSWORD=${process}Password
+            - MONGO_INITDB_ROOT_USERNAME=${databaseUser}
+            - MONGO_INITDB_ROOT_PASSWORD=${databasePassword}
         ports:
             - ${process}:27017
         logging:
