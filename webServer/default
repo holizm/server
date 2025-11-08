@@ -1,0 +1,11 @@
+server {
+    listen 80 default_server;
+    server_name _;
+
+    root /gesht/server/nginx/defaultHtml;
+    index index.html;
+
+    location / {
+        try_files $uri $uri/ =404;
+    }
+}
