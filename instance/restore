@@ -1,0 +1,48 @@
+if [ "$1" == "" ]; then
+    echo "Specify the filters"
+    exit
+fi
+DatabasesContainer=${Instance}Databases
+
+IFS=',' read -ra params <<< "$1"
+query=""
+for param in "${params[@]}"; do
+    if [ -z "$query" ]; then
+        query="contains(name, '$param')"
+    else
+        query="$query && contains(name, '$param')"
+    fi
+done
+
+NextMarker=""
+Blobs=""
+
+while :; do
+    Result=$(az storage blob list --account-name $AzureStorage --container-name backup --sas-token "$Sas" \
+        --query "[?$query].{name:name}" --marker "$NextMarker" -o tsv)
+
+    Blobs+="$Result"$'\n'
+
+    NextMarker=$(az storage blob list --account-name $AzureStorage --container-name backup --sas-token "$Sas" \
+        --query "nextMarker" -o tsv)
+
+    if [ -z "$NextMarker" ]; then
+        break
+    fi
+done
+
+for Blob in $Blobs; do
+    FileName=$(basename "$Blob")
+    DatabaseName=Temp$(echo $FileName | cut -d"." -f1)
+    TempFileName="Temp$Instance$FileName"
+    TempPath="/Temp/$TempFileName"
+    echo "Downloading blob $Blob to $TempPath"
+    az storage blob download --account-name $AzureStorage --container-name backup --name "$Blob" --sas-token "$Sas" --file "$TempPath" 1>/dev/null
+
+    if [ -f $TempPath ]; then
+        docker cp $TempPath $DatabasesContainer:/
+        docker exec $DatabasesContainer bash -c "mariadb -u root -p${DatabasesPassword} -e 'drop database if exists $DatabaseName'"
+        docker exec $DatabasesContainer bash -c "mariadb -u root -p${DatabasesPassword} -e 'create database if not exists $DatabaseName'"
+        docker exec $DatabasesContainer bash -c "mariadb -u root -p${DatabasesPassword} $DatabaseName < /$TempFileName"
+    fi
+done
