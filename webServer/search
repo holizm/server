@@ -1,0 +1,12 @@
+include /${instance}/${process}/nginx/${tenant}/httpsRedirect;
+
+server {
+    include /${instance}/${process}/nginx/${tenant}/listen;
+
+    include /${instance}/${process}/nginx/${tenant}/certificate;
+
+    location / {
+        proxy_pass http://localhost:${randomPort};
+        include /${instance}/${process}/nginx/${tenant}/proxy;
+    }
+}
