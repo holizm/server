@@ -1,0 +1,175 @@
+#!/bin/bash
+DatabaseToBackup="$1"
+DatabasesContainer=${Instance}Databases
+AccountsContainer=${Instance}AccountsDatabase
+BackupDirectory=/$Instance/BackupDirectory
+if [ -n "$DatabaseToBackup" ]; then
+    mkdir -p $BackupDirectory/Databases
+    echo "----------------------------"
+    echo "----------------------------"
+    echo "Backing up $DatabaseToBackup ..."
+    echo "----------------------------"
+    echo "----------------------------"
+    docker exec $DatabasesContainer bash -c "rm -rf /$DatabaseToBackup.sql"
+    docker exec $DatabasesContainer bash -c "mariadb-dump -p${DatabasesPassword} $DatabaseToBackup > $DatabaseToBackup.sql"
+    docker cp $DatabasesContainer:/$DatabaseToBackup.sql /$Instance/BackupDirectory/Databases/$DatabaseToBackup.sql 1>/dev/null
+    echo "Backup complete for $DatabaseToBackup"
+    exit 0
+fi
+echo "----------------------------"
+echo "----------------------------"
+echo "Backing up $Instance ..."
+echo "----------------------------"
+echo "----------------------------"
+rm -rf $BackupDirectory
+mkdir -p $BackupDirectory/Databases
+docker exec $DatabasesContainer bash -c "mariadb -u root -p${DatabasesPassword} -e 'show databases'" |
+while read Database;
+do
+    if [[ "$Database" = [a-z]* ]]; then
+        continue
+    fi
+    if [[ "$Database" = "Database" ]]; then
+        continue
+    fi
+    if [[ "$Database" == Temp[A-Z]* ]]; then
+        continue
+    fi
+    docker exec $DatabasesContainer bash -c "rm -rf /$Database.sql"
+    docker exec $DatabasesContainer bash -c "mariadb-dump -p${DatabasesPassword} $Database > $Database.sql"
+    docker cp $DatabasesContainer:/$Database.sql /$Instance/BackupDirectory/Databases/$Database.sql 1>/dev/null
+    echo $Database
+done
+if [ -d /$Instance/Accounts ]; then
+    mkdir -p $BackupDirectory/Accounts/Databases
+    docker exec $AccountsContainer bash -c "rm -rf /Keycloak.sql"
+    docker exec $AccountsContainer bash -c "mariadb-dump -u ${AccountsMariaUser} -p${AccountsMariaPassword} accounts > Keycloak.sql"
+    docker cp $AccountsContainer:/Keycloak.sql /$Instance/BackupDirectory/Accounts/Databases/Keycloak.sql 1>/dev/null
+    echo "Accounts dataabase"
+fi
+find /$Instance -type f -name SettingsOverride.json | cut -d'/' -f3 |
+while read DirectoryName;
+do
+    mkdir -p $BackupDirectory/$DirectoryName
+    cp /$Instance/$DirectoryName/SettingsOverride.json $BackupDirectory/$DirectoryName/SettingsOverride.json
+done
+find /$Instance -name Subdomain | cut -d'/' -f3 |
+while read DirectoryName;
+do
+    mkdir -p $BackupDirectory/$DirectoryName
+    cp /$Instance/$DirectoryName/Subdomain $BackupDirectory/$DirectoryName/Subdomain
+done
+cp -r /$Instance/Common $BackupDirectory
+cp /$Instance/LinkNginxConfs $BackupDirectory/LinkNginxConfs
+cp /$Instance/Params $BackupDirectory/Params
+cp /$Instance/Org $BackupDirectory/Org
+if [ -f /$Instance/Repo ]; then
+    cp /$Instance/Repo $BackupDirectory/Repo
+fi
+mkdir -p /$BackupDirectory/SiteQwik
+cp /$Instance/SiteQwik/colors.css $BackupDirectory/SiteQwik/colors.css
+cp /$Instance/SiteQwik/favicon.ico $BackupDirectory/SiteQwik/favicon.ico
+cp /$Instance/SiteQwik/robots.txt $BackupDirectory/SiteQwik/robots.txt
+cp /$Instance/SiteQwik/sitemap.xml $BackupDirectory/SiteQwik/sitemap.xml
+if [ -f Paths ]; then
+    cp /$Instance/Paths $BackupDirectory/Paths
+    while IFS= read -r Path;
+    do
+        if [ "$Path" != "" ]; then
+            NormalizedPath=$(echo "$Path" | sed "s|/$Instance|/|g; s|//|/|g")
+            mkdir -p $BackupDirectory/$NormalizedPath
+            if [ -f $Path ]; then
+                cp $Path $BackupDirectory/$NormalizedPath
+            else
+                cp -r $Path $BackupDirectory/$NormalizedPath
+            fi
+        fi
+    done <<< "$(cat /$Instance/Paths)"
+fi
+Timestamp=$(date +%Y-%m-%d_%H-%M-%S)
+echo "Uploading ..."
+if [[ -n "$AzureStorage" && -n "$Sas" ]]; then
+  azcopy copy "$BackupDirectory/*" "https://$AzureStorage.blob.core.windows.net/backup/$Timestamp/$Sas" --recursive=true 1>/dev/null
+  echo "Uploaded to Azure"
+elif [[ -n "$AwsBucket" && -n "$AwsServiceUrl" && -n "$AwsAccessKey" && -n "$AwsSecretKey" ]]; then
+  rclone copy "$BackupDirectory" \
+    :s3,"env_auth=false",access_key_id="$AwsAccessKey",secret_access_key="$AwsSecretKey",endpoint="$AwsServiceUrl",acl="private":"$AwsBucket/backup/$Timestamp" \
+    --s3-provider Minio \
+    --quiet
+  echo "Uploaded to Arvan"
+else
+  echo "❌ No valid storage configuration found in Params file."
+  exit 1
+fi
+echo "Deleting old backups ..."
+RetainingDates=()
+for i in {0..29}; do
+    RetainingDates+=($(date -d "-$i days" +%Y-%m-%d))
+done
+for i in {30..119}; do
+    Day=$(date -d "-$i days" +%Y-%m-%d)
+    if [ $(date -d "$Day" +%u) -eq 6 ]; then
+        RetainingDates+=($Day)
+    fi
+done
+for i in {30..119}; do
+    RetainingDates+=($(date -d "-$i days" +%Y-%m-01))
+done
+for i in {4..12}; do
+    RetainingDates+=($(date -d "-$i months" +%Y-%m-01))
+done
+export RetainingDates=($(echo "${RetainingDates[@]}" | tr ' ' '\n' | sort -u))
+for Date in "${RetainingDates[@]}"; do
+    echo "Keep: $Date"
+done
+if [[ -n "$AzureStorage" && -n "$Sas" ]]; then
+  Blobs=$(az storage blob list \
+    --account-name "$AzureStorage" \
+    --container-name backup \
+    --sas-token "$Sas" \
+    --query "[].name" -o tsv)
+  for Blob in $Blobs; do
+    Keep=false
+    for Date in "${RetainingDates[@]}"; do
+      if [[ $Blob == $Date* ]]; then
+        Keep=true
+        break
+      fi
+    done
+    if [ "$Keep" = false ]; then
+      echo "Deleting blob: $Blob"
+      az storage blob delete \
+        --account-name "$AzureStorage" \
+        --container-name backup \
+        --name "$Blob" \
+        --sas-token "$Sas"
+    else
+      echo "Keeping blob: $Blob"
+    fi
+  done
+elif [[ -n "$AwsBucket" && -n "$AwsServiceUrl" ]]; then
+  Dates=$(rclone lsf \
+    :s3,"env_auth=false",access_key_id="$AwsAccessKey",secret_access_key="$AwsSecretKey",endpoint="$AwsServiceUrl":"$AwsBucket/backup/" \
+    --s3-provider Minio --dirs-only)
+  for Dir in $Dates; do
+    DirDate=${Dir%/}
+    Keep=false
+    for Date in "${RetainingDates[@]}"; do
+      if [[ "$DirDate" == "$Date" ]]; then
+        Keep=true
+        break
+      fi
+    done
+    if [ "$Keep" = false ]; then
+      echo "Deleting folder: $DirDate"
+      rclone purge \
+        :s3,"env_auth=false",access_key_id="$AwsAccessKey",secret_access_key="$AwsSecretKey",endpoint="$AwsServiceUrl":"$AwsBucket/backup/$DirDate" \
+        --s3-provider Minio \
+        --quiet
+    else
+      echo "Keeping folder: $DirDate"
+    fi
+  done
+fi
+echo "✅ Deleted old backups"
+date >> /$Instance/BackupLog
