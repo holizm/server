@@ -13,6 +13,7 @@ export default params => {
         depth,
         directoryPath,
         home,
+        print,
     } = params
 
     if (directoryPath === "/") {
@@ -64,14 +65,16 @@ export default params => {
     params.instancePath = `${home}/${instance}`
     params.processPath = `${home}/${instance}/${process}`
     params.originalProcessPath = `${home}/${repo}/${process}`
-    params.level = depth === 1 ? "instance" : "process"
+    params.level = depth === 3 ? "instance" : "process"
 
-    success(`Organization: ${org}`)
-    success(`Repository: ${repo}`)
-    success(`Instance: ${instance}`)
-    success(`Process: ${process}`)
-    success(`Role: ${role}`)
-    success(`ProcessPath=${params.processPath}`)
-    success(`OriginalProcessPath=${params.originalProcessPath}`)
+    if (print) {
+        success(`Organization: ${org}`)
+        success(`Repository: ${repo}`)
+        success(`Instance: ${instance}`)
+        success(`Process: ${process}`)
+        success(`Role: ${role}`)
+        success(`ProcessPath=${params.processPath}`)
+        success(`OriginalProcessPath=${params.originalProcessPath}`)
+    }
     return params
 }

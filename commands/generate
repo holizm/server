@@ -2,6 +2,7 @@
 
 import { ensure } from '../scripts/ensure.js'
 import {
+    excludedDirs,
     getDepth,
     getDirs,
     getLines,
@@ -18,14 +19,6 @@ import generateForDirectory from '../scripts/generateForDirectory.js'
 import extract from '../scripts/extract.js'
 import { clear } from '../scripts/terminal.js'
 import generateBackupAndRestore from '../scripts/generateBackupAndRestore.js'
-
-const excludedDirs = [
-    '.vscode',
-    'backup',
-    'backupDirectory',
-    'common',
-    'NA',
-]
 
 clear()
 

@@ -71,3 +71,11 @@ export const remove = p => {
 }
 
 export const getDepth = path => (path.match(/\//g) || []).length
+
+export const excludedDirs = [
+    '.vscode',
+    'backup',
+    'backupDirectory',
+    'common',
+    'NA',
+]

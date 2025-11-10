@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 
-import { pathToFileURL } from "url"
+import { pathToFileURL } from 'url'
 import {
+    excludedDirs,
     getDepth,
     getDirs,
     isDev,
@@ -9,11 +10,12 @@ import {
 } from '../scripts/os.js'
 import extract from '../scripts/extract.js'
 import { runOnTerminal } from '../scripts/terminal.js'
+import { info } from '../scripts/logger.js'
 
 const start = params => {
     const {
-        filter,
         directoryPath,
+        filter,
     } = params
     params.depth = getDepth(directoryPath)
     params.home = process.env.HOME
@@ -29,7 +31,7 @@ const start = params => {
     } = params
 
     if (level === 'instance') {
-        let dirs = getDirs(instancePath)
+        const dirs = getDirs().filter(d => !excludedDirs.includes(d))
         if (filter) {
             const regex = new RegExp(filter)
             dirs = dirs.filter(dir => regex.test(dir))
@@ -38,6 +40,7 @@ const start = params => {
             const directoryPath = `${instancePath}/${dir}`
             start({
                 directoryPath,
+                print: true,
             })
         }
     } else {
