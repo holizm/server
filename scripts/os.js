@@ -69,3 +69,5 @@ export const remove = p => {
         return false
     }
 }
+
+export const getDepth = path => (path.match(/\//g) || []).length
