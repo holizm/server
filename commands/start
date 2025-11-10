@@ -4,6 +4,7 @@ import { pathToFileURL } from "url"
 import {
     getDepth,
     getDirs,
+    isDev,
     isFile,
 } from '../scripts/os.js'
 import extract from '../scripts/extract.js'
@@ -12,7 +13,12 @@ import { runOnTerminal } from '../scripts/terminal.js'
 const start = params => {
     const {
         filter,
+        directoryPath,
     } = params
+    params.depth = getDepth(directoryPath)
+    params.home = process.env.HOME
+    params.isDev = isDev()
+    params.environmentRoot = isDev() ? `${params.home}` : '/gesht'
     params = extract(params)
     const {
         instancePath,
