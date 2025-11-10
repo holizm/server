@@ -31,7 +31,7 @@ const start = params => {
     } = params
 
     if (level === 'instance') {
-        const dirs = getDirs().filter(d => !excludedDirs.includes(d))
+        let dirs = getDirs().filter(d => !excludedDirs.includes(d))
         if (filter) {
             const regex = new RegExp(filter)
             dirs = dirs.filter(dir => regex.test(dir))
@@ -49,7 +49,7 @@ const start = params => {
 
             runOnTerminal('docker system prune --force')
             const command = `docker compose -p ${lowercaseInstance}-${lowercaseGitHubImageNameOrProcess} up --remove-orphans --quiet-pull -d`
-            console.log(command)
+            runOnTerminal(command)
         }
     }
 }
