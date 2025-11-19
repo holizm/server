@@ -87,3 +87,9 @@ export const excludedDirs = [
     'common',
     'NA',
 ]
+
+export const createDirIfNotExists = dirPath => {
+    if (!fs.existsSync(dirPath)) {
+        fs.mkdirSync(dirPath, { recursive: true })
+    }
+}

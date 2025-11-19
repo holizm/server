@@ -2,6 +2,7 @@
 
 import path from "path"
 import { runOnTerminal } from '../scripts/terminal.js'
+import { createDirIfNotExists } from "../scripts/os.js"
 
 const home = process.env.HOME
 const cwd = process.cwd()
@@ -19,10 +20,10 @@ function findConfFiles() {
 function linkConfFiles(confFiles) {
     for (const file of confFiles) {
         const absolutePath = path.resolve(file)
-        runOnTerminal(`ln -s -f "${absolutePath}" "${home}/nginx/conf.d"`)
+        runOnTerminal(`ln -s -f ${absolutePath} ${home}/nginx/conf.d`)
     }
 }
 
 const confFiles = findConfFiles()
-console.log(confFiles)
+createDirIfNotExists(`${home}/nginx/conf.d`)
 linkConfFiles(confFiles)
