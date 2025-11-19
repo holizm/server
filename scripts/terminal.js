@@ -16,6 +16,7 @@ export const clear = () => {
 
 export const runOnTerminal = (command, throwOnError, hideError) => {
     try {
+        command = hideError ? `${command} 2>/dev/null || true` : command
         const result = execSync(command, {
             encoding: 'utf8',
             stdio: ['pipe', 'pipe', hideError ? 'ignore' : 'pipe'],
