@@ -8,7 +8,7 @@ const cwd = process.cwd()
 
 function findConfFiles() {
     try {
-        const output = runOnTerminal(`find ${cwd} -type f -name "*.conf"`, false, false).trim()
+        const output = runOnTerminal(`find ${cwd} -type f -name "*.conf"`, false, true).trim()
         return output ? output.split("\n") : []
     } catch {
         return []
