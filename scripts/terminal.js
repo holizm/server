@@ -16,7 +16,11 @@ export const clear = () => {
 
 export const runOnTerminal = (command, throwOnError, hideError) => {
     try {
-        const result = execSync(command, { encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'] })
+        const result = execSync(command, {
+            encoding: 'utf8',
+            stdio: ['pipe', 'pipe', 'pipe'],
+            shell: true,
+        })
         return result.trim()
     } catch (e) {
         const msg = e.stderr?.toString().trim() || e.message || String(e)
