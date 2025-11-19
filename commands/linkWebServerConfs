@@ -20,10 +20,9 @@ function findConfFiles() {
 function linkConfFiles(confFiles) {
     for (const file of confFiles) {
         const absolutePath = path.resolve(file)
-        runOnTerminal(`ln -s -f ${absolutePath} ${home}/nginx/conf.d`)
+        runOnTerminal(`ln -s -f ${absolutePath} /etc/nginx/conf.d`)
     }
 }
 
 const confFiles = findConfFiles()
-createDirIfNotExists(`${home}/nginx/conf.d`)
 linkConfFiles(confFiles)
