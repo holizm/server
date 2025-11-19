@@ -1,0 +1,25 @@
+#!/usr/bin/env node
+
+import path from "path"
+import { runOnTerminal } from '../scripts/terminal.js'
+
+const home = process.env.HOME
+
+function findConfFiles() {
+    try {
+        const output = runOnTerminal(`find -type f -name "*.conf"`).trim()
+        return output ? output.split("\n") : []
+    } catch {
+        return []
+    }
+}
+
+function linkConfFiles(confFiles) {
+    for (const file of confFiles) {
+        const absolutePath = path.resolve(file)
+        runOnTerminal(`ln -s -f "${absolutePath}" "${home}/nginx/conf.d"`)
+    }
+}
+
+const confFiles = findConfFiles()
+linkConfFiles(confFiles)
