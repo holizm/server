@@ -7,7 +7,7 @@ const home = process.env.HOME
 
 function findConfFiles() {
     try {
-        const output = runOnTerminal(`find -type f -name "*.conf"`).trim()
+        const output = runOnTerminal(`find -type f -name "*.conf" 2>/dev/null`).trim()
         return output ? output.split("\n") : []
     } catch {
         return []
