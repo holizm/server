@@ -21,10 +21,11 @@ const logs = async params => {
 
     const {
         instance,
+        pascalizedProcess,
     } = params
 
     const tail = count && count !== '' ? count : 20
-    const containerName = `${instance}${params.process}`
+    const containerName = `${instance}${pascalizedProcess}`
     const command = `docker logs --follow --tail ${tail} ${containerName}`
 
     await runStreaming(command)
