@@ -19,7 +19,7 @@ export const runOnTerminal = (command, throwOnError, hideError) => {
         const result = execSync(command, {
             encoding: 'utf8',
             stdio: ['pipe', 'pipe', 'pipe'],
-            shell: true,
+            shell: "/bin/bash",
         })
         return result.trim()
     } catch (e) {
