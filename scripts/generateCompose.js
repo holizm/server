@@ -14,14 +14,10 @@ const getFileAndParams = params => {
         if (!params.keycloakIssuer) params.keycloakIssuer = 'https://accounts.example.com/realm/production'
         params.file = 'site'
     } else if (process === 'accounts') {
-        getRandomPort({
-            ...params,
-            propertyName: `${instance}AccountsDatabaseRandomPort`,
-        })
-        getRandomPort({
-            ...params,
-            propertyName: `${instance}AccountsAdminerRandomPort`,
-        })
+        params.propertyName = `${instance}AccountsDatabaseRandomPort`
+        getRandomPort(params)
+        params.propertyName = `${instance}AccountsAdminerRandomPort`
+        getRandomPort(params)
         params.file = 'accounts'
     } else if (process.endsWith('Panel')) {
         params.file = 'panel'
@@ -42,5 +38,6 @@ export default params => {
     } = params
     const sourceFile = `${isDev ? home : "/gesht"}/server/composes/${file}`
     const targetFile = `${processPath}/compose.yaml`
+    console.log(params)
     replaceVariables(sourceFile, targetFile, params)
 }

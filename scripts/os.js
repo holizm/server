@@ -28,10 +28,18 @@ export const getLines = file =>
         .filter(Boolean)
 
 const readReplaceWrite = (inputFile, outputFile, flag, params) => {
-    fs.mkdirSync(path.dirname(outputFile), { recursive: true })
-    const content = fs.readFileSync(inputFile, 'utf8')
-    const replaced = content.replace(/\${(\w+)}/g, (_, v1, v2) => params[v1 || v2] || '')
-    fs.writeFileSync(outputFile, replaced, { flag })
+    const dir = path.dirname(outputFile)
+    fs.mkdirSync(dir, { recursive: true })
+
+    let content = fs.readFileSync(inputFile, 'utf8')
+    let prev = null
+
+    while (content !== prev) {
+        prev = content
+        content = content.replace(/\${(\w+)}/g, (_, v) => params[v] || '')
+    }
+
+    fs.writeFileSync(outputFile, content, { flag })
 }
 
 export const replaceVariables = (inputFile, outputFile, params) => readReplaceWrite(inputFile, outputFile, 'w', params)
