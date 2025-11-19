@@ -2,9 +2,11 @@ import {
     isFile,
     replaceVariables,
 } from './os.js'
+import getRandomPort from "./getRandomPort.js"
 
 const getFileAndParams = params => {
     const {
+        instance,
         process,
     } = params
     if (process === 'site' || isFile('./site')) {
@@ -12,8 +14,14 @@ const getFileAndParams = params => {
         if (!params.keycloakIssuer) params.keycloakIssuer = 'https://accounts.example.com/realm/production'
         params.file = 'site'
     } else if (process === 'accounts') {
-        getRandomPort(`${instance}AccountsDatabaseRandomPort`)
-        getRandomPort(`${instance}AccountsAdminerRandomPort`)
+        getRandomPort({
+            ...params,
+            propertyName: `${instance}AccountsDatabaseRandomPort`,
+        })
+        getRandomPort({
+            ...params,
+            propertyName: `${instance}AccountsAdminerRandomPort`,
+        })
         params.file = 'accounts'
     } else if (process.endsWith('Panel')) {
         params.file = 'panel'
