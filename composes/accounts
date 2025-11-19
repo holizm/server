@@ -5,16 +5,16 @@ services:
         hostname: ${instance}Accounts
         working_dir: /opt/keycloak
         ports:
-            - 127.0.0.1:${randomPort}:8080          
+            - 127.0.0.1:${randomPort}:8080
         environment:
             - KC_PROXY_HEADERS=xforwarded
             - KC_BOOTSTRAP_ADMIN_USERNAME=${accountsAdminUser}
             - KC_BOOTSTRAP_ADMIN_PASSWORD=${accountsAdminPassword}
-            - KC_DB=mariadb
-            - KC_DB_URL_HOST=database            
+            - KC_DB=postgres
+            - KC_DB_URL_HOST=database
             - KC_DB_URL_DATABASE=accounts
-            - KC_DB_USERNAME=${accountsMariaUser}
-            - KC_DB_PASSWORD=${accountsMariaPassword}
+            - KC_DB_USERNAME=${accountsDatabaseUser}
+            - KC_DB_PASSWORD=${accountsDatabasePassword}
             - KC_HTTP_ENABLED=true
             - KC_HOSTNAME_STRICT=false
             - KC_DIR=/opt/keycloak/data/import
@@ -23,28 +23,29 @@ services:
         restart: always
         entrypoint: ["/bin/bash", "-c"]
         command: >
-            "/opt/keycloak/bin/kc.sh build --db=mariadb &&
+            "/opt/keycloak/bin/kc.sh build --db=postgres &&
              /opt/keycloak/bin/kc.sh start --log-level=ROOT:ERROR --log-level=phone_code:DEBUG --optimized"
         depends_on:
             - database
         volumes:
             - ${environmentRoot}/accounts/development.json:/opt/keycloak/data/import/development.json
             - ${environmentRoot}/accounts/themes:/opt/keycloak/themes
+
     database:
-        image: mariadb
+        image: postgres:latest
         container_name: ${instance}AccountsDatabase
         ports:
-            - 127.0.0.1:${${instance}AccountsDatabaseRandomPort}:3306
+            - 127.0.0.1:${${instance}AccountsDatabaseRandomPort}:5432
         environment:
-            - MARIADB_ROOT_PASSWORD=${accountsMariaRoot}
-            - MYSQL_DATABASE=accounts
-            - MYSQL_USER=${accountsMariaUser}
-            - MYSQL_PASSWORD=${accountsMariaPassword}
+            - POSTGRES_DB=accounts
+            - POSTGRES_USER=${accountsDatabaseUser}
+            - POSTGRES_PASSWORD=${accountsDatabasePassword}
         volumes:
-            - ${home}/${instance}/accounts/databases:/var/lib/mysql
+            - ${home}/${instance}/accounts/databases:/var/lib/postgresql/data
         logging:
             driver: none
         restart: always
+
     admin:
         image: adminer
         container_name: ${instance}AccountsAdminer
