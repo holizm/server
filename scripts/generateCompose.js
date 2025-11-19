@@ -38,6 +38,5 @@ export default params => {
     } = params
     const sourceFile = `${isDev ? home : "/gesht"}/server/composes/${file}`
     const targetFile = `${processPath}/compose.yaml`
-    console.log(params)
     replaceVariables(sourceFile, targetFile, params)
 }
