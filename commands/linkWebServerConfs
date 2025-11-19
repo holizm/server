@@ -25,4 +25,5 @@ function linkConfFiles(confFiles) {
 }
 
 const confFiles = findConfFiles()
+console.log(confFiles)
 linkConfFiles(confFiles)
