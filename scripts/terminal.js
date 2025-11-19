@@ -18,7 +18,7 @@ export const runOnTerminal = (command, throwOnError, hideError) => {
     try {
         const result = execSync(command, {
             encoding: 'utf8',
-            stdio: ['pipe', 'pipe', 'pipe'],
+            stdio: ['pipe', 'pipe', hideError ? 'ignore' : 'pipe'],
             shell: true,
         })
         return result.trim()
