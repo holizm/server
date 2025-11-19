@@ -1,0 +1,62 @@
+#!/usr/bin/env node
+
+import { pathToFileURL } from 'url'
+import {
+    excludedDirs,
+    getDepth,
+    getDirs,
+    isDev,
+    isFile,
+} from '../scripts/os.js'
+import extract from '../scripts/extract.js'
+import { runOnTerminal } from '../scripts/terminal.js'
+import { info } from '../scripts/logger.js'
+
+const stop = params => {
+    const {
+        directoryPath,
+        filter,
+    } = params
+    params.depth = getDepth(directoryPath)
+    params.home = process.env.HOME
+    params.isDev = isDev()
+    params.environmentRoot = isDev() ? `${params.home}` : '/gesht'
+    params = extract(params)
+    const {
+        instancePath,
+        level,
+        lowercaseGitHubImageNameOrProcess,
+        lowercaseInstance,
+        processPath,
+    } = params
+
+    if (level === 'instance') {
+        let dirs = getDirs().filter(d => !excludedDirs.includes(d))
+        if (filter) {
+            const regex = new RegExp(filter)
+            dirs = dirs.filter(dir => regex.test(dir))
+        }
+        for (const dir of dirs) {
+            const directoryPath = `${instancePath}/${dir}`
+            stop({
+                directoryPath,
+                print: true,
+            })
+        }
+    } else {
+        const composeFile = `${processPath}/compose.yaml`
+        if (isFile(composeFile)) {
+            const command = `docker compose -p ${lowercaseInstance}-${lowercaseGitHubImageNameOrProcess} down --remove-orphans`
+            runOnTerminal(command)
+            runOnTerminal('docker system prune --force')
+        }
+    }
+}
+
+const isMain = import.meta.url === pathToFileURL(process.argv[1]).href
+if (isMain) {
+    await stop({
+        filter: process.argv[2] || '',
+        directoryPath: process.cwd(),
+    })
+}
