@@ -4,10 +4,11 @@ import path from "path"
 import { runOnTerminal } from '../scripts/terminal.js'
 
 const home = process.env.HOME
+const cwd = process.cwd()
 
 function findConfFiles() {
     try {
-        const output = runOnTerminal(`find -type f -name "*.conf" 2>/dev/null`).trim()
+        const output = runOnTerminal(`find ${cwd} -type f -name "*.conf" 2>/dev/null`).trim()
         return output ? output.split("\n") : []
     } catch {
         return []
