@@ -1,0 +1,40 @@
+#!/usr/bin/env node
+
+import { pathToFileURL } from 'url'
+import {
+    getDepth,
+    isDev,
+} from '../scripts/os.js'
+import extract from '../scripts/extract.js'
+import { runStreaming } from '../scripts/terminal.js'
+
+const logs = async params => {
+    const {
+        directoryPath,
+        count,
+    } = params
+    params.depth = getDepth(directoryPath)
+    params.home = process.env.HOME
+    params.isDev = isDev()
+    params.environmentRoot = isDev() ? `${params.home}` : '/gesht'
+    params = extract(params)
+
+    const {
+        instance,
+        process,
+    } = params
+
+    const tail = count && count !== '' ? count : 20
+    const containerName = `${instance}${process}`
+    const command = `docker logs --follow --tail ${tail} ${containerName}`
+
+    await runStreaming(command)
+}
+
+const isMain = import.meta.url === pathToFileURL(process.argv[1]).href
+if (isMain) {
+    await logs({
+        count: process.argv[2] || '',
+        directoryPath: process.cwd(),
+    })
+}
