@@ -7,6 +7,7 @@ services:
         ports:
             - 127.0.0.1:${randomPort}:8080
         environment:
+            - KEYCLOAK_IMPORT=/opt/keycloak/data/import/development.json
             - KC_PROXY_HEADERS=xforwarded
             - KC_BOOTSTRAP_ADMIN_USERNAME=${accountsAdminUser}
             - KC_BOOTSTRAP_ADMIN_PASSWORD=${accountsAdminPassword}
@@ -24,7 +25,7 @@ services:
         entrypoint: ["/bin/bash", "-c"]
         command: >
             "/opt/keycloak/bin/kc.sh build --db=postgres &&
-             /opt/keycloak/bin/kc.sh start --log-level=ROOT:ERROR --log-level=phone_code:DEBUG --optimized"
+             /opt/keycloak/bin/kc.sh start --import-realm --log-level=ROOT:ERROR --log-level=phone_code:DEBUG --optimized"
         depends_on:
             - database
         volumes:
