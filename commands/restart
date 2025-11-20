@@ -1,0 +1,97 @@
+#!/usr/bin/env node
+
+import { pathToFileURL } from 'url'
+import { isFile, getDirs } from '../scripts/os.js'
+import extract from '../scripts/extract.js'
+import { runOnTerminal } from '../scripts/terminal.js'
+import { info, warning, divide } from '../scripts/logger.js'
+
+const restartApp = (dir, params) => {
+    const currentDir = params.currentDir
+    const target = `${currentDir}/${dir}`
+    const extracted = extract({ directoryPath: target, ...params })
+    const {
+        processPath,
+        process,
+        regex,
+    } = extracted
+
+    const composeFile = `${processPath}/compose.yaml`
+    if (isFile(composeFile)) {
+        divide()
+        info(`Restarting ${dir}`)
+        divide()
+
+        if (regex) {
+            if (process.includes(regex)) {
+                runOnTerminal(`cd "${processPath}" && restart`)
+            }
+        } else {
+            runOnTerminal(`cd "${processPath}" && restart`)
+        }
+    }
+}
+
+const start = params => {
+    const {
+        level,
+        filter,
+    } = params
+
+    if (level === 'instance') {
+        params.currentDir = process.cwd()
+
+        const dirs = getDirs()
+
+        const match = (pattern, list) => {
+            return list.filter(name => {
+                if (filter) {
+                    if (!new RegExp(filter).test(name)) return false
+                }
+                return pattern.test(name)
+            })
+        }
+
+        const databases = match(/databases/, dirs)
+        const apis = match(/api/, dirs)
+        const panels = match(/panel/, dirs)
+
+        const sites = dirs.filter(name => {
+            if (filter && !new RegExp(filter).test(name)) return false
+            if (/site/.test(name)) return true
+            try {
+                runOnTerminal(`ls "${params.currentDir}/${name}/site"`, true, true)
+                return true
+            } catch {
+                return false
+            }
+        })
+
+        for (const dir of databases) restartApp(dir, params)
+        for (const dir of apis) restartApp(dir, params)
+        for (const dir of panels) restartApp(dir, params)
+        for (const dir of sites) restartApp(dir, params)
+
+    } else {
+        console.log()
+        warning('This means pull, stop, start')
+        warning('Latest image would be pulled')
+
+        runOnTerminal('pull')
+        runOnTerminal('stop')
+
+        if (isFile('cache')) {
+            runOnTerminal('rm -rf cache')
+        }
+
+        runOnTerminal('start')
+    }
+}
+
+const isMain = import.meta.url === pathToFileURL(process.argv[1]).href
+if (isMain) {
+    await start({
+        filter: process.argv[2] || '',
+        directoryPath: process.cwd(),
+    })
+}
