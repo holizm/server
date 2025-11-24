@@ -18,7 +18,7 @@ services:
             - ${home}/${instance}/common/privateSettings.json:/${repo}/${gitHubImageNameOrProcess}/privateSettings.json
             - ${home}/${instance}/common/publicSettings.json:/${repo}/${gitHubImageNameOrProcess}/dist/publicSettings.json
             - ${home}/${instance}/${process}/settingsOverride.json:/${repo}/${gitHubImageNameOrProcess}/dist/settingsOverride.json
-            - ${home}/${instance}/${process}:/nginxCache
+            - ${home}/${instance}/${process}:/webServerCache
             - ${home}/server/machine.json:/machine.json
         ports:
             - 127.0.0.1:${randomPort}:3000

@@ -19,9 +19,9 @@
     - It's better to get the name of the server from the name of the owner, and then add 001, 002, etc to the end of it.
 
 - NGINX
-    - IMPORTANT NOTE => Only move /etc/nginx/sites-enabled/ and DO NOT MOVE /etc/nginx/sites-available/ because it's a symbolic link to that.
+    - IMPORTANT NOTE => Only move /etc/webServer/sites-enabled/ and DO NOT MOVE /etc/webServer/sites-available/ because it's a symbolic link to that.
     - Run
-        - `sudo ln -s -f /HolismHolding/Server/Nginx/Default /etc/nginx/conf.d/default.conf`
+        - `sudo ln -s -f /HolismHolding/Server/webServer/Default /etc/webServer/conf.d/default.conf`
         - `sudo nginx -s reload`
 
 - `docker login`

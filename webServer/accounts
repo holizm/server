@@ -1,9 +1,9 @@
-include ${home}/${instance}/${process}/nginx/${tenant}/httpsRedirect;
+include ${home}/${instance}/${process}/webServer/${tenant}/httpsRedirect;
 
 server {
-    include ${home}/${instance}/${process}/nginx/${tenant}/listen;
+    include ${home}/${instance}/${process}/webServer/${tenant}/listen;
 
-    include ${home}/${instance}/${process}/nginx/${tenant}/certificate;
+    include ${home}/${instance}/${process}/webServer/${tenant}/certificate;
 
     location /js/keycloak.js {
         root /gesht/server/temp;
@@ -12,7 +12,7 @@ server {
 
     location / {
         proxy_pass http://localhost:${randomPort};
-        include ${home}/${instance}/${process}/nginx/${tenant}/proxy;
+        include ${home}/${instance}/${process}/webServer/${tenant}/proxy;
     }
 
     proxy_busy_buffers_size   512k;

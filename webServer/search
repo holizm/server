@@ -1,12 +1,12 @@
-include ${home}/${instance}/${process}/nginx/${tenant}/httpsRedirect;
+include ${home}/${instance}/${process}/webServer/${tenant}/httpsRedirect;
 
 server {
-    include ${home}/${instance}/${process}/nginx/${tenant}/listen;
+    include ${home}/${instance}/${process}/webServer/${tenant}/listen;
 
-    include ${home}/${instance}/${process}/nginx/${tenant}/certificate;
+    include ${home}/${instance}/${process}/webServer/${tenant}/certificate;
 
     location / {
         proxy_pass http://localhost:${randomPort};
-        include ${home}/${instance}/${process}/nginx/${tenant}/proxy;
+        include ${home}/${instance}/${process}/webServer/${tenant}/proxy;
     }
 }

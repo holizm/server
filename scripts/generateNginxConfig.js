@@ -33,9 +33,9 @@ const generate = params => {
     const isAnInclude = includes.includes(file)
     const nginxFilePath = isAnInclude
         ?
-        `${processPath}/nginx/${tenant}/${file}`
+        `${processPath}/webServer/${tenant}/${file}`
         :
-        `${processPath}/nginx/${tenant}/${subdomain}${domain}.conf`
+        `${processPath}/webServer/${tenant}/${subdomain}${domain}.conf`
     const sourceFile = `${isDev ? home : '/gesht'}/server/webServer/${file}`
     const tempFile = `${nginxFilePath}.temp`
     replaceVariables(sourceFile, tempFile, params)

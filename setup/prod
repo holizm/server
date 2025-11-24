@@ -92,7 +92,7 @@ EOF
 }
 
 moveNginxDefaultSite() {
-    if mv /etc/nginx/sites-enabled/default /etc/nginx/sites-enabled-default-backup 2>/dev/null; then
+    if mv /etc/webServer/sites-enabled/default /etc/webServer/sites-enabled-default-backup 2>/dev/null; then
         success "Moved default Nginx site to backup"
     else
         warning "Default Nginx site was not found or already moved"
