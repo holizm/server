@@ -1,6 +1,6 @@
 services:
     accounts:
-        image: geshtio/accounts
+        image: nefcanto/accounts
         container_name: ${instance}Accounts
         hostname: ${instance}Accounts
         working_dir: /opt/keycloak
