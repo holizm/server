@@ -99,7 +99,7 @@ moveNginxDefaultSite() {
     fi
 }
 
-registerGeshtCommands() {
+registerHolismCommands() {
     if grep -q "gesht" /etc/environment; then
         success "gesht commands $check_mark"
     else
@@ -189,7 +189,7 @@ install rclone installRclone
 install docker installDocker
 install docker-compose installDockerCompose
 moveNginxDefaultSite
-registerGeshtCommands
+registerHolismCommands
 setTimeZone
 setSshPrompt
 givePermissionsForUser
