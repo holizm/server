@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-BASE="/gesht"
+BASE="/holizm"
 GROUP="shared"
 USERS_FILE="$BASE/users"
 KEYS_DIR="$BASE/keys"

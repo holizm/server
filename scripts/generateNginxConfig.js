@@ -36,7 +36,7 @@ const generate = params => {
         `${processPath}/webServer/${tenant}/${file}`
         :
         `${processPath}/webServer/${tenant}/${subdomain}${domain}.conf`
-    const sourceFile = `${isDev ? home : '/gesht'}/server/webServer/${file}`
+    const sourceFile = `${isDev ? home : '/holizm'}/server/webServer/${file}`
     const tempFile = `${nginxFilePath}.temp`
     replaceVariables(sourceFile, tempFile, params)
     replaceVariables(tempFile, nginxFilePath, params)

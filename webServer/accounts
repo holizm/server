@@ -6,7 +6,7 @@ server {
     include ${home}/${instance}/${process}/webServer/${tenant}/certificate;
 
     location /js/keycloak.js {
-        root /gesht/server/temp;
+        root /holizm/server/temp;
         index keycloak.js;
     }
 

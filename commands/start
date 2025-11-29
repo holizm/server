@@ -20,7 +20,7 @@ const start = params => {
     params.depth = getDepth(directoryPath)
     params.home = process.env.HOME
     params.isDev = isDev()
-    params.environmentRoot = isDev() ? `${params.home}` : '/gesht'
+    params.environmentRoot = isDev() ? `${params.home}` : '/holizm'
     params = extract(params)
     const {
         instancePath,

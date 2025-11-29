@@ -31,4 +31,4 @@ const data = {
     uptimeInDays: getUptimeInDays()
 }
 
-writeFileSync("/gesht/machine.json", JSON.stringify(data, null, 2))
+writeFileSync("/holizm/machine.json", JSON.stringify(data, null, 2))

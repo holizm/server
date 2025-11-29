@@ -2,7 +2,7 @@ services:
     accounts:
         image: holism/push
         container_name: push
-        working_dir: /gesht/push
+        working_dir: /holizm/push
         ports:
             - 127.0.0.1:${{randomPort}}:3000
         restart: always

@@ -2,8 +2,8 @@
 
 sudo groupadd -f shared
 
-USERS_FILE="/gesht/users"
-KEYS_DIR="/gesht/keys"
+USERS_FILE="/holizm/users"
+KEYS_DIR="/holizm/keys"
 
 if [[ ! -f "$USERS_FILE" ]]; then
     echo "Error: User file '$USERS_FILE' not found!"

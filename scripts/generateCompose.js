@@ -36,7 +36,7 @@ export default params => {
         isDev,
         processPath,
     } = params
-    const sourceFile = `${isDev ? home : "/gesht"}/server/composes/${file}`
+    const sourceFile = `${isDev ? home : "/holizm"}/server/composes/${file}`
     const targetFile = `${processPath}/compose.yaml`
     replaceVariables(sourceFile, targetFile, params)
 }

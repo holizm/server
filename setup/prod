@@ -100,21 +100,21 @@ moveNginxDefaultSite() {
 }
 
 registerHolismCommands() {
-    if grep -q "gesht" /etc/environment; then
-        success "gesht commands $check_mark"
+    if grep -q "holizm" /etc/environment; then
+        success "holizm commands $check_mark"
     else
-        info "Registering gesht commands ..."
+        info "Registering holizm commands ..."
         chmod 644 /etc/environment
-        echo 'PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/gesht/server/commands"' | tee -a /etc/environment > /dev/null
-        success "Registered gesht commands"
+        echo 'PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/holizm/server/commands"' | tee -a /etc/environment > /dev/null
+        success "Registered holizm commands"
     fi
-    if grep -q "gesht" /etc/bash.bashrc; then
-        success "gesht commands $check_mark"
+    if grep -q "holizm" /etc/bash.bashrc; then
+        success "holizm commands $check_mark"
     else
-        info "Registering gesht commands ..."
+        info "Registering holizm commands ..."
         chmod 644 /etc/bash.bashrc
-        echo 'PATH="${PATH}:/gesht/server/commands"' | tee -a /etc/bash.bashrc > /dev/null
-        success "Registered gesht commands"
+        echo 'PATH="${PATH}:/holizm/server/commands"' | tee -a /etc/bash.bashrc > /dev/null
+        success "Registered holizm commands"
     fi
 }
 
@@ -147,11 +147,11 @@ addSbinToUserPath() {
 }
 
 configurePythonCore() {
-    scriptsPath="/gesht/Server/Scripts/Python"
+    scriptsPath="/holizm/Server/Scripts/Python"
     sitePackages=$(python3 -m site --user-site)
     mkdir -p "$sitePackages"
     mkdir -p "$(dirname "$sitePackages")"
-    echo "$scriptsPath" > "$sitePackages/gesht-server.pth"
+    echo "$scriptsPath" > "$sitePackages/holizm-server.pth"
     success "Configured Python core path on server"
 }
 
