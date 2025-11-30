@@ -60,7 +60,10 @@ const start = params => {
             if (filter && !new RegExp(filter).test(name)) return false
             if (/site/.test(name)) return true
             try {
-                runOnTerminal(`ls "${params.currentDir}/${name}/site"`, true, true)
+                runOnTerminal(`ls "${params.currentDir}/${name}/site"`, {
+                    throwOnError: true,
+                    hideError: true,
+                })
                 return true
             } catch {
                 return false
