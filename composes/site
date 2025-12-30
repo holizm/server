@@ -14,10 +14,10 @@ services:
             - instance=${instance}
             - process=${process}
         volumes:
-            - ${home}/${instance}/tenants:/${repo}/${gitHubImageNameOrProcess}/dist/tenants
-            - ${home}/${instance}/common/privateSettings.json:/${repo}/${gitHubImageNameOrProcess}/privateSettings.json
-            - ${home}/${instance}/common/publicSettings.json:/${repo}/${gitHubImageNameOrProcess}/dist/publicSettings.json
-            - ${home}/${instance}/${process}/settingsOverride.json:/${repo}/${gitHubImageNameOrProcess}/dist/settingsOverride.json
+            - ${home}/${instance}/tenants:${home}/${repo}/${gitHubImageNameOrProcess}/dist/tenants
+            - ${home}/${instance}/common/privateSettings.json:${home}/${repo}/${gitHubImageNameOrProcess}/privateSettings.json
+            - ${home}/${instance}/common/publicSettings.json:${home}/${repo}/${gitHubImageNameOrProcess}/dist/publicSettings.json
+            - ${home}/${instance}/${process}/settingsOverride.json:${home}/${repo}/${gitHubImageNameOrProcess}/dist/settingsOverride.json
             - ${home}/${instance}/${process}:/webServerCache
             - ${home}/server/machine.json:/machine.json
         ports:
