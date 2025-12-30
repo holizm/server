@@ -3,7 +3,7 @@ services:
         image: ${dockerImageName}
         container_name: ${instance}${pascalizedProcess}
         hostname: ${instance}${pascalizedProcess}
-        working_dir: /${repo}/${process}
+        working_dir: ${home}/${repo}/${process}
         environment:
             - org=${org}
             - repo=${repo}
