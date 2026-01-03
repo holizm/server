@@ -14,7 +14,7 @@ services:
             - apiInstance=${instance}
             - apiProcess=${process}
         volumes:
-            - ${home}/${instance}/storage:/storage
+            - ${home}/${instance}/storage:${home}/${instance}/storage
             - ${home}/${instance}/tenants:${home}/${repo}/common/tenants
             - ${home}/${instance}/common/publicSettings.json:${home}/${repo}/${gitHubImageNameOrProcess}/publicSettings.json
             - ${home}/${instance}/common/privateSettings.json:${home}/${repo}/${gitHubImageNameOrProcess}/privateSettings.json
