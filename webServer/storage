@@ -1,9 +1,9 @@
-# https://storage.example.com/container/guid/width?/height?
-# /instance/storage/container/guid.webp
-# /instance/storage/container/guid/width.web
-# /instance/storage/container/guid/width/height.webp
-# /instance/storage/container/video-guid.mp4
-# /instance/storage/container/audio-guid.mp3
+# https://storage.example.com/container/uuid/width?/height?
+# /instance/storage/container/uuid.webp
+# /instance/storage/container/uuid/width.web
+# /instance/storage/container/uuid/width/height.webp
+# /instance/storage/container/video-uuid.mp4
+# /instance/storage/container/audio-uuid.mp3
 # /instance/storage/container/file-name.extension
 
 # log_format rewriteLog '$remote_addr - $time_local '
