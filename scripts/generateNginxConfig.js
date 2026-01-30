@@ -4,6 +4,7 @@ import {
     remove,
     replaceVariables,
 } from './os.js'
+import { runOnTerminal } from './terminal.js'
 
 const generate = params => {
     const includes = [
@@ -46,6 +47,7 @@ const generate = params => {
 export default params => {
     const {
         home,
+        instance,
         isDev,
         process,
         role,

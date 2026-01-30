@@ -2,7 +2,7 @@ import {
     isFile,
     replaceVariables,
 } from './os.js'
-import getRandomPort from "./getRandomPort.js"
+import getRandomPort from './getRandomPort.js'
 
 const getFileAndParams = params => {
     const {
@@ -34,9 +34,13 @@ export default params => {
         file,
         home,
         isDev,
+        process,
         processPath,
     } = params
-    const sourceFile = `${isDev ? home : "/holizm"}/server/composes/${file}`
+    if (process === 'storage') {
+        return
+    }
+    const sourceFile = `${isDev ? home : '/holizm'}/server/composes/${file}`
     const targetFile = `${processPath}/compose.yaml`
     replaceVariables(sourceFile, targetFile, params)
 }
