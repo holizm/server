@@ -3,10 +3,11 @@ import {
     getLines,
     isFile,
 } from './os.js'
+import { errorAndExit } from "./logger.js"
 
 export default baseDir => {
     const filePath = path.join(baseDir, 'params')
-    if (!isFile(filePath)) throw `Params file not found at ${filePath}`
+    if (!isFile(filePath)) errorAndExit(`Params file not found at ${filePath}`)
 
     const out = {}
     for (const raw of getLines(filePath)) {
