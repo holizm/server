@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-source "$(dirname "$0")/../scripts/logger.sh"
-source "$(dirname "$0")/../scripts/installer.sh"
+. "$scripts/installer.sh"
 
 updateApt() {
     info "Updating apt ..."
@@ -105,7 +104,7 @@ registerHolismCommands() {
     else
         info "Registering holizm commands ..."
         chmod 644 /etc/environment
-        echo 'PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/holizm/server/commands"' | tee -a /etc/environment > /dev/null
+        echo 'PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:$HOME/server/commands"' | tee -a /etc/environment > /dev/null
         success "Registered holizm commands"
     fi
     if grep -q "holizm" /etc/bash.bashrc; then
@@ -113,7 +112,7 @@ registerHolismCommands() {
     else
         info "Registering holizm commands ..."
         chmod 644 /etc/bash.bashrc
-        echo 'PATH="${PATH}:/holizm/server/commands"' | tee -a /etc/bash.bashrc > /dev/null
+        echo 'PATH="${PATH}:$HOME/server/commands"' | tee -a /etc/bash.bashrc > /dev/null
         success "Registered holizm commands"
     fi
 }
@@ -169,26 +168,31 @@ addSsh() {
     || (error "Error! Restoring original sudoers." && mv /etc/sudoers.bak /etc/sudoers)
 }
 
-
 updateApt
-install git
+
 install curl
-install zip
-install unzip
-install rsync
+install git
 install jq
-install nginx installNginxFromOfficialSource
-install certbot installCertbot
-install micro installMicro
-install telnet
 install nethogs
-install htpasswd installApache2Utils
-install azcopy installAzCopy
-install az installAzureCli
-install rclone installRclone
-install docker installDocker
-install docker-compose installDockerCompose
+install rsync
+install telnet
+install unzip
+install zip
+
+$setupProd/nginx installNginxFromOfficialSource
+$setupProd/certbot installCertbot
+$setupProd/htpasswd installApache2Utils
 moveNginxDefaultSite
+
+$setupProd/micro installMicro
+$setupProd/rclone installRclone
+
+$setupProd/az installAzureCli
+$setupProd/azcopy installAzCopy
+
+$setupProd/docker installDocker
+$setupProd/docker-compose installDockerCompose
+
 registerHolismCommands
 setTimeZone
 setSshPrompt

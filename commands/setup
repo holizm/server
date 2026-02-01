@@ -1,7 +1,27 @@
 #!/usr/bin/env bash
+set -euo pipefail
+
+homeDir=$(getent passwd "${SUDO_USER:-$USER}" | cut -d: -f6)
+setupProd="$homeDir/server/setupProd"
+scripts="$homeDir/server/scripts"
+
+export homeDir
+export setupProd
+export scripts
+
+. "$scripts/logger.sh"
+
+clear
+divide
+info "running setup ..."
+divide
+
+$setupProd/setup
 
 bash "$(dirname "$0")/../setup/node"
 source "$(dirname "$0")/../setup/prod"
 source "$(dirname "$0")/../setup/secureUsers.sh"
 source "$(dirname "$0")/../setup/setPermissions.sh"
 source "$(dirname "$0")/../setup/includeUpdateTerminalTitleConfig.js"
+
+success "setup complete"
