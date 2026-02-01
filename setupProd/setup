@@ -19,20 +19,20 @@ moveNginxDefaultSite() {
 
 registerHolismCommands() {
     if grep -q "holizm" /etc/environment; then
-        success "holizm commands $check_mark"
+        success "Holism commands $check_mark"
     else
-        info "Registering holizm commands ..."
+        info "Registering holism commands ..."
         chmod 644 /etc/environment
-        echo 'PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:$HOME/server/commands"' | tee -a /etc/environment > /dev/null
-        success "Registered holizm commands"
+        echo 'PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/holism/server/commands"' | tee -a /etc/environment > /dev/null
+        success "Registered holism commands"
     fi
     if grep -q "holizm" /etc/bash.bashrc; then
-        success "holizm commands $check_mark"
+        success "Holism commands $check_mark"
     else
-        info "Registering holizm commands ..."
+        info "Registering Holism commands ..."
         chmod 644 /etc/bash.bashrc
-        echo 'PATH="${PATH}:$HOME/server/commands"' | tee -a /etc/bash.bashrc > /dev/null
-        success "Registered holizm commands"
+        echo 'PATH="${PATH}:/holism/server/commands"' | tee -a /etc/bash.bashrc > /dev/null
+        success "Registered Holism commands"
     fi
 }
 

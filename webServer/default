@@ -2,7 +2,7 @@ server {
     listen 80 default_server;
     server_name _;
 
-    root /holizm/server/webServer/defaultHtml;
+    root /holism/server/webServer/defaultHtml;
     index index.html;
 
     location / {
