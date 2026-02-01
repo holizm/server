@@ -9,38 +9,6 @@ updateApt() {
     success "Updated apt"
 }
 
-installAzCopy() {
-    curl -sSL -O https://packages.microsoft.com/config/ubuntu/24.04/packages-microsoft-prod.deb
-    dpkg -i packages-microsoft-prod.deb
-    rm packages-microsoft-prod.deb
-    apt-get update
-    apt-get install -y azcopy || error "Failed to install AzCopy"
-    success "Installed AzCopy"
-}
-
-installDocker() {
-    apt-get install -y apt-transport-https ca-certificates curl gnupg lsb-release
-    curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /usr/share/keyrings/dockerArchiveKeyring.gpg
-    echo "deb [arch=amd64 signed-by=/usr/share/keyrings/dockerArchiveKeyring.gpg] https://download.docker.com/linux/debian $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
-    apt-get update
-    apt-get install -y docker-ce docker-ce-cli containerd.io || error "Failed to install Docker"
-    groupadd -f docker
-    usermod -aG docker "$USER"
-    success "Installed Docker"
-}
-
-installDockerCompose() {
-    mkdir -p /usr/local/bin
-    local latestVersion
-    latestVersion=$(curl -fsSL https://api.github.com/repos/docker/compose/releases/latest | grep -oP '"tag_name": "\K(.*?)(?=")')
-    if [[ -z "$latestVersion" ]]; then
-        error "Failed to fetch the latest Docker Compose version"
-    fi
-    curl -fsSL "https://github.com/docker/compose/releases/download/${latestVersion}/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-    chmod +x /usr/local/bin/docker-compose || error "Failed to install Docker Compose"
-    success "Installed Docker Compose $latestVersion"
-}
-
 moveNginxDefaultSite() {
     if mv /etc/webServer/sites-enabled/default /etc/webServer/sites-enabled-default-backup 2>/dev/null; then
         success "Moved default Nginx site to backup"
