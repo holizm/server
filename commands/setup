@@ -2,8 +2,8 @@
 set -euo pipefail
 
 homeDir=$(getent passwd "${SUDO_USER:-$USER}" | cut -d: -f6)
-setupProd="$homeDir/server/setupProd"
-scripts="$homeDir/server/scripts"
+setupProd="/holism/server/setupProd"
+scripts="/holism/server/scripts"
 
 export homeDir
 export setupProd
