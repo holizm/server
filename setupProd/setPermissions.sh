@@ -1,30 +1,30 @@
 #!/bin/bash
 set -e
 
-BASE="/holizm"
-GROUP="shared"
-USERS_FILE="$BASE/users"
-KEYS_DIR="$BASE/keys"
-CMDS_DIR="$BASE/server/commands"
+base="/holism"
+group="shared"
+usersFile="$base/users"
+keysDir="$base/keys"
+cmdsDir="$base/server/commands"
 
-for dir in "$BASE" "$BASE/users" "$BASE/keys" "$BASE/server" "$BASE/fonts"; do
+for dir in "$base" "$base/users" "$base/keys" "$base/server" "$base/fonts"; do
     if [[ -d "$dir" ]]; then
-        sudo chown root:$GROUP "$dir"
+        sudo chown root:$group "$dir"
         sudo chmod 2775 "$dir"
     fi
 done
 
-if [[ -d "$BASE/keys" ]]; then
-    sudo chown root:root "$BASE/keys"
-    sudo chmod 0750 "$BASE/keys"
+if [[ -d "$base/keys" ]]; then
+    sudo chown root:root "$base/keys"
+    sudo chmod 0750 "$base/keys"
 fi
 
-if [[ -f "$BASE/users" ]]; then
-    sudo chown root:root "$BASE/users"
-    sudo chmod 0640 "$BASE/users"
+if [[ -f "$base/users" ]]; then
+    sudo chown root:root "$base/users"
+    sudo chmod 0640 "$base/users"
 fi
 
-if [[ -f "$USERS_FILE" && -d "$KEYS_DIR" ]]; then
+if [[ -f "$usersFile" && -d "$keysDir" ]]; then
     while IFS= read -r user; do
         [[ -z "$user" ]] && continue
         if [[ "$user" =~ ^[[:space:]] || "$user" =~ [[:space:]]$ ]]; then
@@ -33,16 +33,18 @@ if [[ -f "$USERS_FILE" && -d "$KEYS_DIR" ]]; then
         if [[ ! "$user" =~ ^[a-z0-9]+$ ]]; then
             continue
         fi
-        PUB="$KEYS_DIR/$user.pub"
-        if [[ ! -f "$PUB" ]]; then
-            sudo touch "$PUB"
-            sudo chown root:root "$PUB"
-            sudo chmod 0640 "$PUB"
+        pub="$keysDir/$user.pub"
+        if [[ ! -f "$pub" ]]; then
+            sudo touch "$pub"
+            sudo chown root:root "$pub"
+            sudo chmod 0640 "$pub"
         fi
-    done < "$USERS_FILE"
+    done < "$usersFile"
 fi
 
-if [[ -d "$CMDS_DIR" ]]; then
-    mapfile -t files < <(find "$CMDS_DIR" -maxdepth 1 -type f)
-    if (( ${#files[@]} )); then sudo chmod 0755 "${files[@]}"; fi
+if [[ -d "$cmdsDir" ]]; then
+    mapfile -t files < <(find "$cmdsDir" -maxdepth 1 -type f)
+    if (( ${#files[@]} )); then
+        sudo chmod 0755 "${files[@]}"
+    fi
 fi
