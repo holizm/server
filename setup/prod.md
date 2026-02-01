@@ -21,7 +21,7 @@
 - NGINX
     - IMPORTANT NOTE => Only move /etc/webServer/sites-enabled/ and DO NOT MOVE /etc/webServer/sites-available/ because it's a symbolic link to that.
     - Run
-        - `sudo ln -s -f /HolismHolding/Server/webServer/Default /etc/webServer/conf.d/default.conf`
+        - `sudo ln -s -f ~/server/webServer/default /etc/webServer/conf.d/default.conf`
         - `sudo nginx -s reload`
 
 - `docker login`
