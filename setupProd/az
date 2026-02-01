@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+. "$scripts/installer.sh"
+
+installAzureCli() {
+    curl -sL https://aka.ms/InstallAzureCLIDeb | bash || error "Failed to install Azure CLI"
+    success "Installed Azure CLI"
+}
+
+install az installAzureCli

@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+. "$scripts/installer.sh"
+
+installMicro() {
+    cd /usr/local/bin && curl -fsSL https://getmic.ro | bash || error "Failed to install Micro"
+    success "Installed Micro"
+}
+
+install micro installMicro

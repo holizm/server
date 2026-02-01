@@ -9,16 +9,6 @@ updateApt() {
     success "Updated apt"
 }
 
-installCertbot() {
-    apt-get install -y certbot python3-certbot-nginx || error "Failed to install certbot"
-    success "Installed certbot"
-}
-
-installMicro() {
-    cd /usr/local/bin && curl -fsSL https://getmic.ro | bash || error "Failed to install Micro"
-    success "Installed Micro"
-}
-
 installAzCopy() {
     curl -sSL -O https://packages.microsoft.com/config/ubuntu/24.04/packages-microsoft-prod.deb
     dpkg -i packages-microsoft-prod.deb
@@ -26,20 +16,6 @@ installAzCopy() {
     apt-get update
     apt-get install -y azcopy || error "Failed to install AzCopy"
     success "Installed AzCopy"
-}
-
-installRclone() {
-    curl https://rclone.org/install.sh | bash
-    success "Installed Rclone"
-}
-
-installAzureCli() {
-    curl -sL https://aka.ms/InstallAzureCLIDeb | bash || error "Failed to install Azure CLI"
-    success "Installed Azure CLI"
-}
-
-installApache2Utils() {
-    apt-get install -y apache2-utils
 }
 
 installDocker() {
@@ -63,31 +39,6 @@ installDockerCompose() {
     curl -fsSL "https://github.com/docker/compose/releases/download/${latestVersion}/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
     chmod +x /usr/local/bin/docker-compose || error "Failed to install Docker Compose"
     success "Installed Docker Compose $latestVersion"
-}
-
-installNginxFromOfficialSource() {
-    info "Installing NGINX from nginx.org ..."
-
-    apt-get install -y curl gnupg2 ca-certificates lsb-release debian-archive-keyring
-
-    curl -fsSL https://nginx.org/keys/nginx_signing.key | gpg --dearmor \
-        -o /usr/share/keyrings/nginxArchiveKeyring.gpg || error "Failed to import NGINX signing key"
-
-    echo "deb [signed-by=/usr/share/keyrings/nginxArchiveKeyring.gpg] \
-http://nginx.org/packages/debian $(lsb_release -cs) nginx" | tee /etc/apt/sources.list.d/nginx.list > /dev/null
-
-    tee /etc/apt/preferences.d/99nginx > /dev/null <<EOF
-Package: *
-Pin: origin nginx.org
-Pin-Priority: 900
-EOF
-
-    apt-get update
-    apt-get install -y nginx || error "Failed to install NGINX"
-    systemctl enable nginx
-    systemctl start nginx
-
-    success "Installed NGINX $(nginx -v 2>&1 | cut -d/ -f2)"
 }
 
 moveNginxDefaultSite() {

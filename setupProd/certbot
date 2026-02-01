@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+. "$scripts/installer.sh"
+
+installCertbot() {
+    apt-get install -y certbot python3-certbot-nginx || error "Failed to install certbot"
+    success "Installed certbot"
+}
+
+install certbot installCertbot
