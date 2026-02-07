@@ -4,7 +4,7 @@ import { error, warning } from './logger.js'
 import extract from './extract.js'
 import calculateSubdomain from './calculateSubdomain.js'
 import getRandomPort from './getRandomPort.js'
-import generateNginxConfig from './generateNginxConfig.js'
+import generateWebServerConfig from './generateWebServerConfig.js'
 import generateCompose from './generateCompose.js'
 import { isFile } from './os.js'
 import pascalize from './pascalize.js'
@@ -24,5 +24,5 @@ export default params => {
     params[`${instance}${pascalize(process)}Port`] = params.randomPort
     params.dockerImageName = `ghcr.io/${params.lowercaseOrg}/${params.lowercaseRepo}/${params.lowercaseGitHubImageNameOrProcess}:latest`
     generateCompose(params)
-    generateNginxConfig(params)
+    generateWebServerConfig(params)
 }
