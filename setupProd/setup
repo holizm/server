@@ -18,7 +18,7 @@ moveNginxDefaultSite() {
 }
 
 registerHolismCommands() {
-    if grep -q "holizm" /etc/environment; then
+    if grep -q "holism" /etc/environment; then
         success "Holism commands $check_mark"
     else
         info "Registering holism commands ..."
@@ -26,7 +26,7 @@ registerHolismCommands() {
         echo 'PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/holism/server/commands"' | tee -a /etc/environment > /dev/null
         success "Registered holism commands"
     fi
-    if grep -q "holizm" /etc/bash.bashrc; then
+    if grep -q "holism" /etc/bash.bashrc; then
         success "Holism commands $check_mark"
     else
         info "Registering Holism commands ..."
@@ -65,11 +65,11 @@ addSbinToUserPath() {
 }
 
 configurePythonCore() {
-    scriptsPath="/holizm/Server/Scripts/Python"
+    scriptsPath="/holism/server/scripts/python"
     sitePackages=$(python3 -m site --user-site)
     mkdir -p "$sitePackages"
     mkdir -p "$(dirname "$sitePackages")"
-    echo "$scriptsPath" > "$sitePackages/holizm-server.pth"
+    echo "$scriptsPath" > "$sitePackages/holism-server.pth"
     success "Configured Python core path on server"
 }
 
