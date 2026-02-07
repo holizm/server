@@ -40,7 +40,7 @@ export default params => {
     if (process === 'storage') {
         return
     }
-    const sourceFile = `${isDev ? home : '/holizm'}/server/composes/${file}`
+    const sourceFile = `${isDev ? home : '/holism'}/server/composes/${file}`
     const targetFile = `${processPath}/compose.yaml`
     replaceVariables(sourceFile, targetFile, params)
 }
