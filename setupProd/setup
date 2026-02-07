@@ -98,19 +98,21 @@ install telnet
 install unzip
 install zip
 
-$setupProd/nginx installNginxFromOfficialSource
-$setupProd/certbot installCertbot
-$setupProd/htpasswd installApache2Utils
+$setupProd/nginx
+$setupProd/certbot
+$setupProd/htpasswd
 moveNginxDefaultSite
 
-$setupProd/micro installMicro
-$setupProd/rclone installRclone
+$setupProd/micro
+$setupProd/rclone
 
-$setupProd/az installAzureCli
-$setupProd/azcopy installAzCopy
+$setupProd/az
+$setupProd/azcopy
 
-$setupProd/docker installDocker
-$setupProd/docker-compose installDockerCompose
+$setupProd/docker
+$setupProd/docker-compose
+
+$setupProd/node
 
 registerHolismCommands
 setTimeZone
@@ -119,3 +121,7 @@ givePermissionsForUser
 addSbinToUserPath
 configurePythonCore
 addSsh
+
+source $setupProd/secureUsers.sh
+source $setupProd/setPermissions.sh
+source $setupProd/includeUpdateTerminalTitleConfig.js
