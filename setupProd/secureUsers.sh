@@ -1,30 +1,30 @@
 #!/bin/bash
 
+. "$scripts/logger.sh"
+
 sudo groupadd -f shared
 
 usersFile="/holism/users"
 keysDir="/holism/keys"
 
 if [[ ! -f "$usersFile" ]]; then
-    echo "Error: User file '$usersFile' not found!"
-    exit 1
+    errorAndExit "Error: User file '$usersFile' not found!"
 fi
 
 if [[ ! -d "$keysDir" ]]; then
-    echo "Error: Keys directory '$keysDir' not found!"
-    exit 1
+    errorAndExit "Error: Keys directory '$keysDir' not found!"
 fi
 
 checkUser() {
     local user="$1"
 
     if [[ "$user" == "root" ]]; then
-        echo "Error: username '$user' is not allowed (reserved name)"
+        error "Error: username '$user' is not allowed (reserved name)"
         return 1
     fi
 
     if [[ ! "$user" =~ ^[a-z0-9]+$ ]]; then
-        echo "Error: username '$user' must contain only lowercase letters (a–z)"
+        error "Error: username '$user' must contain only lowercase letters (a–z)"
         return 1
     fi
 
@@ -33,7 +33,7 @@ checkUser() {
 
 while IFS= read -r user; do
     if [[ "$user" =~ ^[[:space:]] || "$user" =~ [[:space:]]$ ]]; then
-        echo "Error: username '$user' has leading or trailing whitespace"
+        error "Error: username '$user' has leading or trailing whitespace"
         continue
     fi
 
@@ -57,7 +57,7 @@ while IFS= read -r user; do
         sudo chmod 700 "/home/$user/.ssh"
         sudo chmod 600 "/home/$user/.ssh/authorized_keys"
     else
-        echo "Warning: No public key for '$user' at '$pubKey'"
+        warning "Warning: No public key for '$user' at '$pubKey'"
     fi
 
 done < "$usersFile"

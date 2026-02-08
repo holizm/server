@@ -87,7 +87,7 @@ addSsh() {
     || (error "Error! Restoring original sudoers." && mv /etc/sudoers.bak /etc/sudoers)
 }
 
-updateApt
+# updateApt
 
 install curl
 install git
