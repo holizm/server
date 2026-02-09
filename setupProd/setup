@@ -124,4 +124,4 @@ addSsh
 
 source $setupProd/secureUsers.sh
 source $setupProd/setPermissions.sh
-source $setupProd/includeUpdateTerminalTitleConfig.js
+$setupProd/includeUpdateTerminalTitleConfig.js
