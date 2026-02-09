@@ -12,7 +12,7 @@ SyslogFacility AUTH
 LogLevel VERBOSE
 
 # Authentication
-PermitRootLogin no
+PermitRootLogin prohibit-password
 PasswordAuthentication no
 PubkeyAuthentication yes
 AuthorizedKeysFile .ssh/authorized_keys
