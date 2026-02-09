@@ -1,0 +1,132 @@
+#!/usr/bin/env node
+
+import { pathToFileURL } from 'url'
+import {
+    getDepth,
+    isDev,
+    getDirs,
+    excludedDirs,
+    isFile,
+    getLines,
+} from '../scripts/os.js'
+import { runOnTerminal } from '../scripts/terminal.js'
+import { info, success, error, divide } from '../scripts/logger.js'
+
+function getCurrentNameservers() {
+    try {
+        const resolveConfigurationPath = '/etc/resolv.conf'
+        const content = getContent(resolveConfigurationPath)
+        const nameservers = content
+            .split('\n')
+            .filter(line => line.startsWith('nameserver'))
+            .map(line => line.split(/\s+/)[1])
+            .filter(Boolean)
+        return nameservers
+    } catch (err) {
+        console.error(`Error reading /etc/resolv.conf:`, err.message)
+        process.exit(1)
+    }
+}
+
+function changeDns(params) {
+    const {
+        providerArgument,
+        directoryPath,
+        filter,
+    } = params
+
+    const currentDirectory = directoryPath || process.cwd()
+    const baseDirectoryName = currentDirectory
+    params.baseDirectoryName = baseDirectoryName
+    params.home = process.env.HOME
+    params.isDev = isDev()
+    params.environmentRoot = params.isDev ? `${params.home}` : '/holism'
+
+    const sudo = process.getuid && process.getuid() !== 0 ? 'sudo' : ''
+
+    function runSudoCommand(command) {
+        try {
+            const fullCommand = sudo ? `${sudo} ${command}` : command
+            return runOnTerminal(fullCommand)
+        } catch (err) {
+            console.error(`Command failed: ${command}`, err.message)
+            process.exit(1)
+        }
+    }
+
+    const dnsProviders = {
+        google: "Google DNS|8.8.8.8 8.8.4.4",
+        cloudflare: "Cloudflare DNS|1.1.1.1 1.0.0.1",
+        opendns: "OpenDNS|208.67.222.222 208.67.220.220",
+        quad9: "Quad9|9.9.9.9 149.112.112.112"
+    }
+
+    const currentNameservers = getCurrentNameservers()
+    info('Old nameservers:')
+    console.log(getContent('/etc/resolv.conf'))
+
+    const providerKeys = Object.keys(dnsProviders)
+    const providerCount = providerKeys.length
+    let newNameservers = ''
+    let selectedLabel = ''
+
+    if (providerArgument) {
+        if (dnsProviders[providerArgument]) {
+            const selected = dnsProviders[providerArgument]
+            selectedLabel = selected.split('|')[0]
+            newNameservers = selected.split('|')[1]
+            success(`Manually set nameservers: ${selectedLabel}`)
+        } else {
+            error(`Invalid provider: ${providerArgument}`)
+            info('Available providers:')
+            providerKeys.forEach(key => {
+                console.log(`- ${key}`)
+            })
+            process.exit(1)
+        }
+    } else {
+        let matchedIndex = -1
+
+        for (let i = 0; i < providerKeys.length; i++) {
+            const key = providerKeys[i]
+            const value = dnsProviders[key]
+            const ipString = value.split('|')[1]
+            const firstIp = ipString.trim().split(' ')[0]
+
+            if (currentNameservers[0] === firstIp) {
+                matchedIndex = i
+                break
+            }
+        }
+
+        let nextIndex
+        if (matchedIndex >= 0) {
+            nextIndex = (matchedIndex + 1) % providerCount
+        } else {
+            nextIndex = 0
+        }
+
+        const nextKey = providerKeys[nextIndex]
+        const nextValue = dnsProviders[nextKey]
+        selectedLabel = nextValue.split('|')[0]
+        newNameservers = nextValue.split('|')[1]
+        success(`New nameservers: ${selectedLabel}`)
+    }
+
+    runSudoCommand(`bash -c "echo -n > /etc/resolv.conf"`)
+
+    const nameserverArray = newNameservers.trim().split(/\s+/)
+    nameserverArray.forEach(nameserver => {
+        runSudoCommand(`bash -c "echo nameserver ${nameserver} >> /etc/resolv.conf"`)
+    })
+
+    console.log(getContent('/etc/resolv.conf'))
+}
+
+const isMain = import.meta.url === pathToFileURL(process.argv[1]).href
+if (isMain) {
+    await changeDns({
+        providerArgument: process.argv[2] || '',
+        directoryPath: process.cwd(),
+    })
+}
