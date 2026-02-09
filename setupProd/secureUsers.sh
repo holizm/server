@@ -1,63 +1,55 @@
-#!/bin/bash
+#!/usr/bin/env bash
+set -euo pipefail
 
 . "$scripts/logger.sh"
 
-sudo groupadd -f shared
+groupadd -f shared
 
 usersFile="/holism/users"
 keysDir="/holism/keys"
 
-if [[ ! -f "$usersFile" ]]; then
-    errorAndExit "Error: User file '$usersFile' not found!"
-fi
-
-if [[ ! -d "$keysDir" ]]; then
-    errorAndExit "Error: Keys directory '$keysDir' not found!"
-fi
+[[ -f "$usersFile" ]] || errorAndExit "User file '$usersFile' not found"
+[[ -d "$keysDir" ]] || errorAndExit "Keys directory '$keysDir' not found"
 
 checkUser() {
     local user="$1"
 
-    if [[ "$user" == "root" ]]; then
-        error "Error: username '$user' is not allowed (reserved name)"
-        return 1
-    fi
-
-    if [[ ! "$user" =~ ^[a-z0-9]+$ ]]; then
-        error "Error: username '$user' must contain only lowercase letters (a–z)"
-        return 1
-    fi
+    [[ "$user" != "root" ]] || return 1
+    [[ ${#user} -eq 20 ]] || return 1
+    [[ "$user" =~ ^[a-z]{3}[a-z0-9]{17}$ ]] || return 1
 
     return 0
 }
 
-while IFS= read -r user; do
-    if [[ "$user" =~ ^[[:space:]] || "$user" =~ [[:space:]]$ ]]; then
-        error "Error: username '$user' has leading or trailing whitespace"
-        continue
-    fi
+while IFS= read -r rawUser || [[ -n "$rawUser" ]]; do
+    user="$(echo "$rawUser" | xargs)"
+    [[ -n "$user" ]] || continue
 
     if ! checkUser "$user"; then
+        warning "Skipping invalid username '$user'. Rules: exactly 20 chars, first 3 letters [a-z], remaining 17 letters or digits [a-z0-9], cannot be 'root'"
         continue
     fi
 
     if ! id "$user" >/dev/null 2>&1; then
-        sudo useradd -m -s /bin/bash "$user"
+        useradd -m -s /bin/bash "$user"
     fi
 
-    sudo usermod -aG shared "$user"
-    sudo passwd -d "$user"
+    usermod -G shared "$user"
+    passwd -d "$user" >/dev/null 2>&1 || true
+
+    [[ -f /etc/sudoers.d/$user ]] && rm -f /etc/sudoers.d/$user
 
     pubKey="$keysDir/$user.pub"
 
     if [[ -f "$pubKey" ]]; then
-        sudo mkdir -p "/home/$user/.ssh"
-        sudo cp "$pubKey" "/home/$user/.ssh/authorized_keys"
-        sudo chown -R "$user:$user" "/home/$user/.ssh"
-        sudo chmod 700 "/home/$user/.ssh"
-        sudo chmod 600 "/home/$user/.ssh/authorized_keys"
+        homeDir="$(getent passwd "$user" | cut -d: -f6)"
+        mkdir -p "$homeDir/.ssh"
+        cp "$pubKey" "$homeDir/.ssh/authorized_keys"
+        chown -R "$user:$user" "$homeDir/.ssh"
+        chmod 700 "$homeDir/.ssh"
+        chmod 600 "$homeDir/.ssh/authorized_keys"
     else
-        warning "Warning: No public key for '$user' at '$pubKey'"
+        warning "No public key for '$user' at '$pubKey'"
     fi
 
 done < "$usersFile"
