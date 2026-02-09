@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 
+format="table {{.Repository}}\t{{.Tag}}\t{{.ID}}\t{{.CreatedSince}}\t{{.Size}}"
+
 if [ $# -eq 0 ]; then
-    docker image ls
+    docker images --format "$format"
 else
-    docker image ls | grep "$1"
+    docker images --format "$format" | grep "$1"
 fi
