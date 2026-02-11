@@ -35,7 +35,7 @@ for Blob in $Blobs; do
     FileName=$(basename "$Blob")
     DatabaseName=Temp$(echo $FileName | cut -d"." -f1)
     TempFileName="Temp$Instance$FileName"
-    TempPath="/Temp/$TempFileName"
+    TempPath="/tmp/$TempFileName"
     echo "Downloading blob $Blob to $TempPath"
     az storage blob download --account-name $AzureStorage --container-name backup --name "$Blob" --sas-token "$Sas" --file "$TempPath" 1>/dev/null
 
