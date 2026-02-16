@@ -7,7 +7,7 @@ install() {
     local cmd_name="$1"
     local pkg_or_func="${2:-}"
     if command -v "$cmd_name" &>/dev/null; then
-        success "$cmd_name $check_mark"
+        success "$cmd_name $checkMark"
         return
     fi
     info "installing $cmd_name ..."

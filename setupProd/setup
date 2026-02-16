@@ -19,7 +19,7 @@ moveNginxDefaultSite() {
 
 registerHolismCommands() {
     if grep -q "holism" /etc/environment; then
-        success "Holism commands $check_mark"
+        success "Holism commands $checkMark"
     else
         info "Registering holism commands ..."
         chmod 644 /etc/environment
@@ -27,7 +27,7 @@ registerHolismCommands() {
         success "Registered holism commands"
     fi
     if grep -q "holism" /etc/bash.bashrc; then
-        success "Holism commands $check_mark"
+        success "Holism commands $checkMark"
     else
         info "Registering Holism commands ..."
         chmod 644 /etc/bash.bashrc
@@ -38,7 +38,7 @@ registerHolismCommands() {
 
 setTimeZone() {
     if timedatectl | grep -q "Time zone: UTC"; then
-        success "Time Zone $check_mark"
+        success "Time Zone $checkMark"
         return
     fi
     info "Configuring Time Zone to UTC ..."
