@@ -37,7 +37,11 @@ export default params => {
         process,
         processPath,
     } = params
-    if (process === 'storage') {
+    const processesWithoutCompose = [
+        'storage',
+        'statics',
+    ]
+    if (processesWithoutCompose.includes(process)) {
         return
     }
     const sourceFile = `${isDev ? home : '/holism'}/server/composes/${file}`
