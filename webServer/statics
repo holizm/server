@@ -1,0 +1,18 @@
+include ${home}/${instance}/statics/webServer/${tenant}/httpsRedirect;
+
+server {
+
+    include ${home}/${instance}/statics/webServer/${tenant}/listen;
+
+    include ${home}/${instance}/statics/webServer/${tenant}/certificate;
+    
+    include ${home}/${instance}/statics/webServer/${tenant}/compression;
+
+    root ${home}/${instance}/statics;
+
+    location = /robots.txt {
+        default_type text/plain;
+        return 200 "User-agent: *\nAllow: /";
+    }
+
+}
