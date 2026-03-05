@@ -20,7 +20,7 @@ if [ -n "$databaseToBackup" ]; then
         --password=${databasesPassword} \
         --authenticationDatabase=admin \
         --db=$databaseToBackup \
-        --archive=/$databaseToBackup.archive \
+        --archive=/tmp/$databaseToBackup.archive \
         --gzip
     docker cp $databasesContainer:/tmp/$databaseToBackup.archive $backupDirectory/databases/$databaseToBackup.archive 1>/dev/null
     echo "Backup complete for $databaseToBackup"
@@ -47,7 +47,7 @@ while read database; do
         --authenticationDatabase=admin \
         --db=$database \
         --quiet \
-        --archive=/$database.archive \
+        --archive=/tmp/$database.archive \
         --gzip
     docker cp $databasesContainer:/tmp/$database.archive $backupDirectory/databases/$database.archive 1>/dev/null
     echo $database
