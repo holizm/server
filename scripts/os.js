@@ -93,3 +93,8 @@ export const createDirIfNotExists = dirPath => {
         fs.mkdirSync(dirPath, { recursive: true })
     }
 }
+
+export const setAsExecutableForTheCurrentUser = path => {
+    fs.chmodSync(path, 0o755)
+    // todo: this runs `chmod +x` which seems to add execution for user/group/world. limit it to the user only
+}

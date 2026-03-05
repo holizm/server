@@ -1,4 +1,4 @@
-import { replaceVariables } from './os.js'
+import { replaceVariables, setAsExecutableForTheCurrentUser } from './os.js'
 
 export default params => {
     const {
@@ -15,4 +15,6 @@ export default params => {
 
     replaceVariables(backupTemplatePath, backupTarget, params)
     replaceVariables(restoreTemplatePath, restoreTarget, params)
+    setAsExecutableForTheCurrentUser(backupTarget)
+    setAsExecutableForTheCurrentUser(restoreTarget)
 }
