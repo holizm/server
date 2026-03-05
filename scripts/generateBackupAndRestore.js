@@ -1,4 +1,7 @@
-import { replaceVariables, setAsExecutableForTheCurrentUser } from './os.js'
+import {
+    replaceVariables,
+    setAsExecutableForTheCurrentUser,
+} from './os.js'
 
 export default params => {
     const {
