@@ -3,7 +3,7 @@
 databaseToBackup=$1
 databasesContainer=${instance}Databases
 accountsContainer=${instance}AccountsDatabase
-backupDirectory=/${instance}/backupDirectory
+backupDirectory=~/${instance}/backupDirectory
 
 rm -rf "$backupDirectory"
 
@@ -14,7 +14,7 @@ if [ -n "$databaseToBackup" ]; then
     echo "Backing up $databaseToBackup ..."
     echo "----------------------------"
     echo "----------------------------"
-    docker exec $databasesContainer bash -c "rm -rf /$databaseToBackup.archive"
+    docker exec $databasesContainer bash -c "rm -rf /tmp/$databaseToBackup.archive"
     docker exec $databasesContainer mongodump \
         --username=${databasesUser} \
         --password=${databasesPassword} \
@@ -22,7 +22,7 @@ if [ -n "$databaseToBackup" ]; then
         --db=$databaseToBackup \
         --archive=/$databaseToBackup.archive \
         --gzip
-    docker cp $databasesContainer:/$databaseToBackup.archive $backupDirectory/databases/$databaseToBackup.archive 1>/dev/null
+    docker cp $databasesContainer:/tmp/$databaseToBackup.archive $backupDirectory/databases/$databaseToBackup.archive 1>/dev/null
     echo "Backup complete for $databaseToBackup"
     exit 0
 fi
@@ -40,7 +40,7 @@ while read database; do
     if [[ $database == admin || $database == local || $database == config ]]; then
         continue
     fi
-    docker exec $databasesContainer bash -c "rm -rf /$database.archive"
+    docker exec $databasesContainer bash -c "rm -rf /tmp/$database.archive"
     docker exec $databasesContainer mongodump \
         --username=${databasesUser} \
         --password=${databasesPassword} \
@@ -49,15 +49,15 @@ while read database; do
         --quiet \
         --archive=/$database.archive \
         --gzip
-    docker cp $databasesContainer:/$database.archive $backupDirectory/databases/$database.archive 1>/dev/null
+    docker cp $databasesContainer:/tmp/$database.archive $backupDirectory/databases/$database.archive 1>/dev/null
     echo $database
 done
 
-if [ -d /${instance}/accounts ]; then
+if [ -d ~/${instance}/accounts ]; then
     mkdir -p $backupDirectory/accounts/databases
-    docker exec $accountsContainer bash -c "rm -rf /keycloak.sql"
+    docker exec $accountsContainer bash -c "rm -rf /tmp/keycloak.sql"
     docker exec $accountsContainer bash -c "mariadb-dump -u ${accountsMariaUser} -p${accountsMariaPassword} accounts > keycloak.sql"
-    docker cp $accountsContainer:/keycloak.sql $backupDirectory/accounts/databases/keycloak.sql 1>/dev/null
+    docker cp $accountsContainer:/tmp/keycloak.sql $backupDirectory/accounts/databases/keycloak.sql 1>/dev/null
     echo "Accounts database"
 fi
 
@@ -65,7 +65,7 @@ echo "Copying non-database files ..."
 rsync -a --no-times \
     --exclude="backupDirectory/" \
     --exclude="databases/" \
-    /${instance}/ $backupDirectory/
+    ~/${instance}/ $backupDirectory/
 
 timestamp=$(date +%Y-%m-%d_%H-%M-%S)
 echo "Uploading ..."
@@ -118,4 +118,4 @@ for blob in $blobs; do
 done
 
 echo "Deleted old backups"
-date >> /$instance/backupLog
+date >> ~/$instance/backupLog
