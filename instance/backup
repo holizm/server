@@ -1,175 +1,121 @@
 #!/bin/bash
-DatabaseToBackup="$1"
-DatabasesContainer=${Instance}Databases
-AccountsContainer=${Instance}AccountsDatabase
-BackupDirectory=/$Instance/BackupDirectory
-if [ -n "$DatabaseToBackup" ]; then
-    mkdir -p $BackupDirectory/Databases
+
+databaseToBackup=$1
+databasesContainer=${instance}Databases
+accountsContainer=${instance}AccountsDatabase
+backupDirectory=/$instance/backupDirectory
+
+$Sudo rm -rf "$backupDirectory"
+
+if [ -n "$databaseToBackup" ]; then
+    mkdir -p $backupDirectory/databases
     echo "----------------------------"
     echo "----------------------------"
-    echo "Backing up $DatabaseToBackup ..."
+    echo "Backing up $databaseToBackup ..."
     echo "----------------------------"
     echo "----------------------------"
-    docker exec $DatabasesContainer bash -c "rm -rf /$DatabaseToBackup.sql"
-    docker exec $DatabasesContainer bash -c "mariadb-dump -p${DatabasesPassword} $DatabaseToBackup > $DatabaseToBackup.sql"
-    docker cp $DatabasesContainer:/$DatabaseToBackup.sql /$Instance/BackupDirectory/Databases/$DatabaseToBackup.sql 1>/dev/null
-    echo "Backup complete for $DatabaseToBackup"
+    docker exec $databasesContainer bash -c "rm -rf /$databaseToBackup.archive"
+    docker exec $databasesContainer mongodump \
+        --username=$databasesUser \
+        --password=$databasesPassword \
+        --authenticationDatabase=admin \
+        --db=$databaseToBackup \
+        --archive=/$databaseToBackup.archive \
+        --gzip
+    docker cp $databasesContainer:/$databaseToBackup.archive $backupDirectory/databases/$databaseToBackup.archive 1>/dev/null
+    echo "Backup complete for $databaseToBackup"
     exit 0
 fi
+
 echo "----------------------------"
 echo "----------------------------"
-echo "Backing up $Instance ..."
+echo "Backing up $instance ..."
 echo "----------------------------"
 echo "----------------------------"
-rm -rf $BackupDirectory
-mkdir -p $BackupDirectory/Databases
-docker exec $DatabasesContainer bash -c "mariadb -u root -p${DatabasesPassword} -e 'show databases'" |
-while read Database;
-do
-    if [[ "$Database" = [a-z]* ]]; then
+
+mkdir -p $backupDirectory/databases
+
+docker exec $databasesContainer bash -c "mongosh --quiet --username \"$databasesUser\" --password \"$databasesPassword\" --authenticationDatabase admin --eval 'db.adminCommand({ listDatabases: 1 }).databases.map(d => d.name).join(\"\n\")'" |
+while read database; do
+    if [[ $database == admin || $database == local || $database == config ]]; then
         continue
     fi
-    if [[ "$Database" = "Database" ]]; then
-        continue
-    fi
-    if [[ "$Database" == Temp[A-Z]* ]]; then
-        continue
-    fi
-    docker exec $DatabasesContainer bash -c "rm -rf /$Database.sql"
-    docker exec $DatabasesContainer bash -c "mariadb-dump -p${DatabasesPassword} $Database > $Database.sql"
-    docker cp $DatabasesContainer:/$Database.sql /$Instance/BackupDirectory/Databases/$Database.sql 1>/dev/null
-    echo $Database
+    docker exec $databasesContainer bash -c "rm -rf /$database.archive"
+    docker exec $databasesContainer mongodump \
+        --username=$databasesUser \
+        --password=$databasesPassword \
+        --authenticationDatabase=admin \
+        --db=$database \
+        --quiet \
+        --archive=/$database.archive \
+        --gzip
+    docker cp $databasesContainer:/$database.archive $backupDirectory/databases/$database.archive 1>/dev/null
+    echo $database
 done
-if [ -d /$Instance/Accounts ]; then
-    mkdir -p $BackupDirectory/Accounts/Databases
-    docker exec $AccountsContainer bash -c "rm -rf /Keycloak.sql"
-    docker exec $AccountsContainer bash -c "mariadb-dump -u ${AccountsMariaUser} -p${AccountsMariaPassword} accounts > Keycloak.sql"
-    docker cp $AccountsContainer:/Keycloak.sql /$Instance/BackupDirectory/Accounts/Databases/Keycloak.sql 1>/dev/null
-    echo "Accounts dataabase"
+
+if [ -d /$instance/accounts ]; then
+    mkdir -p $backupDirectory/accounts/databases
+    docker exec $accountsContainer bash -c "rm -rf /keycloak.sql"
+    docker exec $accountsContainer bash -c "mariadb-dump -u $AccountsMariaUser -p$AccountsMariaPassword accounts > keycloak.sql"
+    docker cp $accountsContainer:/keycloak.sql $backupDirectory/accounts/databases/keycloak.sql 1>/dev/null
+    echo "Accounts database"
 fi
-find /$Instance -type f -name SettingsOverride.json | cut -d'/' -f3 |
-while read DirectoryName;
-do
-    mkdir -p $BackupDirectory/$DirectoryName
-    cp /$Instance/$DirectoryName/SettingsOverride.json $BackupDirectory/$DirectoryName/SettingsOverride.json
-done
-find /$Instance -name Subdomain | cut -d'/' -f3 |
-while read DirectoryName;
-do
-    mkdir -p $BackupDirectory/$DirectoryName
-    cp /$Instance/$DirectoryName/Subdomain $BackupDirectory/$DirectoryName/Subdomain
-done
-cp -r /$Instance/Common $BackupDirectory
-cp /$Instance/LinkNginxConfs $BackupDirectory/LinkNginxConfs
-cp /$Instance/Params $BackupDirectory/Params
-cp /$Instance/Org $BackupDirectory/Org
-if [ -f /$Instance/Repo ]; then
-    cp /$Instance/Repo $BackupDirectory/Repo
-fi
-mkdir -p /$BackupDirectory/SiteQwik
-cp /$Instance/SiteQwik/colors.css $BackupDirectory/SiteQwik/colors.css
-cp /$Instance/SiteQwik/favicon.ico $BackupDirectory/SiteQwik/favicon.ico
-cp /$Instance/SiteQwik/robots.txt $BackupDirectory/SiteQwik/robots.txt
-cp /$Instance/SiteQwik/sitemap.xml $BackupDirectory/SiteQwik/sitemap.xml
-if [ -f Paths ]; then
-    cp /$Instance/Paths $BackupDirectory/Paths
-    while IFS= read -r Path;
-    do
-        if [ "$Path" != "" ]; then
-            NormalizedPath=$(echo "$Path" | sed "s|/$Instance|/|g; s|//|/|g")
-            mkdir -p $BackupDirectory/$NormalizedPath
-            if [ -f $Path ]; then
-                cp $Path $BackupDirectory/$NormalizedPath
-            else
-                cp -r $Path $BackupDirectory/$NormalizedPath
-            fi
-        fi
-    done <<< "$(cat /$Instance/Paths)"
-fi
-Timestamp=$(date +%Y-%m-%d_%H-%M-%S)
+
+echo "Copying non-database files ..."
+rsync -a --no-times \
+    --exclude="backupDirectory/" \
+    --exclude="Databases/" \
+    /$instance/ $backupDirectory/
+
+timestamp=$(date +%Y-%m-%d_%H-%M-%S)
 echo "Uploading ..."
-if [[ -n "$AzureStorage" && -n "$Sas" ]]; then
-  azcopy copy "$BackupDirectory/*" "https://$AzureStorage.blob.core.windows.net/backup/$Timestamp/$Sas" --recursive=true 1>/dev/null
-  echo "Uploaded to Azure"
-elif [[ -n "$AwsBucket" && -n "$AwsServiceUrl" && -n "$AwsAccessKey" && -n "$AwsSecretKey" ]]; then
-  rclone copy "$BackupDirectory" \
-    :s3,"env_auth=false",access_key_id="$AwsAccessKey",secret_access_key="$AwsSecretKey",endpoint="$AwsServiceUrl",acl="private":"$AwsBucket/backup/$Timestamp" \
-    --s3-provider Minio \
-    --quiet
-  echo "Uploaded to Arvan"
+if ( which azcopy 1>/dev/null ); then
+    azcopy copy "$backupDirectory/*" "https://$azureStorage.blob.core.windows.net/backup/$timestamp/$Sas" --recursive=true 1>/dev/null
 else
-  echo "❌ No valid storage configuration found in Params file."
-  exit 1
+    /azcopy copy "$backupDirectory/*" "https://$azureStorage.blob.core.windows.net/backup/$timestamp/$Sas" --recursive=true 1>/dev/null
 fi
+echo "Uploaded"
+
 echo "Deleting old backups ..."
-RetainingDates=()
+retainingDates=()
 for i in {0..29}; do
-    RetainingDates+=($(date -d "-$i days" +%Y-%m-%d))
+    retainingDates+=($(date -d "-$i days" +%Y-%m-%d))
 done
 for i in {30..119}; do
     Day=$(date -d "-$i days" +%Y-%m-%d)
     if [ $(date -d "$Day" +%u) -eq 6 ]; then
-        RetainingDates+=($Day)
+        retainingDates+=($Day)
     fi
 done
 for i in {30..119}; do
-    RetainingDates+=($(date -d "-$i days" +%Y-%m-01))
+    retainingDates+=($(date -d "-$i days" +%Y-%m-01))
 done
 for i in {4..12}; do
-    RetainingDates+=($(date -d "-$i months" +%Y-%m-01))
+    retainingDates+=($(date -d "-$i months" +%Y-%m-01))
 done
-export RetainingDates=($(echo "${RetainingDates[@]}" | tr ' ' '\n' | sort -u))
-for Date in "${RetainingDates[@]}"; do
-    echo "Keep: $Date"
+export retainingDates=($(echo "${retainingDates[@]}" | tr ' ' '\n' | sort -u))
+
+for date in "${retainingDates[@]}"; do
+    echo $date
 done
-if [[ -n "$AzureStorage" && -n "$Sas" ]]; then
-  Blobs=$(az storage blob list \
-    --account-name "$AzureStorage" \
-    --container-name backup \
-    --sas-token "$Sas" \
-    --query "[].name" -o tsv)
-  for Blob in $Blobs; do
-    Keep=false
-    for Date in "${RetainingDates[@]}"; do
-      if [[ $Blob == $Date* ]]; then
-        Keep=true
-        break
-      fi
+
+blobs=$(az storage blob list --account-name $azureStorage --container-name backup --sas-token "$Sas" --query "[].name" -o tsv)
+for blob in $blobs; do
+    keep=false
+    for date in "${retainingDates[@]}"; do
+        if [[ $blob == $date* ]]; then
+            keep=true
+            break
+        fi
     done
-    if [ "$Keep" = false ]; then
-      echo "Deleting blob: $Blob"
-      az storage blob delete \
-        --account-name "$AzureStorage" \
-        --container-name backup \
-        --name "$Blob" \
-        --sas-token "$Sas"
+
+    if [ "$keep" = false ]; then
+        echo "Deleting blob: $blob"
+        az storage blob delete --account-name $azureStorage --container-name backup --name "$blob" --sas-token "$Sas"
     else
-      echo "Keeping blob: $Blob"
+        echo "Keeping blob: $blob"
     fi
-  done
-elif [[ -n "$AwsBucket" && -n "$AwsServiceUrl" ]]; then
-  Dates=$(rclone lsf \
-    :s3,"env_auth=false",access_key_id="$AwsAccessKey",secret_access_key="$AwsSecretKey",endpoint="$AwsServiceUrl":"$AwsBucket/backup/" \
-    --s3-provider Minio --dirs-only)
-  for Dir in $Dates; do
-    DirDate=${Dir%/}
-    Keep=false
-    for Date in "${RetainingDates[@]}"; do
-      if [[ "$DirDate" == "$Date" ]]; then
-        Keep=true
-        break
-      fi
-    done
-    if [ "$Keep" = false ]; then
-      echo "Deleting folder: $DirDate"
-      rclone purge \
-        :s3,"env_auth=false",access_key_id="$AwsAccessKey",secret_access_key="$AwsSecretKey",endpoint="$AwsServiceUrl":"$AwsBucket/backup/$DirDate" \
-        --s3-provider Minio \
-        --quiet
-    else
-      echo "Keeping folder: $DirDate"
-    fi
-  done
-fi
-echo "✅ Deleted old backups"
-date >> /$Instance/BackupLog
+done
+
+echo "Deleted old backups"
+date >> /$instance/backupLog
