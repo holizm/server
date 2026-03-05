@@ -5,7 +5,7 @@ databasesContainer=${instance}Databases
 accountsContainer=${instance}AccountsDatabase
 backupDirectory=/$instance/backupDirectory
 
-$Sudo rm -rf "$backupDirectory"
+rm -rf "$backupDirectory"
 
 if [ -n "$databaseToBackup" ]; then
     mkdir -p $backupDirectory/databases
