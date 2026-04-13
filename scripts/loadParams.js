@@ -3,7 +3,7 @@ import {
     getLines,
     isFile,
 } from './os.js'
-import { errorAndExit } from "./logger.js"
+import { errorAndExit } from './logger.js'
 
 export default baseDir => {
     const filePath = path.join(baseDir, 'params')
@@ -17,7 +17,7 @@ export default baseDir => {
         if (idx === -1) continue
         const key = line.slice(0, idx).trim()
         if (!key) continue
-        const value = line.slice(idx + 1).trim().replace(/^(['"])(.*)\1$/, '$2')
+        const value = line.slice(idx + 1).trim().replace(/^([''])(.*)\1$/, '$2')
         out[key] = value
     }
     return out
