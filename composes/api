@@ -25,6 +25,16 @@ services:
         restart: always
         networks:
             - ${instance}Network
+        user: "node"
+        read_only: true
+        init: true
+        security_opt:
+            - no-new-privileges:true
+        cap_drop:
+            - ALL
+        tmpfs:
+            - /tmp
+            - /run
 networks:
     ${instance}Network:
         name: ${instance}Network
