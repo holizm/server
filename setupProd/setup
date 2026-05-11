@@ -64,15 +64,6 @@ addSbinToUserPath() {
     fi
 }
 
-configurePythonCore() {
-    scriptsPath="/holism/server/scripts/python"
-    sitePackages=$(python3 -m site --user-site)
-    mkdir -p "$sitePackages"
-    mkdir -p "$(dirname "$sitePackages")"
-    echo "$scriptsPath" > "$sitePackages/holism-server.pth"
-    success "Configured Python core path on server"
-}
-
 addSsh() {
     local line='Defaults env_keep += "SSH_AUTH_SOCK"'
     if grep -Fxq "$line" /etc/sudoers; then
@@ -119,7 +110,6 @@ setTimeZone
 setSshPrompt
 givePermissionsForUser
 addSbinToUserPath
-configurePythonCore
 addSsh
 
 source $setupProd/secureUsers.sh
