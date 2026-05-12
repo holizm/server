@@ -68,8 +68,8 @@ preserveSshAgentInSudo() {
     fi
     info "Adding SSH_AUTH_SOCK preservation to sudoers..."
     (cp /etc/sudoers /etc/sudoers.bak && \
-     echo "$line" | tee -a /etc/sudoers >/dev/null && \
-     vi-cf /etc/sudoers) \
+    echo "$line" | tee -a /etc/sudoers >/dev/null && \
+    visudo -cf /etc/sudoers) \
     && success "Line added successfully!" \
     || (error "Error! Restoring original sudoers." && mv /etc/sudoers.bak /etc/sudoers)
 }
