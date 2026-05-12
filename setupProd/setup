@@ -50,10 +50,6 @@ setSshPrompt() {
     truncate -s 0 /etc/skel/.bashrc
 }
 
-givePermissionsForUser() {
-    usermod -aG docker $USER
-}
-
 addSbinToUserPath() {
     local file="/etc/bash.bashrc"
     local line='export PATH=$PATH:/usr/sbin'
@@ -64,7 +60,7 @@ addSbinToUserPath() {
     fi
 }
 
-addSsh() {
+preserveSshAgentInSudo() {
     local line='Defaults env_keep += "SSH_AUTH_SOCK"'
     if grep -Fxq "$line" /etc/sudoers; then
         success "SSH_AUTH_SOCK is already preserved in sudoers."
@@ -78,7 +74,7 @@ addSsh() {
     || (error "Error! Restoring original sudoers." && mv /etc/sudoers.bak /etc/sudoers)
 }
 
-# updateApt
+updateApt
 
 install curl
 install git
@@ -108,9 +104,8 @@ $setupProd/node
 registerHolismCommands
 setTimeZone
 setSshPrompt
-givePermissionsForUser
 addSbinToUserPath
-addSsh
+preserveSshAgentInSudo
 
 source $setupProd/secureUsers.sh
 source $setupProd/setPermissions.sh
