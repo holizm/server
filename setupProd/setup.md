@@ -3,7 +3,7 @@
 ## 1. Operating System
 
 * Debian Trixie
-  [https://www.debian.org/releases/trixie/](https://www.debian.org/releases/trixie/)
+  [https://cdimage.debian.org/debian-cd/current/amd64/iso-cd/debian-13.4.0-amd64-netinst.iso](https://www.debian.org/releases/trixie/)
 
 ---
 
