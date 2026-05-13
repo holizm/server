@@ -15,7 +15,7 @@ apt update && apt upgrade -y
 
 ---
 
-## 3. Initial Access
+## 3. Change root password
 
 * Log in as `root`
 * Change root password:
