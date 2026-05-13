@@ -87,26 +87,6 @@ nano /etc/resolv.conf
 
 ---
 
-## 7. NGINX Setup
-
-⚠️ Important:
-
-* Do NOT move `/etc/nginx/sites-available/`
-* Only manage `sites-enabled` or use symlinks carefully.
-* Create symlink:
-
-```bash
-sudo ln -s -f /holism/server/webServer/defaultHtml /etc/nginx/conf.d/default.conf
-```
-
-* Reload NGINX:
-
-```bash
-sudo nginx -s reload
-```
-
----
-
 ## 8. Docker Login
 
 ```bash

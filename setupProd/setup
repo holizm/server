@@ -9,12 +9,14 @@ updateApt() {
     success "Updated apt"
 }
 
-moveNginxDefaultSite() {
-    if mv /etc/webServer/sites-enabled/default /etc/webServer/sites-enabled-default-backup 2>/dev/null; then
+setNginxDefaultSite() {
+    if mv /etc/nginx/sites-enabled/default /etc/nginx/sites-enabled-default-backup 2>/dev/null; then
         success "Moved default Nginx site to backup"
     else
         warning "Default Nginx site was not found or already moved"
     fi
+    ln -s -f /holism/server/webServer/defaultHtml /etc/nginx/conf.d/default.conf
+    nginx -s reload
 }
 
 registerHolismCommands() {
@@ -88,7 +90,7 @@ install zip
 $setupProd/nginx
 $setupProd/certbot
 $setupProd/htpasswd
-moveNginxDefaultSite
+setNginxDefaultSite
 
 $setupProd/micro
 $setupProd/rclone
