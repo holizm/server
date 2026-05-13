@@ -1,4 +1,5 @@
 # Listen on a non-standard port
+# Choose from private (ephemeral) range (49152–65535)
 Port 53292
 
 # Networking

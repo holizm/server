@@ -7,80 +7,51 @@
 
 ---
 
-## 2. Initial Access
+## 2. System Update
+
+```bash
+apt update && apt upgrade -y
+```
+
+---
+
+## 3. Initial Access
 
 * Log in as `root`
 * Change root password:
 
-  ```bash
-  passwd root
-  ```
+```bash
+passwd root
+```
 
 ---
 
-## 3. Create Admin User (Recommended)
+## 4. Harden/Secure SSH
 
 > ⚠️ Do not close the current SSH session until everything is tested from a second session.
+> ⚠️ Choose a random port from the private/ephemeral range (49152–65535)
 
-* Create a new admin user (lowercase, strong, ~20 chars recommended):
+* Copy this file:
 
-  ```bash
-  adduser new-admin-username
-  ```
-* Grant sudo privileges:
+```text
+/home/dev/server/setupProd/hardenedSshConfig
+```
 
-  ```bash
-  usermod -aG sudo new-admin-username
-  ```
-* Set up SSH access:
+* To:
 
-  ```bash
-  ssh-copy-id new-admin-username@server-ip
-  ```
-* Ensure passwordless sudo (optional, configure via `/etc/sudoers` or `/etc/sudoers.d/`)
+```text
+/etc/ssh/sshd_config
+```
 
----
+* Then run:
 
-## 4. Disable Root Login (after verification)
-
-* Make sure the new user works first.
-* Then disable root SSH login in:
-
-  ```bash
-  nano /etc/ssh/sshd_config
-  ```
-
-  Set:
-
-  ```
-  PermitRootLogin no
-  ```
+```bash
+systemctl restart ssh
+```
 
 ---
 
-## 5. Change SSH Port
-
-> ⚠️ Keep the current session open and test a second session before closing anything.
-
-* Edit SSH config:
-
-  ```bash
-  nano /etc/ssh/sshd_config
-  ```
-* Change:
-
-  ```
-  Port <new-port>
-  ```
-* Restart SSH:
-
-  ```bash
-  systemctl restart ssh
-  ```
-
----
-
-## 6. Fix Directory Ownership (if needed)
+## 5. Fix Directory Ownership (if needed)
 
 ```bash
 sudo chown -R $(whoami):$(whoami) /HolismHolding
@@ -89,64 +60,64 @@ sudo chown -R $(whoami):$(whoami) /Instance
 
 ---
 
-## 7. Set Hostname
+## 6. Set Hostname
 
 * Change hostname:
 
-  ```bash
-  sudo hostnamectl set-hostname new-hostname
-  ```
+```bash
+sudo hostnamectl set-hostname new-hostname
+```
+
 * Update `/etc/hosts`:
 
-  ```
-  127.0.1.1   new-hostname
-  ```
+```text
+127.0.1.1   new-hostname
+```
+
 * Reboot:
 
-  ```bash
-  sudo reboot
-  ```
+```bash
+sudo reboot
+```
 
 > Naming convention suggestion:
 > `<owner-name>-001`, `<owner-name>-002`, etc.
 
 ---
 
-## 8. DNS / Nameservers (Optional)
+## 7. DNS / Nameservers (Optional)
 
 * Edit:
 
-  ```bash
-  nano /etc/resolv.conf
-  ```
+```bash
+nano /etc/resolv.conf
+```
 
 > Note: This file may be overwritten by system services (use systemd-resolved if persistent config is needed).
 
 ---
 
-## 9. NGINX Setup
+## 8. NGINX Setup
 
 ⚠️ Important:
 
 * Do NOT move `/etc/nginx/sites-available/`
-
 * Only manage `sites-enabled` or use symlinks carefully.
-
 * Create symlink:
 
-  ```bash
-  sudo ln -s -f /HolismHolding/Server/Nginx/Default /etc/nginx/conf.d/default.conf
-  ```
+```bash
+sudo ln -s -f /HolismHolding/Server/Nginx/Default /etc/nginx/conf.d/default.conf
+```
 
 * Reload NGINX:
 
-  ```bash
-  sudo nginx -s reload
-  ```
+```bash
+sudo nginx -s reload
+```
 
 ---
 
-## 10. Docker Login
+## 9. Docker Login
 
 ```bash
 docker login
@@ -155,7 +126,7 @@ docker login ghcr.io
 
 ---
 
-## 11. CPU Feature Check (SSE4.2)
+## 10. CPU Feature Check (SSE4.2)
 
 Required for UBI9 / Keycloak:
 
@@ -165,7 +136,7 @@ cat /proc/cpuinfo | grep sse4
 
 ---
 
-## 12. Security Checklist
+## 11. Security Checklist
 
 * Enable firewall (allow only required ports):
 
@@ -178,5 +149,3 @@ cat /proc/cpuinfo | grep sse4
 * Restrict database access (VPN-only exposure)
 
 ---
-
-If you want, I can also turn this into a **fully automated bootstrap script** or a **production hardening checklist with verification steps**.
