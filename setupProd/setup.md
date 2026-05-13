@@ -48,24 +48,14 @@ passwd root
 ```bash
 systemctl restart ssh
 ```
-
 ---
 
-## 5. Fix Directory Ownership (if needed)
-
-```bash
-sudo chown -R $(whoami):$(whoami) /HolismHolding
-sudo chown -R $(whoami):$(whoami) /Instance
-```
-
----
-
-## 6. Set Hostname
+## 5. Set Hostname
 
 * Change hostname:
 
 ```bash
-sudo hostnamectl set-hostname new-hostname
+hostnamectl set-hostname new-hostname
 ```
 
 * Update `/etc/hosts`:
@@ -77,7 +67,7 @@ sudo hostnamectl set-hostname new-hostname
 * Reboot:
 
 ```bash
-sudo reboot
+reboot
 ```
 
 > Naming convention suggestion:
@@ -85,7 +75,7 @@ sudo reboot
 
 ---
 
-## 7. DNS / Nameservers (Optional)
+## 6. DNS / Nameservers (Optional)
 
 * Edit:
 
@@ -97,7 +87,7 @@ nano /etc/resolv.conf
 
 ---
 
-## 8. NGINX Setup
+## 7. NGINX Setup
 
 ⚠️ Important:
 
@@ -106,7 +96,7 @@ nano /etc/resolv.conf
 * Create symlink:
 
 ```bash
-sudo ln -s -f /HolismHolding/Server/Nginx/Default /etc/nginx/conf.d/default.conf
+sudo ln -s -f /holism/server/webServer/defaultHtml /etc/nginx/conf.d/default.conf
 ```
 
 * Reload NGINX:
@@ -117,7 +107,7 @@ sudo nginx -s reload
 
 ---
 
-## 9. Docker Login
+## 8. Docker Login
 
 ```bash
 docker login
@@ -126,7 +116,7 @@ docker login ghcr.io
 
 ---
 
-## 10. CPU Feature Check (SSE4.2)
+## 9. CPU Feature Check (SSE4.2)
 
 Required for UBI9 / Keycloak:
 
