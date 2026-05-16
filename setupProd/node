@@ -3,10 +3,10 @@
 . "$scripts/logger.sh"
 
 installNode() {
-    sudo apt-get update -y
-    sudo apt-get install -y curl ca-certificates gnupg jq
+    apt-get update -y
+    apt-get install -y curl ca-certificates gnupg jq
     curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
-    sudo apt-get install -y nodejs
+    apt-get install -y nodejs
 
     echo 'export NODE_OPTIONS="--trace-deprecation"' >> ~/.bashrc
     export NODE_OPTIONS="--trace-deprecation"
@@ -15,7 +15,7 @@ installNode() {
 latestLts=$(curl -s https://nodejs.org/dist/index.json)
 
 if [[ -z "$latestLts" ]]; then
-    errorAndExit "Change your internet or DNS"
+    error "Change your internet or DNS"
 fi
 
 latestLts=$(echo "$latestLts" | jq -r '[.[] | select(.lts != false)][0].version')

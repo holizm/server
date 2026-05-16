@@ -90,7 +90,7 @@ install zip
 $setupProd/nginx
 $setupProd/certbot
 $setupProd/htpasswd
-setNginxDefaultSite
+#setNginxDefaultSite
 
 $setupProd/micro
 $setupProd/rclone
