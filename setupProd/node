@@ -12,11 +12,10 @@ installNode() {
     export NODE_OPTIONS="--trace-deprecation"
 }
 
-info 'install node ...'
 latestLts=$(curl -s https://nodejs.org/dist/index.json)
 
 if [[ -z "$latestLts" ]]; then
-    error "Change your internet or DNS"
+    error 'Change your internet or DNS'
 fi
 
 latestLts=$(echo "$latestLts" | jq -r '[.[] | select(.lts != false)][0].version')
