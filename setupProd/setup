@@ -87,19 +87,19 @@ install telnet
 install unzip
 install zip
 
-$setupProd/nginx
-$setupProd/certbot
-$setupProd/htpasswd
-#setNginxDefaultSite
+# $setupProd/nginx
+# $setupProd/certbot
+# $setupProd/htpasswd
+# #setNginxDefaultSite
 
-$setupProd/micro
-$setupProd/rclone
+# $setupProd/micro
+# $setupProd/rclone
 
-$setupProd/az
-$setupProd/azcopy
+# $setupProd/az
+# $setupProd/azcopy
 
-$setupProd/docker
-$setupProd/docker-compose
+# $setupProd/docker
+# $setupProd/docker-compose
 
 $setupProd/node
 
