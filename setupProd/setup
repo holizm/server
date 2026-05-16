@@ -76,16 +76,16 @@ preserveSshAgentInSudo() {
     || (error "Error! Restoring original sudoers." && mv /etc/sudoers.bak /etc/sudoers)
 }
 
-updateApt
+# updateApt
 
-install curl
-install git
-install jq
-install nethogs
-install rsync
-install telnet
-install unzip
-install zip
+# install curl
+# install git
+# install jq
+# install nethogs
+# install rsync
+# install telnet
+# install unzip
+# install zip
 
 # $setupProd/nginx
 # $setupProd/certbot
