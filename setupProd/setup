@@ -101,7 +101,7 @@ preserveSshAgentInSudo() {
 # $setupProd/docker
 # $setupProd/docker-compose
 
-$setupProd/node
+#$setupProd/node
 
 registerHolismCommands
 setTimeZone
