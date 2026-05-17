@@ -75,23 +75,37 @@ preserveSshAgentInSudo() {
     local line='Defaults env_keep += "SSH_AUTH_SOCK"'
     local file='/etc/sudoers.d/ssh-auth-sock'
 
-    mkdir -p /etc/sudoers.d
+    if ! command -v visudo >/dev/null 2>&1; then
+        warning "visudo not found. Skipping sudo SSH_AUTH_SOCK configuration."
+        return 0
+    fi
+
+    if [ ! -d /etc/sudoers.d ]; then
+        warning "/etc/sudoers.d not found. Skipping sudo SSH_AUTH_SOCK configuration."
+        return 0
+    fi
 
     if [ -f "$file" ] && grep -Fxq "$line" "$file" 2>/dev/null; then
-        success "SSH_AUTH_SOCK is already preserved in sudoers."
+        success "SSH_AUTH_SOCK already preserved in sudoers."
         return 0
     fi
 
     info "Adding SSH_AUTH_SOCK preservation to sudoers..."
 
-    echo "$line" > "$file" &&
-    chmod 440 "$file" &&
-    visudo -cf "$file" &&
-    success "Line added successfully!" ||
-    (
-        error "Error! Removing invalid sudoers file."
-        rm -f "$file"
-    )
+    if echo "$line" > "$file" 2>/dev/null; then
+        chmod 440 "$file" 2>/dev/null || true
+
+        if visudo -cf "$file" >/dev/null 2>&1; then
+            success "SSH_AUTH_SOCK preservation added."
+        else
+            warning "Invalid sudoers entry detected. Disabling it."
+            rm -f "$file"
+        fi
+    else
+        warning "Cannot write to sudoers.d. Skipping."
+    fi
+
+    return 0
 }
 
 # updateApt
