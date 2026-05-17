@@ -75,7 +75,9 @@ preserveSshAgentInSudo() {
     local line='Defaults env_keep += "SSH_AUTH_SOCK"'
     local file='/etc/sudoers.d/ssh-auth-sock'
 
-    if grep -Fxq "$line" "$file" 2>/dev/null; then
+    mkdir -p /etc/sudoers.d
+
+    if [ -f "$file" ] && grep -Fxq "$line" "$file" 2>/dev/null; then
         success "SSH_AUTH_SOCK is already preserved in sudoers."
         return 0
     fi
