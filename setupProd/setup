@@ -73,16 +73,23 @@ addSbinToUserPath() {
 
 preserveSshAgentInSudo() {
     local line='Defaults env_keep += "SSH_AUTH_SOCK"'
-    if grep -Fxq "$line" /etc/sudoers; then
+    local file='/etc/sudoers.d/ssh-auth-sock'
+
+    if grep -Fxq "$line" "$file" 2>/dev/null; then
         success "SSH_AUTH_SOCK is already preserved in sudoers."
         return 0
     fi
+
     info "Adding SSH_AUTH_SOCK preservation to sudoers..."
-    (cp /etc/sudoers /etc/sudoers.bak && \
-    echo "$line" | tee -a /etc/sudoers >/dev/null && \
-    visudo -cf /etc/sudoers) \
-    && success "Line added successfully!" \
-    || (error "Error! Restoring original sudoers." && mv /etc/sudoers.bak /etc/sudoers)
+
+    echo "$line" > "$file" &&
+    chmod 440 "$file" &&
+    visudo -cf "$file" &&
+    success "Line added successfully!" ||
+    (
+        error "Error! Removing invalid sudoers file."
+        rm -f "$file"
+    )
 }
 
 # updateApt
