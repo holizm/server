@@ -9,19 +9,19 @@ cmdsDir="$base/server/commands"
 
 for dir in "$base" "$base/users" "$base/keys" "$base/server" "$base/fonts"; do
     if [[ -d "$dir" ]]; then
-        sudo chown root:$group "$dir"
-        sudo chmod 2775 "$dir"
+        chown root:$group "$dir"
+        chmod 2775 "$dir"
     fi
 done
 
 if [[ -d "$base/keys" ]]; then
-    sudo chown root:root "$base/keys"
-    sudo chmod 0750 "$base/keys"
+    chown root:root "$base/keys"
+    chmod 0750 "$base/keys"
 fi
 
 if [[ -f "$base/users" ]]; then
-    sudo chown root:root "$base/users"
-    sudo chmod 0640 "$base/users"
+    chown root:root "$base/users"
+    chmod 0640 "$base/users"
 fi
 
 if [[ -f "$usersFile" && -d "$keysDir" ]]; then
@@ -35,9 +35,9 @@ if [[ -f "$usersFile" && -d "$keysDir" ]]; then
         fi
         pub="$keysDir/$user.pub"
         if [[ ! -f "$pub" ]]; then
-            sudo touch "$pub"
-            sudo chown root:root "$pub"
-            sudo chmod 0640 "$pub"
+            touch "$pub"
+            chown root:root "$pub"
+            chmod 0640 "$pub"
         fi
     done < "$usersFile"
 fi
@@ -45,6 +45,6 @@ fi
 if [[ -d "$cmdsDir" ]]; then
     mapfile -t files < <(find "$cmdsDir" -maxdepth 1 -type f)
     if (( ${#files[@]} )); then
-        sudo chmod 0755 "${files[@]}"
+        chmod 0755 "${files[@]}"
     fi
 fi
