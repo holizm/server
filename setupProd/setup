@@ -15,8 +15,17 @@ setNginxDefaultSite() {
     else
         success "Default Nginx site $checkMark"
     fi
-    ln -s -f /holism/server/webServer/default /etc/nginx/conf.d/default.conf
-    nginx -s reload
+
+    local source="/holism/server/webServer/default"
+    local target="/etc/nginx/conf.d/default.conf"
+
+    if [ -L "$target" ] && [ "$(readlink -f "$target")" = "$(readlink -f "$source")" ]; then
+        success "Nginx default link already exists $checkMark"
+    else
+        ln -sfn "$source" "$target"
+        nginx -s reload
+        success "Linked Nginx default site"
+    fi
 }
 
 registerHolismCommands() {
