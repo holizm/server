@@ -109,7 +109,7 @@ $setupProd/rclone
 
 $setupProd/docker
 
-$setupProd/node
+# $setupProd/node
 
 registerHolismCommands
 setTimeZone
