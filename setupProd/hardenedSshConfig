@@ -43,7 +43,7 @@ MaxSessions 5
 MaxStartups 3:30:10
 
 # Subsystem for SFTP
-Subsystem sftp /usr/libexec/sftp-server
+Subsystem sftp /usr/lib/openssh/sftp-server
 
 # Restrict accepted key types and algorithms (only modern)
 PubkeyAcceptedKeyTypes ssh-ed25519,ecdsa-sha2-nistp256

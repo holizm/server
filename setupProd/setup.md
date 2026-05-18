@@ -10,7 +10,7 @@
 ## 2. System Update
 
 ```bash
-apt update && apt upgrade -y
+apt update && apt full-upgrade -y
 ```
 
 ---
