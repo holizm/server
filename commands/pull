@@ -1,0 +1,30 @@
+#!/usr/bin/env node
+
+import fs from 'fs'
+import path from 'path'
+import { execSync } from 'child_process'
+
+const filter = process.argv[2]
+
+if (level === 'instance') {
+    let appDirectories = fs.readdirSync(instancePath, { withFileTypes: true })
+        .filter(dirent => dirent.isDirectory())
+        .map(dirent => dirent.name)
+
+    if (filter) {
+        const regex = new RegExp(filter)
+        appDirectories = appDirectories.filter(name => regex.test(name))
+    }
+
+    for (const appDirectory of appDirectories) {
+        const dirPath = path.join(instancePath, appDirectory)
+        process.chdir(dirPath)
+        execSync('pull', { stdio: 'inherit' })
+    }
+} else {
+    const dockerComposePath = path.join(processPath, 'docker-compose.yml')
+    if (fs.existsSync(dockerComposePath) && processName !== 'accounts' && processName !== 'databases') {
+        const image = `ghcr.io/${lowercaseOrg}/${lowercaseRepo}/${lowercaseGitHubImageNameOrProcess}:latest`
+        execSync(`docker pull ${image}`, { stdio: 'inherit' })
+    }
+}
