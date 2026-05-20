@@ -1,30 +1,56 @@
 #!/usr/bin/env node
 
-import fs from 'fs'
-import path from 'path'
-import { execSync } from 'child_process'
+import {
+    excludedDirs,
+    getDepth,
+    getDirs,
+    isDev,
+    isFile,
+} from '../scripts/os.js'
+import extract from '../scripts/extract.js'
+import { runOnTerminal } from '../scripts/terminal.js'
 
-const filter = process.argv[2]
+const pull = async params => {
+    const {
+        directoryPath,
+        filter,
+    } = params
+    params.depth = getDepth(directoryPath)
+    params.home = process.env.HOME
+    params.isDev = isDev()
+    params.environmentRoot = isDev() ? `${params.home}` : '/holism'
+    params = extract(params)
+    const {
+        instancePath,
+        level,
+        lowercaseGitHubImageNameOrProcess,
+        lowercaseInstance,
+        processPath,
+    } = params
 
-if (level === 'instance') {
-    let appDirectories = fs.readdirSync(instancePath, { withFileTypes: true })
-        .filter(dirent => dirent.isDirectory())
-        .map(dirent => dirent.name)
-
-    if (filter) {
-        const regex = new RegExp(filter)
-        appDirectories = appDirectories.filter(name => regex.test(name))
-    }
-
-    for (const appDirectory of appDirectories) {
-        const dirPath = path.join(instancePath, appDirectory)
-        process.chdir(dirPath)
-        execSync('pull', { stdio: 'inherit' })
-    }
-} else {
-    const dockerComposePath = path.join(processPath, 'docker-compose.yml')
-    if (fs.existsSync(dockerComposePath) && processName !== 'accounts' && processName !== 'databases') {
-        const image = `ghcr.io/${lowercaseOrg}/${lowercaseRepo}/${lowercaseGitHubImageNameOrProcess}:latest`
-        execSync(`docker pull ${image}`, { stdio: 'inherit' })
+    if (level === 'instance') {
+        let dirs = getDirs().filter(d => !excludedDirs.includes(d))
+        if (filter) {
+            const regex = new RegExp(filter)
+            dirs = dirs.filter(dir => regex.test(dir))
+        }
+        for (const dir of dirs) {
+            const directoryPath = `${instancePath}/${dir}`
+            await pull({
+                directoryPath,
+                print: true,
+            })
+        }
+    } else {
+        const composeFile = `${processPath}/compose.yaml`
+        if (isFile(composeFile)) {
+            const command = `docker compose -p ${lowercaseInstance}-${lowercaseGitHubImageNameOrProcess} pull`
+            runOnTerminal(command)
+        }
     }
 }
+
+await pull({
+    filter: process.argv[2] || '',
+    directoryPath: process.cwd(),
+})

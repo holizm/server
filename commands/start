@@ -1,6 +1,5 @@
 #!/usr/bin/env node
 
-import { pathToFileURL } from 'url'
 import {
     excludedDirs,
     getDepth,
@@ -54,10 +53,7 @@ const start = params => {
     }
 }
 
-const isMain = import.meta.url === pathToFileURL(process.argv[1]).href
-if (isMain) {
-    await start({
-        filter: process.argv[2] || '',
-        directoryPath: process.cwd(),
-    })
-}
+await start({
+    filter: process.argv[2] || '',
+    directoryPath: process.cwd(),
+})
