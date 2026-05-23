@@ -1,0 +1,15 @@
+services:
+  registry:
+    image: registry:latest
+    container_name: imageRegistry
+    restart: always
+    ports:
+      - "127.0.0.1:5000:5000"
+    environment:
+      REGISTRY_STORAGE_FILESYSTEM_ROOTDIRECTORY: /var/lib/registry
+      REGISTRY_AUTH: htpasswd
+      REGISTRY_AUTH_HTPASSWD_REALM: "Holism image registry"
+      REGISTRY_AUTH_HTPASSWD_PATH: /auth/htpasswd
+    volumes:
+      - /holism/data:/var/lib/registry
+      - /holism/auth:/auth
