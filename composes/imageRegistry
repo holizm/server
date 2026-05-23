@@ -12,5 +12,5 @@ services:
       REGISTRY_AUTH_HTPASSWD_PATH: /auth/htpasswd
       REGISTRY_STORAGE_DELETE_ENABLED: "true"
     volumes:
-      - /holism/data:/var/lib/registry
-      - /holism/auth:/auth
+      - /holism/imageRegistry/data:/var/lib/registry
+      - /holism/imageRegistry/auth:/auth
