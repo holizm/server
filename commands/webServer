@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+
+if [[ "$1" == "" ]]; then
+    echo "Error - Please provide the domain argument"
+    exit
+fi
+
+nginx -T | grep -A20 -B5 "$1"
