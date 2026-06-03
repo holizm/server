@@ -160,3 +160,35 @@ $setupProd/includeUpdateTerminalTitleConfig.js
 # chmod 700 $HOME/.docker/run
 
 # dockerd-rootless.sh &
+
+# for the entire server
+
+# ------------------
+# sudo tee /etc/systemd/system/docker-rootless-all.service > /dev/null <<'EOF'
+# [Unit]
+# Description=Rootless Docker Daemon for all users
+# After=network.target
+
+# [Service]
+# Type=forking
+# ExecStart=/bin/bash -c '
+# for dir in /home/*/.docker/run; do
+#   user=$(basename $(dirname $dir))
+#   export XDG_RUNTIME_DIR=$dir
+#   export PATH=/home/$user/bin:/usr/bin:/bin
+#   sudo -u $user /home/$user/bin/dockerd-rootless.sh >/home/$user/.docker/dockerd.log 2>&1 &
+# done
+# wait
+# '
+# Restart=always
+# RestartSec=10s
+
+# [Install]
+# WantedBy=multi-user.target
+# EOF
+
+# ---------------------------
+
+# sudo systemctl daemon-reload
+# sudo systemctl enable docker-rootless-all
+# sudo systemctl start docker-rootless-all
