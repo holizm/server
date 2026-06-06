@@ -159,6 +159,12 @@ $setupProd/includeUpdateTerminalTitleConfig.js
 # mkdir -p $HOME/.docker/run
 # chmod 700 $HOME/.docker/run
 
+# mkdir -p ~/.config/docker
+# micro ~/.config/docker/daemon.json
+# {
+#   "exec-opts": ["native.cgroupdriver=cgroupfs"]
+# }
+
 # dockerd-rootless.sh &
 
 # for the entire server
