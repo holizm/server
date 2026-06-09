@@ -145,6 +145,11 @@ export default params => {
                 ...params,
                 file: 'storage',
             })
+        } else if (process === 'statics') {
+            generate({
+                ...params,
+                file: 'compression',
+            })
         } else {
             generate({
                 ...params,
