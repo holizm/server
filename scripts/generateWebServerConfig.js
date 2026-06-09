@@ -76,14 +76,14 @@ export default params => {
         params.domain = domain
         params.locales = locales
         params.defaultLocale = defaultLocale
-        for (const cfg of [
+        for (const config of [
             'httpsRedirect',
             'certificate',
             'listen',
             'proxy'
         ]) generate({
             ...params,
-            file: cfg,
+            file: config,
         })
         if (isFile('./hasBasicAuth')) {
             execSync(
@@ -95,6 +95,7 @@ export default params => {
                 file: 'basicAuth',
             })
         }
+        console.log(process)
         if (process === 'site' || isFile('./site')) {
             generate({
                 ...params,
