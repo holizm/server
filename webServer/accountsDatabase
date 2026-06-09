@@ -5,7 +5,8 @@ server {
 }
 
 server {
-    listen 443 http2 ssl;
+    listen 443;
+    http2 on;
     server_name ${subdomain}${domain};
 
     ssl_certificate /etc/letsencrypt/live/${domain}/fullchain.pem;
