@@ -11,23 +11,24 @@ const generate = params => {
         'certificate',
         'compression',
         'httpsRedirect',
-        'multitenantWwwRedirect',
         'listen',
-        'proxy',
         'multitenantCacheConfig',
-        'multitenantCacheUsage'
+        'multitenantCacheUsage',
+        'multitenantWwwRedirect',
+        'proxy',
+        'wwwRedirect',
     ]
     const {
+        domain,
         file,
         home,
         instance,
         isDev,
-        process,
-        tenant,
-        domain,
-        subdomain,
-        processPath,
         locales,
+        process,
+        processPath,
+        subdomain,
+        tenant,
     } = params
     const localesList = locales.split(',').map(s => s.trim()).filter(Boolean)
     const localesRegex = localesList.join('|')
@@ -95,7 +96,6 @@ export default params => {
                 file: 'basicAuth',
             })
         }
-        console.log(process)
         if (process === 'site' || isFile('./site')) {
             generate({
                 ...params,
