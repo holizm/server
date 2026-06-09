@@ -15,7 +15,9 @@ export default params => {
         role,
     } = params
     getRandomPort(params)
+    console.log(params)
     params = extract(params)
+    console.log(params)
     const {
         process,
         instance,
