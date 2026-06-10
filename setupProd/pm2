@@ -10,13 +10,15 @@ configurePm2() {
     envFile="/etc/environment"
     nodePath="/usr/local/node/bin"
 
-    if grep -qE "(^|:)${nodePath}(:|$)" "$envFile" 2>/dev/null; then
+    if grep -qE "(^|:)${nodePath}(:|$)" "$envFile"; then
         return
     fi
 
-    if grep -q '^PATH=' "$envFile"; then
-        sed -i "s|^PATH=\"\(.*\)\"|PATH=\"\1:${nodePath}\"|" "$envFile"
-        sed -i "s|^PATH=\(.*\)|PATH=\1:${nodePath}|" "$envFile"
+    currentPath=$(grep '^PATH=' "$envFile" | cut -d= -f2- | tr -d '"')
+
+    if [ -n "$currentPath" ]; then
+        newPath="${currentPath}:${nodePath}"
+        sed -i "s|^PATH=.*|PATH=\"${newPath}\"|" "$envFile"
     else
         echo "PATH=\"/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:${nodePath}\"" >> "$envFile"
     fi
