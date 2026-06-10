@@ -51,9 +51,11 @@ export default params => {
         instance,
         isDev,
         process,
+        processPath,
         role,
         tenants,
     } = params
+    remove(`${processPath}/webServer`)
     for (const tenant of tenants) {
         let tenantName, domain, locales, defaultLocale, roles
         if (tenant.length === 5) {
@@ -88,7 +90,7 @@ export default params => {
         })
         if (isFile('./hasBasicAuth')) {
             execSync(
-                `htpasswd -b -c /${instance}/${process}/basicAuth '${params.basicAuthUsername}' '${params.basicAuthPassword}'`,
+                `htpasswd -b -c ${home}/${instance}/${process}/basicAuth '${params.basicAuthUsername}' '${params.basicAuthPassword}'`,
                 { stdio: 'inherit', shell: '/bin/bash' }
             )
             generate({
