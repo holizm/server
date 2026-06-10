@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+
+. "$scripts/installer.sh"
+
+installPm2() {
+    npm install -g --registry="https://mirror-npm.runflare.com" pm2
+}
+
+configurePm2() {
+    envFile="/etc/environment"
+    nodePath="/usr/local/node/bin"
+
+    if grep -qE "(^|:)${nodePath}(:|$)" "$envFile" 2>/dev/null; then
+        return
+    fi
+
+    if grep -q '^PATH=' "$envFile"; then
+        sed -i "s|^PATH=\"\(.*\)\"|PATH=\"\1:${nodePath}\"|" "$envFile"
+        sed -i "s|^PATH=\(.*\)|PATH=\1:${nodePath}|" "$envFile"
+    else
+        echo "PATH=\"/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:${nodePath}\"" >> "$envFile"
+    fi
+}
+
+install pm2 installPm2
+configurePm2

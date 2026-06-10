@@ -133,7 +133,7 @@ $setupProd/rclone
 $setupProd/docker
 
 # $setupProd/node
-npm install -g --registry="https://mirror-npm.runflare.com" pm2
+$setupProd/pm2
 
 registerHolismCommands
 setTimeZone
