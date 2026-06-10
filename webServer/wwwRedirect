@@ -2,7 +2,7 @@ server
 {
     listen 80;
     server_name www.${subdomain}${domain};
-    return 301 https://${subdomain}${domain}$NginxParamsRequestUri;
+    return 301 https://${subdomain}${domain}$request_uri;
 }
 
 server
@@ -13,5 +13,5 @@ server
 
     include ${home}/${instance}/${process}/webServer/${tenant}/certificate;
 
-    return 301 https://${subdomain}${domain}$NginxParamsRequestUri;
+    return 301 https://${subdomain}${domain}$request_uri;
 }
