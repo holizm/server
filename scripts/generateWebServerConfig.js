@@ -152,6 +152,10 @@ export default params => {
                 ...params,
                 file: 'compression',
             })
+            generate({
+                ...params,
+                file: 'statics',
+            })
         } else {
             generate({
                 ...params,
