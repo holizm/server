@@ -1,15 +1,11 @@
 #!/usr/bin/env node
 
-import bios from '../scripts/serverInfo/bios.js'
 import cpu from '../scripts/serverInfo/cpu.js'
 import ram from '../scripts/serverInfo/ram.js'
 import storage from '../scripts/serverInfo/storage.js'
 import system from '../scripts/serverInfo/system.js'
-import windowingSystem from '../scripts/serverInfo/windowingSystem.js'
 
 system()
-bios()
 cpu()
 ram()
 storage()
-windowingSystem()
