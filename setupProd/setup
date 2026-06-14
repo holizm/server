@@ -134,7 +134,7 @@ $setupProd/docker
 
 # $setupProd/node
 $setupProd/pm2
-npm install -g serve
+npm install -g --registry='https://mirror-npm.runflare.com' serve
 
 registerHolismCommands
 setTimeZone
