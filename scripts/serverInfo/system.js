@@ -10,9 +10,9 @@ function run(cmd) {
 }
 
 export default function checkSystem() {
-    const manufacturer = run('sudo dmidecode -s system-manufacturer') || 'Unknown'
-    const product = run('sudo dmidecode -s system-product-name') || 'Unknown'
-    const version = run('sudo dmidecode -s system-version') || ''
+    const manufacturer = run('dmidecode -s system-manufacturer') || 'Unknown'
+    const product = run('dmidecode -s system-product-name') || 'Unknown'
+    const version = run('dmidecode -s system-version') || ''
 
     const pcName = `${manufacturer} ${product} ${version}`.trim()
 

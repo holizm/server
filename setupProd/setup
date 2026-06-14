@@ -76,12 +76,12 @@ preserveSshAgentInSudo() {
     local file='/etc/sudoers.d/ssh-auth-sock'
 
     if ! command -v visudo >/dev/null 2>&1; then
-        warning "visudo not found. Skipping sudo SSH_AUTH_SOCK configuration."
+        warning "visudo not found. Skipping SSH_AUTH_SOCK configuration."
         return 0
     fi
 
     if [ ! -d /etc/sudoers.d ]; then
-        warning "/etc/sudoers.d not found. Skipping sudo SSH_AUTH_SOCK configuration."
+        warning "/etc/sudoers.d not found. Skipping SSH_AUTH_SOCK configuration."
         return 0
     fi
 
@@ -172,7 +172,7 @@ $setupProd/includeUpdateTerminalTitleConfig.js
 # for the entire server
 
 # ------------------
-# sudo tee /etc/systemd/system/docker-rootless-all.service > /dev/null <<'EOF'
+# tee /etc/systemd/system/docker-rootless-all.service > /dev/null <<'EOF'
 # [Unit]
 # Description=Rootless Docker Daemon for all users
 # After=network.target
@@ -184,7 +184,7 @@ $setupProd/includeUpdateTerminalTitleConfig.js
 #   user=$(basename $(dirname $dir))
 #   export XDG_RUNTIME_DIR=$dir
 #   export PATH=/home/$user/bin:/usr/bin:/bin
-#   sudo -u $user /home/$user/bin/dockerd-rootless.sh >/home/$user/.docker/dockerd.log 2>&1 &
+#   -u $user /home/$user/bin/dockerd-rootless.sh >/home/$user/.docker/dockerd.log 2>&1 &
 # done
 # wait
 # '
@@ -197,6 +197,6 @@ $setupProd/includeUpdateTerminalTitleConfig.js
 
 # ---------------------------
 
-# sudo systemctl daemon-reload
-# sudo systemctl enable docker-rootless-all
-# sudo systemctl start docker-rootless-all
+# systemctl daemon-reload
+# systemctl enable docker-rootless-all
+# systemctl start docker-rootless-all

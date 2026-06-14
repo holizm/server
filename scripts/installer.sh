@@ -15,10 +15,10 @@ install() {
         if declare -f "$pkg_or_func" &>/dev/null; then
             "$pkg_or_func" || errorAndExit "failed to install $cmd_name"
         else
-            sudo apt-get install -y "$pkg_or_func" || errorAndExit "failed to install $cmd_name"
+            apt-get install -y "$pkg_or_func" || errorAndExit "failed to install $cmd_name"
         fi
     else
-        sudo apt-get install -y "$cmd_name" || errorAndExit "failed to install $cmd_name"
+        apt-get install -y "$cmd_name" || errorAndExit "failed to install $cmd_name"
     fi
     success "installed $cmd_name"
 }
