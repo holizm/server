@@ -11,7 +11,7 @@ const getFileAndParams = params => {
     } = params
     if (process === 'site' || isFile('./site')) {
         if (!params.authSecret) params.authSecret = 'auth_secret'
-        if (!params.keycloakIssuer) params.keycloakIssuer = 'https://accounts.example.com/realm/production'
+        if (!params.iamIssuer) params.iamIssuer = 'https://accounts.example.com/realm/production'
         params.file = 'site'
     } else if (process === 'accounts') {
         params.propertyName = `${instance}AccountsDatabaseRandomPort`

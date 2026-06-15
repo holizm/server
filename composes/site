@@ -4,9 +4,9 @@ services:
         container_name: ${instance}${pascalizedProcess}
         hostname: ${instance}${pascalizedProcess}
         environment:
-            - AUTH_SECRET=${authSecret}
-            - KEYCLOAK_CLIENT_SECRET=${keycloakClientSecret}
-            - KEYCLOAK_ISSUER=${keycloakIssuer}
+            - authSecret=${authSecret}
+            - iamClientSecret=${iamClientSecret}
+            - iamIssuer=${iamIssuer}
             - PROTOCOL_HEADER=x-forwarded-proto
             - HOST_HEADER=x-forwarded-host
             - org=${org}
