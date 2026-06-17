@@ -12,9 +12,9 @@ const generate = params => {
         'compression',
         'httpsRedirect',
         'listen',
-        'multitenantCacheConfig',
-        'multitenantCacheUsage',
-        'multitenantWwwRedirect',
+        'cacheConfig',
+        'cacheUsage',
+        'wwwRedirect',
         'proxy',
         'wwwRedirect',
     ]
