@@ -31,7 +31,7 @@ const generate = params => {
         tenant,
     } = params
     const localesList = locales.split(',').map(s => s.trim()).filter(Boolean)
-    const localesRegex = localesList.join('|')
+    params.localesRegex = localesList.join('|')
     const isAnInclude = includes.includes(file)
     const nginxFilePath = isAnInclude
         ?
