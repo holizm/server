@@ -65,6 +65,7 @@ echo "Copying non-database files ..."
 rsync -a --no-times \
     --exclude="backupDirectory/" \
     --exclude="databases/" \
+    --exclude="**/node_modules/" \
     ~/${instance}/ $backupDirectory/
 
 timestamp=$(date +%Y-%m-%d_%H-%M-%S)
