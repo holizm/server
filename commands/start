@@ -41,11 +41,32 @@ const start = params => {
         }
     } else {
         const composeFile = `${processPath}/compose.yaml`
-        if (isFile(composeFile)) {
+        const packageFile = `${processPath}/package.json`
+        if (isFile(packageJson)) {
+            const portFile = `${processPath}/compose.yaml`
+            const port = runOnTerminal(
+                `grep -oP '127\\.0\\.0\\.1:\\K[0-9]+' ${portFile} | head -n1`,
+                true
+            ).trim()
+            const fullProcessName = camelize(
+                `${lowercaseInstance} ${lowercaseGitHubImageNameOrProcess}`
+            )
+            const list = runOnTerminal('pm2 list', true)
+            const isRunning = list.includes(fullProcessName)
+            if (!isRunning) {
+                runOnTerminal(
+                    `/usr/local/node/bin/pm2 start process.js --name ${fullProcessName} --update-env -- ${port}`
+                )
+            }
+        }
+        else if (isFile(composeFile)) {
 
             runOnTerminal('docker system prune --force')
             const command = `docker compose -p ${lowercaseInstance}-${lowercaseGitHubImageNameOrProcess} up --remove-orphans --quiet-pull -d`
             runOnTerminal(command)
+        }
+        else {
+            warning('What to start?')
         }
     }
 }
