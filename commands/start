@@ -4,7 +4,10 @@ import {
     excludedDirs,
     getDepth,
     getDirs,
+    isApi,
     isFile,
+    isPanel,
+    isSite,
 } from '../scripts/os.js'
 import extract from '../scripts/extract.js'
 import { runOnTerminal } from '../scripts/terminal.js'
@@ -54,9 +57,21 @@ const start = params => {
             const list = runOnTerminal('pm2 list', true)
             const isRunning = list.includes(fullProcessName)
             if (!isRunning) {
-                runOnTerminal(
-                    `/usr/local/node/bin/pm2 start process.js --name ${fullProcessName} --update-env -- ${port}`
-                )
+                if (isApi(params)) {
+                    runOnTerminal(
+                        `/usr/local/node/bin/pm2 start process.js --name ${fullProcessName} --update-env -- ${port}`
+                    )
+                }
+                else if (isPanel(params)) {
+                    runOnTerminal(
+                        `/usr/local/node/bin/pm2 start /usr/local/node/bin/serve --name ${fullProcessName} -- -s . -l ${port}`
+                    )
+                }
+                else if (isSite(params)) {
+                    runOnTerminal(
+                        `PORT=${port} /usr/local/node/bin/pm2 start server/entry.express.js --name ${fullProcessName}`
+                    )
+                }
             }
         }
         else if (isFile(composeFile)) {
