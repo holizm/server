@@ -1,7 +1,10 @@
 #!/usr/bin/env node
 
 import { pathToFileURL } from 'url'
-import { getDepth } from '../scripts/os.js'
+import {
+    getDepth,
+    isFile,
+} from '../scripts/os.js'
 import extract from '../scripts/extract.js'
 import { runStreaming } from '../scripts/terminal.js'
 
