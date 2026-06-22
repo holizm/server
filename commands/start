@@ -45,7 +45,7 @@ const start = params => {
     } else {
         const composeFile = `${processPath}/compose.yaml`
         const packageFile = `${processPath}/package.json`
-        if (isFile(packageJson)) {
+        if (isFile(packageFile)) {
             const portFile = `${processPath}/compose.yaml`
             const port = runOnTerminal(
                 `grep -oP '127\\.0\\.0\\.1:\\K[0-9]+' ${portFile} | head -n1`,

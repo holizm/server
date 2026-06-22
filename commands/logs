@@ -16,12 +16,28 @@ const logs = async params => {
 
     const {
         instance,
+        instancePath,
+        level,
+        lowercaseGitHubImageNameOrProcess,
+        lowercaseInstance,
         pascalizedProcess,
+        processPath,
     } = params
 
     const tail = count && count !== '' ? count : 20
-    const containerName = `${instance}${pascalizedProcess}`
-    const command = `docker logs --follow --tail ${tail} ${containerName}`
+    const composeFile = `${processPath}/compose.yaml`
+    const packageFile = `${processPath}/package.json`
+    let command = ''
+    if (isFile(packageFile)) {
+        const fullProcessName = camelize(
+            `${lowercaseInstance} ${lowercaseGitHubImageNameOrProcess}`
+        )
+        command = `pm2 logs ${fullProcessName}`
+    }
+    else if (isFile(composeFile)) {
+        const containerName = `${instance}${pascalizedProcess}`
+        command = `docker logs --follow --tail ${tail} ${containerName}`
+    }
 
     await runStreaming(command)
 }
