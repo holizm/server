@@ -2,6 +2,7 @@
 
 import { pathToFileURL } from 'url'
 import {
+    camelize,
     getDepth,
     isFile,
 } from '../scripts/os.js'
