@@ -119,4 +119,4 @@ for blob in $blobs; do
 done
 
 echo "Deleted old backups"
-date >> ~/$instance/backupLog
+date >> ~/${instance}/backupLog
