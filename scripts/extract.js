@@ -5,7 +5,10 @@ import {
     errorAndExit,
     success,
 } from '../scripts/logger.js'
-import { getContent } from './os.js'
+import {
+    getContent,
+    isDev,
+} from './os.js'
 import pascalize from './pascalize.js'
 
 export default params => {
@@ -66,6 +69,8 @@ export default params => {
     params.processPath = `${home}/${instance}/${process}`
     params.originalProcessPath = `${home}/${repo}/${process}`
     params.level = depth === 3 ? 'instance' : 'process'
+    params.environmentRoot = isDev() ? `${params.home}` : '/holism'
+
 
     if (print) {
         success(`Organization: ${org}`)

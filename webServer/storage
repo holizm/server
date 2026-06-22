@@ -25,7 +25,7 @@ server {
         proxy_intercept_errors on;
         error_page 404 = @imageApi;
         default_type image/webp;
-        root ${environmentRoot}/${instance}/storage/${tenant};
+        root ${home}/${instance}/storage/${tenant};
     }
 
     location ~ \.mp3$ {
@@ -34,7 +34,7 @@ server {
         proxy_intercept_errors on;
         error_page 404 = @audioApi;
         default_type audio/mpeg;
-        root ${environmentRoot}/${instance}/storage/${tenant};
+        root ${home}/${instance}/storage/${tenant};
     }
 
     location ~ \.mp4$ {
@@ -43,7 +43,7 @@ server {
         proxy_intercept_errors on;
         error_page 404 = @videoApi;
         default_type video/mp4;
-        root ${environmentRoot}/${instance}/storage/${tenant};
+        root ${home}/${instance}/storage/${tenant};
     }
 
     location ~ \.[^/]+$ {
@@ -53,7 +53,7 @@ server {
         error_page 404 = @fileApi;
         default_type application/octet-stream;
         add_header Access-Control-Allow-Origin *;
-        root ${environmentRoot}/${instance}/storage/${tenant};
+        root ${home}/${instance}/storage/${tenant};
     }
 
     location ~ ^[^.]+$ {

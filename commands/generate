@@ -6,7 +6,6 @@ import {
     getDepth,
     getDirs,
     getLines,
-    isDev,
     isFile,
 } from '../scripts/os.js'
 import {
@@ -51,9 +50,6 @@ const baseDir = process.cwd()
 const params = loadParams(baseDir)
 params.baseDir = baseDir
 params.home = process.env.HOME
-params.isDev = isDev()
-params.environmentRoot = isDev() ? `${params.home}` : '/holism'
-
 validateDepth(params)
 
 const args = process.argv.slice(2)

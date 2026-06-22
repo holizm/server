@@ -1,10 +1,7 @@
 #!/usr/bin/env node
 
 import { pathToFileURL } from 'url'
-import {
-    getDepth,
-    isDev,
-} from '../scripts/os.js'
+import { getDepth } from '../scripts/os.js'
 import extract from '../scripts/extract.js'
 import { runStreaming } from '../scripts/terminal.js'
 
@@ -15,8 +12,6 @@ const logs = async params => {
     } = params
     params.depth = getDepth(directoryPath)
     params.home = process.env.HOME
-    params.isDev = isDev()
-    params.environmentRoot = isDev() ? `${params.home}` : '/holism'
     params = extract(params)
 
     const {
