@@ -2,11 +2,11 @@
 
 import { pathToFileURL } from 'url'
 import {
-    camelize,
     getDepth,
     isFile,
 } from '../scripts/os.js'
 import extract from '../scripts/extract.js'
+import camelize from '../scripts/camelize.js'
 import { runStreaming } from '../scripts/terminal.js'
 
 const logs = async params => {
