@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
 while true; do
-  timeout -s KILL 5s git pull && break
+  timeout -s KILL 5s git -C /holism/server pull && break
   sleep 1
 done
