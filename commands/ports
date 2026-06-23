@@ -9,7 +9,8 @@ import getComposePort from '../scripts/getComposePort.js'
 import getReverseProxyPort from '../scripts/getReverseProxyPort.js'
 import { getDepth } from '../scripts/os.js'
 
-let params = { directoryPath: process.cwd() }
+const directoryPath = process.cwd()
+let params = { directoryPath }
 params = extract(params)
 const home = directoryPath.startsWith('/home/')
     ?
