@@ -1,0 +1,26 @@
+#!/bin/bash
+
+free -h | awk '
+NR==2 {
+    print "========================================"
+    printf "TOTAL: %-8s USED: %-8s FREE: %-8s\n", $2, $3, $4
+    print "========================================"
+    print ""
+}
+'
+
+ps -eo pid,pmem,rss,args --sort=-rss | head -20 | awk '
+BEGIN {
+    printf "%-8s %-8s %-12s %s\n", "PID", "%MEM", "RAM", "COMMAND"
+}
+NR > 1 {
+    ram_mb = $3 / 1024
+
+    if (ram_mb >= 1024)
+        ram = sprintf("%.2fG", ram_mb / 1024)
+    else
+        ram = sprintf("%.1fM", ram_mb)
+
+    printf "%-8s %-8s %-12s %s\n",
+        $1, $2, ram, substr($0, index($0, $4))
+}'
