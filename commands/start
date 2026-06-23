@@ -73,10 +73,16 @@ const start = params => {
                 `grep -oP '127\\.0\\.0\\.1:\\K[0-9]+' ${portFile} | head -n1`,
                 true
             ).trim()
-            const pm2Port = runOnTerminal(
-                `/usr/local/node/bin/pm2 jlist | jq -r '.[] | select(.name=="${fullProcessName}") | .pm2_env.PORT // .pm2_env.env.PORT // empty'`,
+            const pid = runOnTerminal(
+                `/usr/local/node/bin/pm2 pid ${fullProcessName}`,
                 true
             ).trim()
+
+            const listeningPort = pid
+                ?
+                runOnTerminal(`lsof -Pan -p ${pid} -iTCP -sTCP:LISTEN | awk 'NR==2 {print $9}' | sed 's/.*://'`, true).trim()
+                :
+                ''
             params.fullProcessName = camelize(
                 `${lowercaseInstance} ${lowercaseGitHubImageNameOrProcess}`
             )
@@ -86,7 +92,7 @@ const start = params => {
                 startProcess(params)
             }
             else {
-                if (params.port === pm2Port) {
+                if (params.port === pid) {
                     info(`${params.fullProcessName} is already running`)
                 }
                 else {
