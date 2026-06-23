@@ -52,15 +52,15 @@ export default params => {
         errorAndExit('Invalid repository. Repository name should start with an lowercase letter.')
     }
 
-    const process = depth === 4 ? path.posix.basename(directoryPath) : 'NA'
-    const role = ((process.endsWith('Panel') || process.endsWith('Api')) && process !== 'site') ? process.replace('Panel', '').replace('Api', '') : null
+    const processToRun = depth === 4 ? path.posix.basename(directoryPath) : 'NA'
+    const role = ((processToRun.endsWith('Panel') || processToRun.endsWith('Api')) && processToRun !== 'site') ? processToRun.replace('Panel', '').replace('Api', '') : null
     const githubImageName = getContent('./githubImageName')
-    const githubImageNameOrProcess = githubImageName || process
+    const githubImageNameOrProcess = githubImageName || processToRun
 
     params.org = org
     params.repo = repo
     params.instance = instance
-    params.process = process
+    params.process = processToRun
     params.role = role ? role : ''
     params.home = home
     params.depth = depth
@@ -71,12 +71,12 @@ export default params => {
     params.lowercaseOrg = org.toLowerCase()
     params.lowercaseRepo = repo.toLowerCase()
     params.lowercaseInstance = instance.toLowerCase()
-    params.lowercaseProcess = process.toLowerCase()
+    params.lowercaseProcess = processToRun.toLowerCase()
     params.lowercaseRole = role ? role.toLowerCase() : ''
     params.pascalizedProcess = pascalize(params.process)
     params.instancePath = `${home}/${instance}`
-    params.processPath = `${home}/${instance}/${process}`
-    params.originalProcessPath = `${home}/${repo}/${process}`
+    params.processPath = `${home}/${instance}/${processToRun}`
+    params.originalProcessPath = `${home}/${repo}/${processToRun}`
     params.level = depth === 3 ? 'instance' : 'process'
     params.environmentRoot = isDev() ? `${params.home}` : '/holism'
     params.fullProcessName = camelize(`${instance} ${githubImageNameOrProcess}`)
@@ -88,7 +88,7 @@ export default params => {
         success(`Organization: ${org}`)
         success(`Repository: ${repo}`)
         success(`Instance: ${instance}`)
-        success(`Process: ${process}`)
+        success(`Process: ${processToRun}`)
         success(`Role: ${role}`)
         success(`ProcessPath=${params.processPath}`)
         success(`OriginalProcessPath=${params.originalProcessPath}`)
