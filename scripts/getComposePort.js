@@ -1,3 +1,5 @@
+import { runOnTerminal } from './terminal.js'
+
 export default params => {
     const { composeFile } = params
     const composePort = runOnTerminal(
