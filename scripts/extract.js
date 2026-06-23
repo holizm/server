@@ -19,7 +19,7 @@ export default params => {
         directoryPath,
     } = params
     if (!depth) {
-        depth = getDepth(process.cwd())
+        depth = getDepth(directoryPath)
     }
 
     if (directoryPath === '/') {
