@@ -26,7 +26,7 @@ export default params => {
         errorAndExit('Can not be executed from the root')
     }
     const home = process.env.HOME
-    if (cwd === home) {
+    if (directoryPath === home) {
         errorAndExit('Can not run command from the home directory')
     }
 
