@@ -8,11 +8,7 @@ import getComposePort from '../scripts/getComposePort.js'
 import getReverseProxyPort from '../scripts/getReverseProxyPort.js'
 import { getDepth } from '../scripts/os.js'
 
-const params = {
-    directoryPath: process.cwd()
-}
-params.depth = getDepth(params.directoryPath)
-params.home = process.env.HOME
+let params = { directoryPath: process.cwd() }
 params = extract(params)
 
 const {
@@ -21,25 +17,18 @@ const {
     processPath,
 } = params
 
-const composePort = getComposePort(params)
-
-const reverseProxyPort = getReverseProxyPort(params)
-
-const firstConfigFile = runOnTerminal(
-    `find ${processPath}/webServer -type f -name '*.config' | head -n1`,
-    true
-).trim()
-const runningReverseProxyPort = runOnTerminal(
-    `nginx -T 2>/dev/null | grep -A20 -F "$(grep -m1 server_name ${firstConfigFile} | awk '{print $2}' | tr -d ';')" | grep -oP 'proxy_pass\\s+http://localhost:\\K[0-9]+' | head -n1`,
-    true
-).trim()
+const processPort = getComposePort(params)
+const {
+    reverseProxyPort,
+    runningReverseProxyPort,
+} = getReverseProxyPort(params)
 
 const pid = runOnTerminal(
     `/usr/local/node/bin/pm2 pid ${fullProcessName}`,
     true
 ).trim()
 
-const processPort = pid
+const runningProcessPort = pid
     ? runOnTerminal(
         `lsof -Pan -p ${pid} -iTCP -sTCP:LISTEN | awk 'NR==2 {print $9}' | sed 's/.*://'`,
         true
@@ -49,5 +38,5 @@ const processPort = pid
 info(`${fullProcessName}`)
 info(`runningReverseProxyPort: ${runningReverseProxyPort}`)
 info(`reverseProxyPort: ${reverseProxyPort}`)
+info(`runningProcessPort: ${runningProcessPort}`)
 info(`processPort: ${processPort}`)
-info(`composePort: ${composePort}`)
