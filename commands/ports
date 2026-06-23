@@ -6,6 +6,7 @@ import extract from '../scripts/extract.js'
 import camelize from '../scripts/camelize.js'
 import getComposePort from '../scripts/getComposePort.js'
 import getReverseProxyPort from '../scripts/getReverseProxyPort.js'
+import { getDepth } from '../scripts/os.js'
 
 const params = {}
 params.depth = getDepth(process.cwd())
