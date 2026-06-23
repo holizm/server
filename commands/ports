@@ -2,57 +2,59 @@
 
 import { runOnTerminal } from '../scripts/terminal.js'
 import { info } from '../scripts/logger.js'
+import extract from '../scripts/extract.js'
+import camelize from '../scripts/camelize.js'
 
-const showProcess = params => {
-    const {
-        fullProcessName,
-        processPath,
-    } = params
+const params = {}
+params.depth = getDepth(process.cwd())
+params.home = process.env.HOME
+params = extract(params)
 
-    const composeFile = `${processPath}/compose.yaml`
+const {
+    composeFile,
+    fullProcessName,
+    processPath,
+} = params
 
-    const nginxFile = runOnTerminal(
-        `find ${processPath}/webServer -type f -name '*.config' | head -n1`,
+const nginxFile = runOnTerminal(
+    `find ${processPath}/webServer -type f -name '*.config' | head -n1`,
+    true
+).trim()
+
+const composePort = runOnTerminal(
+    `grep -oP '127\\.0\\.0\\.1:\\K[0-9]+' ${composeFile} | head -n1`,
+    true
+).trim()
+
+const nginxConfigPort = nginxFile
+    ? runOnTerminal(
+        `grep -oP 'proxy_pass\\s+http://127\\.0\\.0\\.1:\\K[0-9]+' ${nginxFile} | head -n1`,
         true
     ).trim()
+    : ''
 
-    const composePort = runOnTerminal(
-        `grep -oP '127\\.0\\.0\\.1:\\K[0-9]+' ${composeFile} | head -n1`,
+const nginxActivePort = nginxFile
+    ? runOnTerminal(
+        `nginx -T 2>/dev/null | grep -A20 -F "$(grep -m1 server_name ${nginxFile} | awk '{print $2}' | tr -d ';')" | grep -oP 'proxy_pass\\s+http://127\\.0\\.0\\.1:\\K[0-9]+' | head -n1`,
         true
     ).trim()
+    : ''
 
-    const nginxConfigPort = nginxFile
-        ? runOnTerminal(
-            `grep -oP 'proxy_pass\\s+http://127\\.0\\.0\\.1:\\K[0-9]+' ${nginxFile} | head -n1`,
-            true
-        ).trim()
-        : ''
+const pid = runOnTerminal(
+    `/usr/local/node/bin/pm2 pid ${fullProcessName}`,
+    true
+).trim()
 
-    const nginxActivePort = nginxFile
-        ? runOnTerminal(
-            `nginx -T 2>/dev/null | grep -A20 -F "$(grep -m1 server_name ${nginxFile} | awk '{print $2}' | tr -d ';')" | grep -oP 'proxy_pass\\s+http://127\\.0\\.0\\.1:\\K[0-9]+' | head -n1`,
-            true
-        ).trim()
-        : ''
-
-    const pid = runOnTerminal(
-        `/usr/local/node/bin/pm2 pid ${fullProcessName}`,
+const processPort = pid
+    ? runOnTerminal(
+        `lsof -Pan -p ${pid} -iTCP -sTCP:LISTEN | awk 'NR==2 {print $9}' | sed 's/.*://'`,
         true
     ).trim()
+    : ''
 
-    const processPort = pid
-        ? runOnTerminal(
-            `lsof -Pan -p ${pid} -iTCP -sTCP:LISTEN | awk 'NR==2 {print $9}' | sed 's/.*://'`,
-            true
-        ).trim()
-        : ''
-
-    info(`${fullProcessName}`)
-    info(`nginxFile: ${nginxFile}`)
-    info(`nginxActivePort: ${nginxActivePort}`)
-    info(`nginxConfigPort: ${nginxConfigPort}`)
-    info(`processPort: ${processPort}`)
-    info(`composePort: ${composePort}`)
-}
-
-export default showProcess
+info(`${fullProcessName}`)
+info(`nginxFile: ${nginxFile}`)
+info(`nginxActivePort: ${nginxActivePort}`)
+info(`nginxConfigPort: ${nginxConfigPort}`)
+info(`processPort: ${processPort}`)
+info(`composePort: ${composePort}`)

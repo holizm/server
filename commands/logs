@@ -9,48 +9,35 @@ import extract from '../scripts/extract.js'
 import camelize from '../scripts/camelize.js'
 import { runStreaming } from '../scripts/terminal.js'
 
-const logs = async params => {
-    const {
-        directoryPath,
-        count,
-    } = params
-    params.depth = getDepth(directoryPath)
-    params.home = process.env.HOME
-    params = extract(params)
+const count = process.argv[2]
+params.depth = getDepth(process.cwd())
+params.home = process.env.HOME
+params = extract(params)
 
-    const {
-        gitHubImageNameOrProcess,
-        instance,
-        instancePath,
-        level,
-        lowercaseGitHubImageNameOrProcess,
-        lowercaseInstance,
-        pascalizedProcess,
-        processPath,
-    } = params
+const {
+    composeFile,
+    containerName,
+    gitHubImageNameOrProcess,
+    instance,
+    instancePath,
+    level,
+    lowercaseGitHubImageNameOrProcess,
+    lowercaseInstance,
+    packageFile,
+    pascalizedProcess,
+    processPath,
+} = params
 
-    const tail = count && count !== '' ? count : 20
-    const composeFile = `${processPath}/compose.yaml`
-    const packageFile = `${processPath}/package.json`
-    let command = ''
-    if (isFile(packageFile)) {
-        const fullProcessName = camelize(
-            `${instance} ${gitHubImageNameOrProcess}`
-        )
-        command = `pm2 logs ${fullProcessName}`
-    }
-    else if (isFile(composeFile)) {
-        const containerName = `${instance}${pascalizedProcess}`
-        command = `docker logs --follow --tail ${tail} ${containerName}`
-    }
-
-    await runStreaming(command)
+const tail = count && count !== '' ? count : 20
+let command = ''
+if (isFile(packageFile)) {
+    const fullProcessName = camelize(
+        `${instance} ${gitHubImageNameOrProcess}`
+    )
+    command = `pm2 logs ${fullProcessName}`
+}
+else if (isFile(composeFile)) {
+    command = `docker logs --follow --tail ${tail} ${containerName}`
 }
 
-const isMain = import.meta.url === pathToFileURL(process.argv[1]).href
-if (isMain) {
-    await logs({
-        count: process.argv[2] || '',
-        directoryPath: process.cwd(),
-    })
-}
+await runStreaming(command)

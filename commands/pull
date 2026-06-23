@@ -18,6 +18,7 @@ const pull = async params => {
     params.home = process.env.HOME
     params = extract(params)
     const {
+        composeFile,
         instancePath,
         level,
         lowercaseGitHubImageNameOrProcess,
@@ -39,7 +40,6 @@ const pull = async params => {
             })
         }
     } else {
-        const composeFile = `${processPath}/compose.yaml`
         if (isFile(composeFile)) {
             const command = `docker compose -p ${lowercaseInstance}-${lowercaseGitHubImageNameOrProcess} pull`
             runOnTerminal(command)

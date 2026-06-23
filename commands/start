@@ -36,88 +36,74 @@ const startProcess = params => {
     }
 }
 
-const start = params => {
-    const {
-        directoryPath,
-        filter,
-    } = params
-    params.depth = getDepth(directoryPath)
-    params.home = process.env.HOME
-    params = extract(params)
-    const {
-        gitHubImageNameOrProcess,
-        instance,
-        instancePath,
-        level,
-        lowercaseGitHubImageNameOrProcess,
-        lowercaseInstance,
-        lowercaseProcess,
-        processPath,
-    } = params
+const filter = process.argv[2]
+params.depth = getDepth(process.cwd())
+params.home = process.env.HOME
+params = extract(params)
+const {
+    composeFile,
+    gitHubImageNameOrProcess,
+    instance,
+    instancePath,
+    level,
+    lowercaseGitHubImageNameOrProcess,
+    lowercaseInstance,
+    lowercaseProcess,
+    packageFile,
+    processPath,
+} = params
 
-    if (level === 'instance') {
-        let dirs = getDirs().filter(d => !excludedDirs.includes(d))
-        if (filter) {
-            const regex = new RegExp(filter)
-            dirs = dirs.filter(dir => regex.test(dir))
-        }
-        for (const dir of dirs) {
-            const directoryPath = `${instancePath}/${dir}`
-            start({
-                directoryPath,
-                print: true,
-            })
-        }
-    } else {
-        const composeFile = `${processPath}/compose.yaml`
-        const packageFile = `${processPath}/package.json`
-        if (isFile(packageFile)) {
-            params.fullProcessName = camelize(
-                `${instance} ${gitHubImageNameOrProcess}`
-            )
-            const portFile = `${processPath}/compose.yaml`
-            params.port = runOnTerminal(
-                `grep -oP '127\\.0\\.0\\.1:\\K[0-9]+' ${portFile} | head -n1`,
-                true
-            ).trim()
-            const pid = runOnTerminal(
-                `/usr/local/node/bin/pm2 pid ${params.fullProcessName}`,
-                true
-            ).trim()
+if (level === 'instance') {
+    let dirs = getDirs().filter(d => !excludedDirs.includes(d))
+    if (filter) {
+        const regex = new RegExp(filter)
+        dirs = dirs.filter(dir => regex.test(dir))
+    }
+    for (const dir of dirs) {
+        const directoryPath = `${instancePath}/${dir}`
+        start({
+            directoryPath,
+            print: true,
+        })
+    }
+} else {
+    if (isFile(packageFile)) {
+        params.port = runOnTerminal(
+            `grep -oP '127\\.0\\.0\\.1:\\K[0-9]+' ${composeFile} | head -n1`,
+            true
+        ).trim()
+        const pid = runOnTerminal(
+            `/usr/local/node/bin/pm2 pid ${params.fullProcessName}`,
+            true
+        ).trim()
 
-            const listeningPort = pid
-                ?
-                runOnTerminal(`lsof -Pan -p ${pid} -iTCP -sTCP:LISTEN | awk 'NR==2 {print $9}' | sed 's/.*://'`, true).trim()
-                :
-                ''
-            const list = runOnTerminal('pm2 list', true)
-            const isRunning = list.includes(params.fullProcessName)
-            if (!isRunning) {
-                startProcess(params)
-            }
-            else {
-                if (params.port === pid) {
-                    info(`${params.fullProcessName} is already running`)
-                }
-                else {
-                    runOnTerminal(`/usr/local/node/bin/pm2 delete ${params.fullProcessName}`)
-                    startProcess(params)
-                }
-            }
-        }
-        else if (isFile(composeFile)) {
-
-            runOnTerminal('docker system prune --force')
-            const command = `docker compose -p ${lowercaseInstance}-${lowercaseGitHubImageNameOrProcess} up --remove-orphans --quiet-pull -d`
-            runOnTerminal(command)
+        const listeningPort = pid
+            ?
+            runOnTerminal(`lsof -Pan -p ${pid} -iTCP -sTCP:LISTEN | awk 'NR==2 {print $9}' | sed 's/.*://'`, true).trim()
+            :
+            ''
+        const list = runOnTerminal('pm2 list', true)
+        const isRunning = list.includes(params.fullProcessName)
+        if (!isRunning) {
+            startProcess(params)
         }
         else {
-            warning('What to start?')
+            if (params.port === pid) {
+                info(`${params.fullProcessName} is already running`)
+            }
+            else {
+                runOnTerminal(`/usr/local/node/bin/pm2 delete ${params.fullProcessName}`)
+                startProcess(params)
+            }
         }
     }
-}
+    else if (isFile(composeFile)) {
 
-await start({
-    filter: process.argv[2] || '',
-    directoryPath: process.cwd(),
-})
+        runOnTerminal('docker system prune --force')
+        const command = `docker compose -p ${lowercaseInstance}-${lowercaseGitHubImageNameOrProcess} up --remove-orphans --quiet-pull -d`
+        runOnTerminal(command)
+    }
+    else {
+        warning('What to start?')
+    }
+}

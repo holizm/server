@@ -20,6 +20,7 @@ const stop = params => {
     params.home = process.env.HOME
     params = extract(params)
     const {
+        composeFile,
         instancePath,
         level,
         lowercaseGitHubImageNameOrProcess,
@@ -41,7 +42,6 @@ const stop = params => {
             })
         }
     } else {
-        const composeFile = `${processPath}/compose.yaml`
         if (isFile(composeFile)) {
             const command = `docker compose -p ${lowercaseInstance}-${lowercaseGitHubImageNameOrProcess} down --remove-orphans`
             runOnTerminal(command)

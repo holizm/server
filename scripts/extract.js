@@ -10,6 +10,7 @@ import {
     isDev,
 } from './os.js'
 import pascalize from './pascalize.js'
+import camelize from './camelize.js'
 
 export default params => {
     const {
@@ -70,7 +71,10 @@ export default params => {
     params.originalProcessPath = `${home}/${repo}/${process}`
     params.level = depth === 3 ? 'instance' : 'process'
     params.environmentRoot = isDev() ? `${params.home}` : '/holism'
-
+    params.fullProcessName = camelize(`${instance} ${gitHubImageNameOrProcess}`)
+    params.composeFile = `${params.processPath}/compose.yaml`
+    params.packageFile = `${params.processPath}/package.json`
+    params.containerName = `${instance}${params.pascalizedProcess}`
 
     if (print) {
         success(`Organization: ${org}`)

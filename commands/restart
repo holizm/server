@@ -9,14 +9,13 @@ import { info, warning, divide } from '../scripts/logger.js'
 const restartApp = (dir, params) => {
     const currentDir = params.currentDir
     const target = `${currentDir}/${dir}`
-    const extracted = extract({ directoryPath: target, ...params })
+    const params = extract({ directoryPath: target, ...params })
     const {
         processPath,
         process,
         regex,
-    } = extracted
+    } = params
 
-    const composeFile = `${processPath}/compose.yaml`
     if (isFile(composeFile)) {
         divide()
         info(`Restarting ${dir}`)
