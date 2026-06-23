@@ -1,17 +1,17 @@
 #!/usr/bin/env node
 
-import path from "path"
+import path from 'path'
 import { runOnTerminal } from '../scripts/terminal.js'
-import { createDirIfNotExists } from "../scripts/os.js"
+import { createDirIfNotExists } from '../scripts/os.js'
 
 const home = process.env.HOME
 const cwd = process.cwd()
 
 function findConfFiles() {
     try {
-        const command = `find ${cwd} -type f -name "*.conf" -path "*/webServer/*"`
+        const command = `find ${cwd} -type f -name '*.conf' -path '*/webServer/*' -not -path '*/backupDirectory/*'`
         const output = runOnTerminal(command, false, true).trim()
-        return output ? output.split("\n") : []
+        return output ? output.split('\n') : []
     } catch {
         return []
     }
