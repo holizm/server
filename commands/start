@@ -11,8 +11,9 @@ import {
 } from '../scripts/os.js'
 import extract from '../scripts/extract.js'
 import { runOnTerminal } from '../scripts/terminal.js'
-import { info } from '../scripts/logger.js'
+import { errorAndExit, info } from '../scripts/logger.js'
 import camelize from '../scripts/camelize.js'
+import getComposePort from '../scripts/getComposePort.js'
 
 const startProcess = params => {
     const {
@@ -54,6 +55,7 @@ const {
 } = params
 
 if (level === 'instance') {
+    errorAndExit('Not implemented at the instance level yet. Please start each process separately.')
     let dirs = getDirs().filter(d => !excludedDirs.includes(d))
     if (filter) {
         const regex = new RegExp(filter)
@@ -61,17 +63,10 @@ if (level === 'instance') {
     }
     for (const dir of dirs) {
         const directoryPath = `${instancePath}/${dir}`
-        start({
-            directoryPath,
-            print: true,
-        })
     }
 } else {
     if (isFile(packageFile)) {
-        params.port = runOnTerminal(
-            `grep -oP '127\\.0\\.0\\.1:\\K[0-9]+' ${composeFile} | head -n1`,
-            true
-        ).trim()
+        params.port = getComposePort(params)
         const pid = runOnTerminal(
             `/usr/local/node/bin/pm2 pid ${params.fullProcessName}`,
             true
