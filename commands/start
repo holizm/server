@@ -13,6 +13,28 @@ import extract from '../scripts/extract.js'
 import { runOnTerminal } from '../scripts/terminal.js'
 import { info } from '../scripts/logger.js'
 
+const startProcess = params => {
+    const {
+        fullProcessName,
+        port,
+    } = params
+    if (isApi(params)) {
+        runOnTerminal(
+            `/usr/local/node/bin/pm2 start process.js --name ${fullProcessName} --update-env -- ${port}`
+        )
+    }
+    else if (isPanel(params)) {
+        runOnTerminal(
+            `/usr/local/node/bin/pm2 start /usr/local/node/bin/serve --name ${fullProcessName} -- -s . -l ${port}`
+        )
+    }
+    else if (isSite(params)) {
+        runOnTerminal(
+            `PORT=${port} /usr/local/node/bin/pm2 start server/entry.express.js --name ${fullProcessName}`
+        )
+    }
+}
+
 const start = params => {
     const {
         directoryPath,
@@ -47,30 +69,29 @@ const start = params => {
         const packageFile = `${processPath}/package.json`
         if (isFile(packageFile)) {
             const portFile = `${processPath}/compose.yaml`
-            const port = runOnTerminal(
+            params.port = runOnTerminal(
                 `grep -oP '127\\.0\\.0\\.1:\\K[0-9]+' ${portFile} | head -n1`,
                 true
             ).trim()
-            const fullProcessName = camelize(
+            const pm2Port = runOnTerminal(
+                `/usr/local/node/bin/pm2 jlist | jq -r '.[] | select(.name=="${fullProcessName}") | .pm2_env.PORT // .pm2_env.env.PORT // empty'`,
+                true
+            ).trim()
+            params.fullProcessName = camelize(
                 `${lowercaseInstance} ${lowercaseGitHubImageNameOrProcess}`
             )
             const list = runOnTerminal('pm2 list', true)
-            const isRunning = list.includes(fullProcessName)
+            const isRunning = list.includes(params.fullProcessName)
             if (!isRunning) {
-                if (isApi(params)) {
-                    runOnTerminal(
-                        `/usr/local/node/bin/pm2 start process.js --name ${fullProcessName} --update-env -- ${port}`
-                    )
+                startProcess(params)
+            }
+            else {
+                if (params.port === pm2Port) {
+                    info(`${params.fullProcessName} is already running`)
                 }
-                else if (isPanel(params)) {
-                    runOnTerminal(
-                        `/usr/local/node/bin/pm2 start /usr/local/node/bin/serve --name ${fullProcessName} -- -s . -l ${port}`
-                    )
-                }
-                else if (isSite(params)) {
-                    runOnTerminal(
-                        `PORT=${port} /usr/local/node/bin/pm2 start server/entry.express.js --name ${fullProcessName}`
-                    )
+                else {
+                    runOnTerminal(`/usr/local/node/bin/pm2 delete ${params.fullProcessName}`)
+                    startProcess(params)
                 }
             }
         }
