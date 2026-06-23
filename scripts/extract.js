@@ -14,7 +14,7 @@ import pascalize from './pascalize.js'
 import camelize from './camelize.js'
 
 export default params => {
-    const {
+    let {
         depth,
         directoryPath,
     } = params
