@@ -7,6 +7,7 @@ import {
 } from '../scripts/logger.js'
 import {
     getContent,
+    getDepth,
     isDev,
 } from './os.js'
 import pascalize from './pascalize.js'
@@ -19,9 +20,16 @@ export default params => {
         home,
         print,
     } = params
+    if (!depth) {
+        depth = getDepth(process.cwd())
+    }
 
     if (directoryPath === '/') {
         errorAndExit('Can not be executed from the root')
+    }
+    const home = process.env.HOME
+    if (cwd === home) {
+        errorAndExit('Can not run command from the home directory')
     }
 
     if (depth > 4) {
@@ -56,6 +64,8 @@ export default params => {
     params.instance = instance
     params.process = process
     params.role = role ? role : ''
+    params.home = home
+    params.depth = depth
     params.githubImageName = githubImageName || ''
     params.lowercaseGitHubImageName = (githubImageName || '').toLowerCase()
     params.githubImageNameOrProcess = githubImageNameOrProcess

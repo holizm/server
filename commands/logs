@@ -10,10 +10,7 @@ import camelize from '../scripts/camelize.js'
 import { runStreaming } from '../scripts/terminal.js'
 
 const count = process.argv[2]
-const params = {}
-params.depth = getDepth(process.cwd())
-params.home = process.env.HOME
-params = extract(params)
+const params = extract(params)
 
 const {
     composeFile,
