@@ -15,6 +15,7 @@ import camelize from './camelize.js'
 
 export default params => {
     let {
+        home,
         depth,
         directoryPath,
     } = params
@@ -25,7 +26,7 @@ export default params => {
     if (directoryPath === '/') {
         errorAndExit('Can not be executed from the root')
     }
-    const home = process.env.HOME
+    home = home || process.env.HOME
     if (directoryPath === home) {
         errorAndExit('Can not run command from the home directory')
     }
