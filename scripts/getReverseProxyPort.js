@@ -3,7 +3,7 @@ import { runOnTerminal } from './terminal.js'
 
 export default params => {
     const { processPath } = params
-    let command = `find ${processPath}/webServer -type f -name '*.config' | head -n1`
+    let command = `find ${processPath}/webServer -type f -name '*.conf' | head -n1`
     info(command)
     const firstConfigFile = runOnTerminal(command, true).trim()
     info(firstConfigFile)
