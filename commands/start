@@ -38,7 +38,7 @@ const startProcess = params => {
 }
 
 const filter = process.argv[2]
-const params = { directoryPath: process.cwd() }
+let params = { directoryPath: process.cwd() }
 params = extract(params)
 const {
     composeFile,
