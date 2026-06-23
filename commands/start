@@ -44,10 +44,13 @@ const start = params => {
     params.home = process.env.HOME
     params = extract(params)
     const {
+        gitHubImageNameOrProcess,
+        instance,
         instancePath,
         level,
         lowercaseGitHubImageNameOrProcess,
         lowercaseInstance,
+        lowercaseProcess,
         processPath,
     } = params
 
@@ -68,13 +71,16 @@ const start = params => {
         const composeFile = `${processPath}/compose.yaml`
         const packageFile = `${processPath}/package.json`
         if (isFile(packageFile)) {
+            params.fullProcessName = camelize(
+                `${instance} ${gitHubImageNameOrProcess}`
+            )
             const portFile = `${processPath}/compose.yaml`
             params.port = runOnTerminal(
                 `grep -oP '127\\.0\\.0\\.1:\\K[0-9]+' ${portFile} | head -n1`,
                 true
             ).trim()
             const pid = runOnTerminal(
-                `/usr/local/node/bin/pm2 pid ${fullProcessName}`,
+                `/usr/local/node/bin/pm2 pid ${params.fullProcessName}`,
                 true
             ).trim()
 
@@ -83,9 +89,6 @@ const start = params => {
                 runOnTerminal(`lsof -Pan -p ${pid} -iTCP -sTCP:LISTEN | awk 'NR==2 {print $9}' | sed 's/.*://'`, true).trim()
                 :
                 ''
-            params.fullProcessName = camelize(
-                `${lowercaseInstance} ${lowercaseGitHubImageNameOrProcess}`
-            )
             const list = runOnTerminal('pm2 list', true)
             const isRunning = list.includes(params.fullProcessName)
             if (!isRunning) {

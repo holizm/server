@@ -19,6 +19,7 @@ const logs = async params => {
     params = extract(params)
 
     const {
+        gitHubImageNameOrProcess,
         instance,
         instancePath,
         level,
@@ -34,7 +35,7 @@ const logs = async params => {
     let command = ''
     if (isFile(packageFile)) {
         const fullProcessName = camelize(
-            `${lowercaseInstance} ${lowercaseGitHubImageNameOrProcess}`
+            `${instance} ${gitHubImageNameOrProcess}`
         )
         command = `pm2 logs ${fullProcessName}`
     }
