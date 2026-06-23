@@ -17,7 +17,7 @@ params = extract(params)
 const {
     composeFile,
     containerName,
-    gitHubImageNameOrProcess,
+    githubImageNameOrProcess,
     instance,
     instancePath,
     level,
@@ -32,7 +32,7 @@ const tail = count && count !== '' ? count : 20
 let command = ''
 if (isFile(packageFile)) {
     const fullProcessName = camelize(
-        `${instance} ${gitHubImageNameOrProcess}`
+        `${instance} ${githubImageNameOrProcess}`
     )
     command = `pm2 logs ${fullProcessName}`
 }

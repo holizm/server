@@ -48,7 +48,7 @@ export default params => {
 
     const process = depth === 4 ? path.posix.basename(directoryPath) : 'NA'
     const role = ((process.endsWith('Panel') || process.endsWith('Api')) && process !== 'site') ? process.replace('Panel', '').replace('Api', '') : null
-    const githubImageName = getContent('./gitHubImageName')
+    const githubImageName = getContent('./githubImageName')
     const githubImageNameOrProcess = githubImageName || process
 
     params.org = org
@@ -56,9 +56,9 @@ export default params => {
     params.instance = instance
     params.process = process
     params.role = role ? role : ''
-    params.gitHubImageName = githubImageName || ''
+    params.githubImageName = githubImageName || ''
     params.lowercaseGitHubImageName = (githubImageName || '').toLowerCase()
-    params.gitHubImageNameOrProcess = githubImageNameOrProcess
+    params.githubImageNameOrProcess = githubImageNameOrProcess
     params.lowercaseGitHubImageNameOrProcess = githubImageNameOrProcess.toLowerCase()
     params.lowercaseOrg = org.toLowerCase()
     params.lowercaseRepo = repo.toLowerCase()
@@ -71,7 +71,7 @@ export default params => {
     params.originalProcessPath = `${home}/${repo}/${process}`
     params.level = depth === 3 ? 'instance' : 'process'
     params.environmentRoot = isDev() ? `${params.home}` : '/holism'
-    params.fullProcessName = camelize(`${instance} ${gitHubImageNameOrProcess}`)
+    params.fullProcessName = camelize(`${instance} ${githubImageNameOrProcess}`)
     params.composeFile = `${params.processPath}/compose.yaml`
     params.packageFile = `${params.processPath}/package.json`
     params.containerName = `${instance}${params.pascalizedProcess}`

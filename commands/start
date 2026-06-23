@@ -43,7 +43,7 @@ params.home = process.env.HOME
 params = extract(params)
 const {
     composeFile,
-    gitHubImageNameOrProcess,
+    githubImageNameOrProcess,
     instance,
     instancePath,
     level,

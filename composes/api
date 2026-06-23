@@ -16,10 +16,10 @@ services:
         volumes:
             - ${home}/${instance}/storage:${home}/${instance}/storage
             - ${home}/${instance}/tenants:${home}/${repo}/common/tenants
-            - ${home}/${instance}/common/publicSettings.json:${home}/${repo}/${gitHubImageNameOrProcess}/publicSettings.json
-            - ${home}/${instance}/common/privateSettings.json:${home}/${repo}/${gitHubImageNameOrProcess}/privateSettings.json
-            - ${home}/${instance}/common/connectionStrings.json:${home}/${repo}/${gitHubImageNameOrProcess}/connectionStrings.json
-            - ${home}/${instance}/${process}/settingsOverride.json:${home}/${repo}/${gitHubImageNameOrProcess}/settingsOverride.json
+            - ${home}/${instance}/common/publicSettings.json:${home}/${repo}/${githubImageNameOrProcess}/publicSettings.json
+            - ${home}/${instance}/common/privateSettings.json:${home}/${repo}/${githubImageNameOrProcess}/privateSettings.json
+            - ${home}/${instance}/common/connectionStrings.json:${home}/${repo}/${githubImageNameOrProcess}/connectionStrings.json
+            - ${home}/${instance}/${process}/settingsOverride.json:${home}/${repo}/${githubImageNameOrProcess}/settingsOverride.json
         ports:
             - 127.0.0.1:${randomPort}:5000
         restart: always
