@@ -17,7 +17,6 @@ export default params => {
     const {
         depth,
         directoryPath,
-        home,
         print,
     } = params
     if (!depth) {
