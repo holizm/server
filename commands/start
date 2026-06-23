@@ -38,9 +38,7 @@ const startProcess = params => {
 }
 
 const filter = process.argv[2]
-const params = {}
-params.depth = getDepth(process.cwd())
-params.home = process.env.HOME
+const params = { directoryPath: process.cwd() }
 params = extract(params)
 const {
     composeFile,

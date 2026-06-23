@@ -17,7 +17,6 @@ export default params => {
     const {
         depth,
         directoryPath,
-        print,
     } = params
     if (!depth) {
         depth = getDepth(process.cwd())
@@ -85,7 +84,7 @@ export default params => {
     params.packageFile = `${params.processPath}/package.json`
     params.containerName = `${instance}${params.pascalizedProcess}`
 
-    if (print) {
+    if (false) {
         success(`Organization: ${org}`)
         success(`Repository: ${repo}`)
         success(`Instance: ${instance}`)

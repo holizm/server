@@ -10,6 +10,7 @@ import camelize from '../scripts/camelize.js'
 import { runStreaming } from '../scripts/terminal.js'
 
 const count = process.argv[2]
+const params = { directoryPath: process.cwd() }
 const params = extract(params)
 
 const {
