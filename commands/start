@@ -11,7 +11,11 @@ import {
 } from '../scripts/os.js'
 import extract from '../scripts/extract.js'
 import { runOnTerminal } from '../scripts/terminal.js'
-import { errorAndExit, info } from '../scripts/logger.js'
+import {
+    errorAndExit,
+    info,
+    warning,
+} from '../scripts/logger.js'
 import camelize from '../scripts/camelize.js'
 import getComposePort from '../scripts/getComposePort.js'
 
@@ -64,7 +68,7 @@ if (level === 'instance') {
         const directoryPath = `${instancePath}/${dir}`
     }
 } else {
-    if (isFile(packageFile)) {
+    if (isFile(packageFile) || isFile(`./index.html`)) {
         params.port = getComposePort(params)
         const pid = runOnTerminal(
             `/usr/local/node/bin/pm2 pid ${params.fullProcessName}`,
