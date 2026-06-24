@@ -13,7 +13,7 @@ export const extractProxyPassPort = (dump, domain) => {
 
 export default params => {
     const { processPath } = params
-    let command = `find ${processPath}/webServer -type f -name '*.conf' | head -n1`
+    let command = `find ${processPath}/webServer -type f -name '*.conf' | sort | head -n1`
     info(command)
     const firstConfigFile = runOnTerminal(command, true).trim()
     info(firstConfigFile)
