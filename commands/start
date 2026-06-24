@@ -39,6 +39,9 @@ const startProcess = params => {
             `PORT=${port} /usr/local/node/bin/pm2 start server/entry.express.js --name ${fullProcessName}`
         )
     }
+    else {
+        warning('Unknown process')
+    }
 }
 
 const filter = process.argv[2]
