@@ -1,13 +1,37 @@
 import { info } from "./logger.js"
 import { runOnTerminal } from './terminal.js'
 
-export const extractProxyPassPort = (dump, domain) => {
-    const blocks = dump.split('# configuration file')
-    const target = blocks.find(b =>
-        b.includes(`server_name ${domain};`)
-    )
-    if (!target) return null
-    const match = target.match(/proxy_pass\s+http:\/\/[^:]+:(\d+)/)
+const extractProxyPassPort = (dump, filePath) => {
+    const targetFileName = filePath.split('/').pop()
+    const lines = dump.split('\n')
+
+    let collecting = false
+    let buffer = []
+
+    for (const line of lines) {
+        const fileMatch = line.match(/^# configuration file (.+?):$/)
+
+        if (fileMatch) {
+            const currentFileName = fileMatch[1].split('/').pop()
+
+            if (currentFileName === targetFileName) {
+                collecting = true
+                buffer = []
+            } else {
+                collecting = false
+            }
+
+            continue
+        }
+
+        if (collecting) {
+            buffer.push(line)
+        }
+    }
+
+    const block = buffer.join('\n')
+    const match = block.match(/proxy_pass\s+http:\/\/[^:]+:(\d+)/)
+
     return match ? Number(match[1]) : null
 }
 
