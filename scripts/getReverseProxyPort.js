@@ -38,14 +38,10 @@ const extractProxyPassPort = (dump, filePath) => {
 export default params => {
     const { processPath } = params
     let command = `find ${processPath}/webServer -type f -name '*.conf' | sort | head -n1`
-    info(command)
     const firstConfigFile = runOnTerminal(command, true).trim()
-    info(firstConfigFile)
     command = `grep -oP 'proxy_pass\\s+http://localhost:\\K[0-9]+' ${firstConfigFile} | head -n1`
-    info(command)
     const reverseProxyPort = runOnTerminal(command, true).trim()
     command = `nginx -T 2>/dev/null`
-    info(command)
     const webServerConfig = runOnTerminal(command, true).trim()
     const runningReverseProxyPort = extractProxyPassPort(webServerConfig, firstConfigFile)
     return {
