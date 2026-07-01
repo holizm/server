@@ -8,6 +8,8 @@ server {
     
     include ${home}/${instance}/statics/webServer/${tenant}/compression;
 
+    include ${home}/${instance}/statics/webServer/${tenant}/cors;
+
     root ${home}/${instance}/statics;
 
     location = /robots.txt {

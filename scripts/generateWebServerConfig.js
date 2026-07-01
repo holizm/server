@@ -10,6 +10,7 @@ const generate = params => {
     const includes = [
         'certificate',
         'compression',
+        'cors',
         'httpsRedirect',
         'listen',
         'cacheConfig',
@@ -151,6 +152,10 @@ export default params => {
             generate({
                 ...params,
                 file: 'compression',
+            })
+            generate({
+                ...params,
+                file: 'cors',
             })
             generate({
                 ...params,
