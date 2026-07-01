@@ -6,10 +6,8 @@ set -euo pipefail
 groupadd -f shared
 
 usersFile="/holism/users"
-keysDir="/holism/keys"
 
 [[ -f "$usersFile" ]] || errorAndExit "User file '$usersFile' not found"
-[[ -d "$keysDir" ]] || errorAndExit "Keys directory '$keysDir' not found"
 
 checkUser() {
     local user="$1"
@@ -39,18 +37,11 @@ while IFS= read -r rawUser || [[ -n "$rawUser" ]]; do
 
     [[ -f /etc/sudoers.d/$user ]] && rm -f /etc/sudoers.d/$user
 
-    pubKey="$keysDir/$user.pub"
-
-    if [[ -f "$pubKey" ]]; then
-        homeDir="$(getent passwd "$user" | cut -d: -f6)"
-        chmod o+x $homeDir
-        mkdir -p "$homeDir/.ssh"
-        cp "$pubKey" "$homeDir/.ssh/authorized_keys"
-        chown -R "$user:$user" "$homeDir/.ssh"
-        chmod 700 "$homeDir/.ssh"
-        chmod 600 "$homeDir/.ssh/authorized_keys"
-    else
-        warning "No public key for '$user' at '$pubKey'"
-    fi
+    homeDir="$(getent passwd "$user" | cut -d: -f6)"
+    chmod o+x $homeDir
+    mkdir -p "$homeDir/.ssh"
+    chown -R "$user:$user" "$homeDir/.ssh"
+    chmod 700 "$homeDir/.ssh"
+    chmod 600 "$homeDir/.ssh/authorized_keys"
 
 done < "$usersFile"
