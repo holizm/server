@@ -45,7 +45,7 @@ while IFS= read -r rawUser || [[ -n "$rawUser" ]]; do
         homeDir="$(getent passwd "$user" | cut -d: -f6)"
         chmod o+x $homeDir
         mkdir -p "$homeDir/.ssh"
-        cp "$pubKey" "$homeDir/.ssh/authorized_keys"
+        # cp "$pubKey" "$homeDir/.ssh/authorized_keys"
         chown -R "$user:$user" "$homeDir/.ssh"
         chmod 700 "$homeDir/.ssh"
         chmod 600 "$homeDir/.ssh/authorized_keys"
