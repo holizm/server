@@ -1,6 +1,29 @@
 #!/usr/bin/env bash
 
-while true; do
-  timeout -s KILL 5s git -C /holism/server pull && break
-  sleep 1
+. "/holism/server/scripts/logger.sh"
+maxRetries=3
+
+for dir in /holism/*/; do
+    dir="${dir%/}"
+
+    if [ -e "$dir/.git" ]; then
+        echo "Pulling $dir..."
+
+        retryCount=0
+        while [ $retryCount -lt $maxRetries ]; do
+            if timeout -s KILL 5s git -C "$dir" pull; then
+                break
+            fi
+
+            retryCount=$((retryCount + 1))
+            echo "Attempt $retryCount failed. Retrying in 1 second..."
+            sleep 1
+        done
+
+        if [ $retryCount -eq $maxRetries ]; then
+            echo "Error: Failed to pull $dir after $maxRetries attempts." >&2
+        fi
+    fi
 done
+
+echo "Done updating all repositories."
