@@ -28,6 +28,6 @@ export default params => {
     generateCompose(params)
     generateWebServerConfig(params)
     if (process === 'statics') {
-        runOnTerminal(`rsync -a --delete --exclude='.git' /holism/serverFonts/. ${home}/${instance}/statics/fonts`)
+        runOnTerminal(`rsync -a --delete --exclude='.git' /holism/fonts ${home}/${instance}/statics`)
     }
 }
