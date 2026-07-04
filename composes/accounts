@@ -24,8 +24,10 @@ services:
         restart: always
         entrypoint: ["/bin/bash", "-c"]
         command: >
-            "/opt/keycloak/bin/kc.sh build --db=postgres &&
-             /opt/keycloak/bin/kc.sh start --import-realm --log-level=ROOT:ERROR --log-level=phone_code:DEBUG --optimized"
+            /opt/keycloak/bin/kc.sh start --import-realm
+            --log-level=ROOT:ERROR
+            --log-level=phone_code:DEBUG
+            --optimized
         depends_on:
             - database
         volumes:
