@@ -29,7 +29,8 @@ services:
             --log-level=phone_code:DEBUG
             --optimized
         depends_on:
-            - database
+            database:
+                condition: service_healthy
         volumes:
             - ${environmentRoot}/accounts/dev.json:/opt/keycloak/data/import/dev.json
             - ${environmentRoot}/accounts/themes:/opt/keycloak/themes
@@ -48,6 +49,11 @@ services:
         logging:
             driver: none
         restart: always
+        healthcheck:
+            test: ["CMD-SHELL", "pg_isready -U ${accountsDatabaseUser}"]
+            interval: 5s
+            timeout: 5s
+            retries: 10
 
     admin:
         image: adminer
