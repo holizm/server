@@ -42,7 +42,7 @@ services:
             - POSTGRES_USER=${accountsDatabaseUser}
             - POSTGRES_PASSWORD=${accountsDatabasePassword}
         volumes:
-            - ${home}/${instance}/accounts/databases:/var/lib/postgresql
+            - ${home}/${instance}/accounts/databases:/var/lib/postgresql/data
         logging:
             driver: none
         restart: always
