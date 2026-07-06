@@ -43,6 +43,12 @@ passwd root
 /etc/ssh/sshd_config
 ```
 
+* Then make sure SSH config is correct (no log should be printed)
+
+```bash
+sshd -t
+```
+
 * Then run:
 
 ```bash
