@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+
+domain="$1"
+
+find . -type f -name certificate -exec \
+  sed -Ei "s#/live/[^/]+/#/live/${domain}/#g" {} +
