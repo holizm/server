@@ -1,0 +1,7 @@
+location / {
+    proxy_cache_purge ${lowercaseInstance}-${tenant} "$scheme$request_method$host$request_uri";
+
+    allow 127.0.0.1;
+    allow ::1;
+    deny all;
+}
