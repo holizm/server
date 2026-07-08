@@ -1,0 +1,79 @@
+#!/usr/bin/env bash
+
+. "$scripts/logger.sh"
+
+installNginxCachePurgeModule() {
+    info "Installing ngx_cache_purge dynamic module..."
+
+    # Build dependencies
+    apt-get install -y \
+        build-essential \
+        git \
+        wget \
+        ca-certificates \
+        dpkg-dev \
+        libpcre3 \
+        libpcre3-dev \
+        zlib1g \
+        zlib1g-dev \
+        libssl-dev \
+        || error "Failed to install build dependencies"
+
+    # Detect installed NGINX version
+    nginxVersion="$(nginx -v 2>&1 | sed -n 's|.*nginx/\(.*\)$|\1|p')"
+
+    [ -n "$nginxVersion" ] || error "Could not detect installed NGINX version"
+
+    info "Detected NGINX version: $nginxVersion"
+
+    buildDir="$(mktemp -d)"
+
+    trap 'rm -rf "$buildDir"' EXIT
+
+    cd "$buildDir" || error "Failed to enter build directory"
+
+    # Download matching NGINX source
+    wget -q "https://nginx.org/download/nginx-$nginxVersion.tar.gz" \
+        || error "Failed to download NGINX source"
+
+    tar xf "nginx-$nginxVersion.tar.gz" \
+        || error "Failed to extract NGINX source"
+
+    # Download ngx_cache_purge
+    git clone --depth=1 https://github.com/FRiCKLE/ngx_cache_purge.git \
+        || error "Failed to clone ngx_cache_purge"
+
+    cd "nginx-$nginxVersion" || error "NGINX source directory not found"
+
+    # Configure exactly like the installed package + dynamic module
+    ./configure \
+        $(nginx -V 2>&1 | sed -n 's/^.*arguments: //p') \
+        --add-dynamic-module="$buildDir/ngx_cache_purge" \
+        || error "Configure failed"
+
+    make modules || error "Module compilation failed"
+
+    install -d /usr/lib/nginx/modules
+
+    install objs/ngx_http_cache_purge_module.so \
+        /usr/lib/nginx/modules/ \
+        || error "Failed to install module"
+
+    cat >/etc/nginx/modules-load.d/cachePurgeLoader.conf <<EOF
+load_module /usr/lib/nginx/modules/ngx_http_cache_purge_module.so;
+EOF
+
+    nginx -t || error "NGINX configuration test failed"
+
+    success "ngx_cache_purge module installed successfully."
+}
+
+isNginxCachePurgeModuleInstalled() {
+    [ -f /usr/lib/nginx/modules/ngx_http_cache_purge_module.so ]
+}
+
+if isNginxCachePurgeModuleInstalled; then
+    success "ngx_cache_purge module is already installed."
+else
+    installNginxCachePurgeModule
+fi
