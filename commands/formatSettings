@@ -1,26 +1,16 @@
 #!/usr/bin/env node
 
-const { execFileSync } = require("child_process");
 const fs = require("fs");
+const { execSync } = require("child_process");
 
-const files = execFileSync(
-    "find",
-    [
-        ".",
-        "(",
-        "-name", "privateSettings.json",
-        "-o",
-        "-name", "publicSettings.json",
-        "-o",
-        "-name", "settingsOverride.json",
-        "-o",
-        "-name", "connectionStrings.json",
-        ")",
-        "-type", "f",
-    ],
-    {
-        encoding: "utf8",
-    },
+const files = execSync(
+    `find . \\( \
+-name privateSettings.json -o \
+-name publicSettings.json -o \
+-name settingsOverride.json -o \
+-name connectionStrings.json \
+\\) -type f 2>/dev/null`,
+    { encoding: "utf8" },
 )
     .trim()
     .split("\n")
