@@ -1,17 +1,30 @@
 #!/usr/bin/env node
 
 const fs = require("fs");
-const { execSync } = require("child_process");
+const { spawnSync } = require("child_process");
 
-const files = execSync(
-    `find . \\( \
--name privateSettings.json -o \
--name publicSettings.json -o \
--name settingsOverride.json -o \
--name connectionStrings.json \
-\\) -type f 2>/dev/null`,
-    { encoding: "utf8" },
-)
+const result = spawnSync(
+    "find",
+    [
+        ".",
+        "(",
+        "-name", "privateSettings.json",
+        "-o",
+        "-name", "publicSettings.json",
+        "-o",
+        "-name", "settingsOverride.json",
+        "-o",
+        "-name", "connectionStrings.json",
+        ")",
+        "-type", "f",
+    ],
+    {
+        encoding: "utf8",
+        stdio: ["ignore", "pipe", "ignore"],
+    },
+);
+
+const files = result.stdout
     .trim()
     .split("\n")
     .filter(Boolean);
