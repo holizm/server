@@ -55,6 +55,7 @@ export default params => {
         processPath,
         role,
         tenants,
+        user,
     } = params
     remove(`${processPath}/webServer`)
     for (const tenant of tenants) {
@@ -121,8 +122,15 @@ export default params => {
                     ...params,
                     file: 'siteWithCache',
                 })
-                fs.mkdirSync('cache', { recursive: true })
-                fs.chmodSync('cache', 0o777)
+                const cacheDir = `${processPath}/webServer/${tenantName}/cache`
+                fs.mkdirSync(cacheDir, {
+                    recursive: true,
+                    mode: 0o2770,
+                })
+                runOnTerminal(`
+                    chown ${user}:www-data '${cacheDir}'
+                    chmod 2770 '${cacheDir}'
+                `)
             } else {
                 generate({
                     ...params,

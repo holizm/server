@@ -50,6 +50,7 @@ const baseDir = process.cwd()
 const params = loadParams(baseDir)
 params.baseDir = baseDir
 params.home = process.env.HOME
+params.user = process.env.USER
 validateDepth(params)
 
 const args = process.argv.slice(2)
