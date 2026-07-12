@@ -9,14 +9,14 @@ import generateCompose from './generateCompose.js'
 import { isFile } from './os.js'
 import pascalize from './pascalize.js'
 import { runOnTerminal } from './terminal.js'
-
+import getDeterministicPort from './getDeterministicPort.js'
 export default params => {
     const {
         tenants,
         role,
     } = params
-    getRandomPort(params)
     params = extract(params)
+    getDeterministicPort(params)
     const {
         home,
         instance,
