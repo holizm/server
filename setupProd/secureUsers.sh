@@ -32,7 +32,7 @@ while IFS= read -r rawUser || [[ -n "$rawUser" ]]; do
         useradd -m -s /bin/bash "$user"
     fi
 
-    usermod -G shared "$user"
+    usermod -aG shared,www-data "$user"
     passwd -d "$user" >/dev/null 2>&1 || true
 
     [[ -f /etc/sudoers.d/$user ]] && rm -f /etc/sudoers.d/$user
