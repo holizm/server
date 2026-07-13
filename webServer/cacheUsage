@@ -1,7 +1,11 @@
+set $cache_key "$scheme$request_method$host$request_uri";
+
 proxy_cache ${lowercaseInstance}-${tenant};
-proxy_cache_key "$scheme$request_method$host$request_uri";
+proxy_cache_key $cache_key;
 proxy_cache_valid 200 1440m;
 proxy_cache_valid 404 0s;
 proxy_cache_valid 500 0s;
 proxy_cache_use_stale error timeout invalid_header updating http_500 http_502 http_503 http_504;
-add_header X-Cache-Status $upstream_cache_status;
+
+add_header X-Cache-Status $upstream_cache_status always;
+add_header X-Cache-Key $cache_key always;
