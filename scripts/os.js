@@ -84,7 +84,6 @@ export const excludedDirs = [
     '.vscode',
     'backup',
     'backupDirectory',
-    'backupStaging',
     'common',
     'NA',
 ]
