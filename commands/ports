@@ -26,7 +26,6 @@ const {
     composeFile,
     fullProcessName,
     instance,
-    process,
     processPath,
 } = params
 
@@ -36,7 +35,7 @@ const {
     runningReverseProxyPort,
 } = getReverseProxyPort(params)
 
-let command = `ps -eo pid,args | grep '${instance}' | grep '${process}' | grep -v grep | awk '{print $1}'`
+let command = `ps -eo pid,args | grep '${instance}' | grep '${params.process}' | grep -v grep | awk '{print $1}'`
 const pid = runOnTerminal(command).trim()
 
 command = `lsof -Pan -p ${pid} -iTCP -sTCP:LISTEN | awk 'NR==2 {print $9}' | sed 's/.*://'`
