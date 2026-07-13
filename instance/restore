@@ -1,91 +1,218 @@
-#!/bin/bash
+#!/usr/bin/env node
 
-if [ -z "$1" ]; then
-    echo "Specify the filters"
-    exit 1
-fi
+import fs from 'fs'
+import path from 'path'
+import { execFileSync } from 'child_process'
+import camelize from '${environmentRoot}/server/scripts/camelize.js'
 
-DatabasesContainer=${Instance}Databases
-IFS=',' read -ra params <<< "$1"
+const usage = 'restore <snapshot-filter>,<database> [override|prefix]'
+const timestampPattern = /^\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}$/
+const snapshotFilterPattern = /^[0-9_-]+$/
+const databasePattern = /^[A-Za-z][A-Za-z0-9_-]*$/
+const prefixPattern = /^[A-Za-z][A-Za-z0-9_-]*$/
 
-Prefix="$2"
+const config = {
+    instance: '${instance}',
+    home: '${home}',
+    storageProvider: '${storageProvider}',
+    databasesUser: '${databasesUser}',
+    databasesPassword: '${databasesPassword}',
+    azureStorage: '${azureStorage}',
+    azureSas: '${azureSas}',
+    awsEndpoint: '${awsEndpoint}',
+    awsAccessKey: '${awsAccessKey}',
+    awsSecretKey: '${awsSecretKey}',
+    awsBucket: '${awsBucket}',
+}
 
-NextMarker=""
-AllBlobs=""
+const run = (command, args, captureOutput = false) => execFileSync(command, args, {
+    encoding: 'utf8',
+    stdio: captureOutput ? ['ignore', 'pipe', 'inherit'] : 'inherit',
+})
 
-echo "Fetching all blob names from Azure..."
-while :; do
-    Response=$(az storage blob list \
-        --account-name "$AzureStorage" \
-        --container-name backup \
-        --sas-token "$Sas" \
-        --marker "$NextMarker" \
-        --output json 2> >(tee /tmp/az_warnings >&2))
+const fail = message => {
+    throw new Error(message + '\nUsage: ' + usage)
+}
 
-    Names=$(echo "$Response" | jq -r '.[].name')
-    AllBlobs+="$Names"$'\n'
+const parseArguments = args => {
+    if (args.length < 1 || args.length > 2) {
+        fail('Invalid arguments.')
+    }
 
-    NextMarker=$(grep -oP '(?<=WARNING: ).+' /tmp/az_warnings | tail -n1)
+    const parts = args[0].split(',')
+    if (parts.length !== 2 || !parts[0] || !parts[1]) {
+        fail('The first argument must contain exactly one snapshot filter and one database.')
+    }
 
-    if [ -z "$NextMarker" ]; then
-        break
-    fi
-done
+    const snapshotFilter = parts[0]
+    const database = parts[1]
+    const mode = args[1] || ''
 
-if [ -z "$AllBlobs" ]; then
-    echo "No blobs found."
-    exit 1
-fi
+    if (args.length === 2 && !args[1]) {
+        fail('Restore prefix cannot be empty.')
+    }
+    if (!snapshotFilterPattern.test(snapshotFilter)) {
+        fail('Invalid snapshot filter: ' + snapshotFilter)
+    }
+    if (!databasePattern.test(database)) {
+        fail('Invalid database name: ' + database)
+    }
+    if (mode && mode !== 'override' && !prefixPattern.test(mode)) {
+        fail('Invalid restore prefix: ' + mode)
+    }
 
-FilteredBlobs="$AllBlobs"
-for param in "${params[@]}"; do
-    FilteredBlobs=$(echo "$FilteredBlobs" | grep "$param")
-done
+    return { snapshotFilter, database, mode }
+}
 
-if [ -z "$FilteredBlobs" ]; then
-    echo "No blobs matched the filters: $1"
-    exit 1
-fi
+const getAwsOptions = () => [
+    '--s3-provider', 'Other',
+    '--s3-endpoint', config.awsEndpoint,
+    '--s3-access-key-id', config.awsAccessKey,
+    '--s3-secret-access-key', config.awsSecretKey,
+]
 
-docker exec "$DatabasesContainer" bash -c "mkdir -p /Temp"
+const listCloudFiles = database => {
+    if (config.storageProvider === 'aws') {
+        return run('rclone', [
+            'lsf',
+            ':s3:' + config.awsBucket + '/backup',
+            '--recursive',
+            '--files-only',
+            '--include', '*/completed',
+            '--include', '*/databases/dumps/' + database + '.archive',
+            ...getAwsOptions(),
+        ], true)
+    }
 
-for Blob in $FilteredBlobs; do
-    FileName=$(basename "$Blob")
-    BaseName=$(echo "$FileName" | cut -d"." -f1)
+    if (config.storageProvider === 'azure') {
+        const archiveSuffix = '/databases/dumps/' + database + '.archive'
+        const query = "[?ends_with(name, '/completed') || ends_with(name, '" + archiveSuffix + "')].name"
+        return run('az', [
+            'storage', 'blob', 'list',
+            '--account-name', config.azureStorage,
+            '--container-name', 'backup',
+            '--sas-token', config.azureSas,
+            '--query', query,
+            '--output', 'tsv',
+            '--only-show-errors',
+        ], true)
+    }
 
-    if [ -n "$Prefix" ]; then
-        DatabaseName="${Prefix}${BaseName}"
-        TempFileName="${Prefix}${Instance}${FileName}"
-    else
-        DatabaseName="$BaseName"
-        TempFileName="${Instance}${FileName}"
-    fi
+    fail('Unsupported storageProvider: ' + config.storageProvider)
+}
 
-    TempPath="/Temp/$TempFileName"
+const selectSnapshot = (cloudFiles, snapshotFilter, database) => {
+    const files = new Set(cloudFiles.split(/\r?\n/).filter(Boolean))
+    const snapshots = new Set()
 
-    echo "Downloading blob $Blob to $TempPath"
-    az storage blob download \
-        --account-name "$AzureStorage" \
-        --container-name backup \
-        --name "$Blob" \
-        --sas-token "$Sas" \
-        --file "$TempPath" 1>/dev/null
+    for (const file of files) {
+        const snapshot = file.split('/')[0]
+        if (timestampPattern.test(snapshot) && snapshot.includes(snapshotFilter)) {
+            snapshots.add(snapshot)
+        }
+    }
 
-    if [ -f "$TempPath" ]; then
-        docker cp "$TempPath" "$DatabasesContainer:/Temp/$TempFileName"
+    const archiveSuffix = '/databases/dumps/' + database + '.archive'
+    return [...snapshots]
+        .filter(snapshot => files.has(snapshot + '/completed'))
+        .filter(snapshot => files.has(snapshot + archiveSuffix))
+        .sort()
+        .reverse()[0] || ''
+}
 
-        docker exec "$DatabasesContainer" mongorestore \
-            --archive="/Temp/$TempFileName" \
-            --drop \
-            --gzip \
-            --nsInclude="${DatabaseName}.*" \
-            --username="$DatabasesUser" \
-            --password="$DatabasesPassword" \
-            --authenticationDatabase=admin \
-            --quiet
+const downloadArchive = (snapshot, database, archivePath) => {
+    const temporaryPath = archivePath + '.download-' + process.pid
+    const cloudPath = snapshot + '/databases/dumps/' + database + '.archive'
 
-        echo "Restored $DatabaseName"
-    else
-        echo "Failed to download blob: $Blob"
-    fi
-done
+    fs.mkdirSync(path.dirname(archivePath), { recursive: true })
+    fs.rmSync(temporaryPath, { force: true })
+
+    try {
+        if (config.storageProvider === 'aws') {
+            run('rclone', [
+                'copyto',
+                ':s3:' + config.awsBucket + '/backup/' + cloudPath,
+                temporaryPath,
+                ...getAwsOptions(),
+            ])
+        } else {
+            const source = 'https://' + config.azureStorage + '.blob.core.windows.net/backup/' + cloudPath + '?' + config.azureSas
+            run('azcopy', ['copy', source, temporaryPath])
+        }
+
+        run('gzip', ['-t', temporaryPath])
+        fs.renameSync(temporaryPath, archivePath)
+    } catch (error) {
+        fs.rmSync(temporaryPath, { force: true })
+        throw error
+    }
+}
+
+const getDestinationDatabase = (database, mode) => {
+    if (mode === 'override') {
+        return database
+    }
+    return camelize((mode || 'temp') + ' ' + database)
+}
+
+const restoreDatabase = (archivePath, database, destinationDatabase) => {
+    const container = config.instance + 'Databases'
+    const containerArchive = '/tmp/restore-' + process.pid + '-' + database + '.archive'
+    const authentication = [
+        '--username', config.databasesUser,
+        '--password', config.databasesPassword,
+        '--authenticationDatabase', 'admin',
+    ]
+
+    try {
+        run('docker', ['cp', archivePath, container + ':' + containerArchive])
+        const dropCommand = 'db.getSiblingDB(' + JSON.stringify(destinationDatabase) + ').dropDatabase()'
+        run('docker', [
+            'exec', container, 'mongosh',
+            '--quiet',
+            ...authentication,
+            '--eval', dropCommand,
+        ])
+        run('docker', [
+            'exec', container, 'mongorestore',
+            '--archive=' + containerArchive,
+            '--gzip',
+            '--nsInclude=' + database + '.*',
+            '--nsFrom=' + database + '.*',
+            '--nsTo=' + destinationDatabase + '.*',
+            ...authentication,
+            '--quiet',
+        ])
+    } finally {
+        try {
+            run('docker', ['exec', container, 'rm', '-f', containerArchive])
+        } catch { }
+    }
+}
+
+const main = args => {
+    const { snapshotFilter, database, mode } = parseArguments(args)
+    const cloudFiles = listCloudFiles(database)
+    const snapshot = selectSnapshot(cloudFiles, snapshotFilter, database)
+
+    if (!snapshot) {
+        fail('No completed snapshot contains the requested database.')
+    }
+
+    const backupDirectory = path.join(config.home, config.instance, 'backupDirectory')
+    const archivePath = path.join(backupDirectory, 'databases', 'dumps', database + '.archive')
+    const destinationDatabase = getDestinationDatabase(database, mode)
+
+    console.log('Using snapshot: ' + snapshot)
+    downloadArchive(snapshot, database, archivePath)
+    fs.rmSync(path.join(backupDirectory, 'completed'), { force: true })
+    restoreDatabase(archivePath, database, destinationDatabase)
+    console.log('Restored ' + database + ' as ' + destinationDatabase)
+}
+
+try {
+    main(process.argv.slice(2))
+} catch (error) {
+    console.error(error.message || String(error))
+    process.exit(1)
+}
