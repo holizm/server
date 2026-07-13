@@ -52,7 +52,7 @@ const parseArguments = args => {
     }
 
     const snapshotFilter = parts[0]
-    const database = parts[1]
+    const databaseFilter = parts[1]
     const mode = args[1] || ''
 
     if (args.length === 2 && !args[1]) {
@@ -61,14 +61,14 @@ const parseArguments = args => {
     if (!snapshotFilterPattern.test(snapshotFilter)) {
         fail('Invalid snapshot filter: ' + snapshotFilter)
     }
-    if (!databasePattern.test(database)) {
-        fail('Invalid database name: ' + database)
+    if (!databasePattern.test(databaseFilter)) {
+        fail('Invalid database filter: ' + databaseFilter)
     }
     if (mode && mode !== 'override' && !prefixPattern.test(mode)) {
         fail('Invalid restore prefix: ' + mode)
     }
 
-    return { snapshotFilter, database, mode }
+    return { snapshotFilter, databaseFilter, mode }
 }
 
 const getAwsOptions = () => [
@@ -78,7 +78,7 @@ const getAwsOptions = () => [
     '--s3-secret-access-key', config.awsSecretKey,
 ]
 
-const listCloudFiles = database => {
+const listCloudFiles = () => {
     if (config.storageProvider === 'aws') {
         return run('rclone', [
             'lsf',
@@ -86,14 +86,13 @@ const listCloudFiles = database => {
             '--recursive',
             '--files-only',
             '--include', '*/completed',
-            '--include', '*/databases/dumps/' + database + '.archive',
+            '--include', '*/databases/dumps/*.archive',
             ...getAwsOptions(),
         ], true)
     }
 
     if (config.storageProvider === 'azure') {
-        const archiveSuffix = '/databases/dumps/' + database + '.archive'
-        const query = "[?ends_with(name, '/completed') || ends_with(name, '" + archiveSuffix + "')].name"
+        const query = "[?ends_with(name, '/completed') || (contains(name, '/databases/dumps/') && ends_with(name, '.archive'))].name"
         return run('az', [
             'storage', 'blob', 'list',
             '--account-name', config.azureStorage,
@@ -108,7 +107,7 @@ const listCloudFiles = database => {
     fail('Unsupported storageProvider: ' + config.storageProvider)
 }
 
-const selectSnapshot = (cloudFiles, snapshotFilter, database) => {
+const selectSnapshot = (cloudFiles, snapshotFilter, databaseFilter) => {
     const files = new Set(cloudFiles.split(/\r?\n/).filter(Boolean))
     const snapshots = new Set()
 
@@ -119,12 +118,29 @@ const selectSnapshot = (cloudFiles, snapshotFilter, database) => {
         }
     }
 
-    const archiveSuffix = '/databases/dumps/' + database + '.archive'
-    return [...snapshots]
+    const matchingSnapshots = [...snapshots]
         .filter(snapshot => files.has(snapshot + '/completed'))
-        .filter(snapshot => files.has(snapshot + archiveSuffix))
         .sort()
-        .reverse()[0] || ''
+        .reverse()
+
+    for (const snapshot of matchingSnapshots) {
+        const archivePrefix = snapshot + '/databases/dumps/'
+        const databases = [...files]
+            .filter(file => file.startsWith(archivePrefix) && file.endsWith('.archive'))
+            .map(file => file.slice(archivePrefix.length, -'.archive'.length))
+            .filter(database => databasePattern.test(database))
+            .filter(database => database.includes(databaseFilter))
+            .sort()
+
+        if (databases.length > 1) {
+            fail('Database filter is ambiguous: ' + databases.join(', '))
+        }
+        if (databases.length === 1) {
+            return { snapshot, database: databases[0] }
+        }
+    }
+
+    return null
 }
 
 const downloadArchive = (snapshot, database, archivePath) => {
@@ -207,17 +223,19 @@ const restoreDatabase = (archivePath, database, destinationDatabase) => {
 }
 
 const main = args => {
-    const { snapshotFilter, database, mode } = parseArguments(args)
+    const { snapshotFilter, databaseFilter, mode } = parseArguments(args)
 
     divide()
     info('Finding a completed snapshot using ' + config.storageProvider)
-    const cloudFiles = listCloudFiles(database)
-    const snapshot = selectSnapshot(cloudFiles, snapshotFilter, database)
+    const cloudFiles = listCloudFiles()
+    const selection = selectSnapshot(cloudFiles, snapshotFilter, databaseFilter)
 
-    if (!snapshot) {
-        fail('No completed snapshot contains the requested database.')
+    if (!selection) {
+        fail('No completed snapshot contains a database matching: ' + databaseFilter)
     }
+    const { snapshot, database } = selection
     success('Selected snapshot: ' + snapshot)
+    success('Selected database: ' + database)
 
     const backupDirectory = path.join(config.home, config.instance, 'backupDirectory')
     const archivePath = path.join(backupDirectory, 'databases', 'dumps', database + '.archive')
