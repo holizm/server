@@ -4,6 +4,13 @@ import fs from 'fs'
 import path from 'path'
 import { execFileSync } from 'child_process'
 import camelize from '${environmentRoot}/server/scripts/camelize.js'
+import {
+    divide,
+    errorAndExit,
+    info,
+    success,
+    warning,
+} from '${environmentRoot}/server/scripts/logger.js'
 
 const usage = 'restore <snapshot-filter>,<database> [override|prefix]'
 const timestampPattern = /^\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}$/
@@ -128,6 +135,7 @@ const downloadArchive = (snapshot, database, archivePath) => {
     fs.rmSync(temporaryPath, { force: true })
 
     try {
+        info('Downloading database archive')
         if (config.storageProvider === 'aws') {
             run('rclone', [
                 'copyto',
@@ -140,8 +148,10 @@ const downloadArchive = (snapshot, database, archivePath) => {
             run('azcopy', ['copy', source, temporaryPath])
         }
 
+        info('Validating database archive')
         run('gzip', ['-t', temporaryPath])
         fs.renameSync(temporaryPath, archivePath)
+        success('Database archive downloaded and validated')
     } catch (error) {
         fs.rmSync(temporaryPath, { force: true })
         throw error
@@ -165,14 +175,17 @@ const restoreDatabase = (archivePath, database, destinationDatabase) => {
     ]
 
     try {
+        info('Copying database archive to the MongoDB container')
         run('docker', ['cp', archivePath, container + ':' + containerArchive])
         const dropCommand = 'db.getSiblingDB(' + JSON.stringify(destinationDatabase) + ').dropDatabase()'
+        info('Dropping destination database: ' + destinationDatabase)
         run('docker', [
             'exec', container, 'mongosh',
             '--quiet',
             ...authentication,
             '--eval', dropCommand,
         ])
+        info('Restoring database: ' + database + ' -> ' + destinationDatabase)
         run('docker', [
             'exec', container, 'mongorestore',
             '--archive=' + containerArchive,
@@ -183,36 +196,44 @@ const restoreDatabase = (archivePath, database, destinationDatabase) => {
             ...authentication,
             '--quiet',
         ])
+        success('Database restored: ' + destinationDatabase)
     } finally {
         try {
             run('docker', ['exec', container, 'rm', '-f', containerArchive])
-        } catch { }
+        } catch {
+            warning('Could not remove the temporary archive from the MongoDB container')
+        }
     }
 }
 
 const main = args => {
     const { snapshotFilter, database, mode } = parseArguments(args)
+
+    divide()
+    info('Finding a completed snapshot using ' + config.storageProvider)
     const cloudFiles = listCloudFiles(database)
     const snapshot = selectSnapshot(cloudFiles, snapshotFilter, database)
 
     if (!snapshot) {
         fail('No completed snapshot contains the requested database.')
     }
+    success('Selected snapshot: ' + snapshot)
 
     const backupDirectory = path.join(config.home, config.instance, 'backupDirectory')
     const archivePath = path.join(backupDirectory, 'databases', 'dumps', database + '.archive')
     const destinationDatabase = getDestinationDatabase(database, mode)
 
-    console.log('Using snapshot: ' + snapshot)
+    divide()
     downloadArchive(snapshot, database, archivePath)
     fs.rmSync(path.join(backupDirectory, 'completed'), { force: true })
+
+    divide()
     restoreDatabase(archivePath, database, destinationDatabase)
-    console.log('Restored ' + database + ' as ' + destinationDatabase)
+    divide()
 }
 
 try {
     main(process.argv.slice(2))
 } catch (error) {
-    console.error(error.message || String(error))
-    process.exit(1)
+    errorAndExit(error.message || String(error))
 }
