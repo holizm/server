@@ -285,9 +285,16 @@ main() {
     local timestamp
 
     requireCommand docker
-    validateStorageProvider
+    if [ -z "$databaseToBackup" ]; then
+        validateStorageProvider
+    fi
     prepareBackupDirectory
     backupDatabases
+
+    if [ -n "$databaseToBackup" ]; then
+        log "Local backup completed for MongoDB database: $databaseToBackup"
+        return
+    fi
 
     timestamp=$(date +%Y-%m-%d_%H-%M-%S)
     uploadBackup "$timestamp"
