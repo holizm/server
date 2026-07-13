@@ -10,8 +10,8 @@ export default params => {
         instance,
     } = params
 
-    let backupTemplatePath = `${environmentRoot}/server/instance/backup`
-    let restoreTemplatePath = `${environmentRoot}/server/instance/restore`
+    const backupTemplatePath = `${environmentRoot}/server/instance/backup`
+    const restoreTemplatePath = `${environmentRoot}/server/instance/restore`
 
     const backupTarget = `${home}/${instance}/backup`
     const restoreTarget = `${home}/${instance}/restore`

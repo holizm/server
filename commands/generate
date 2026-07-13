@@ -75,5 +75,7 @@ for (const directoryName of directories) {
 }
 
 divide()
+params.directoryPath = baseDir
+params.depth = getDepth(baseDir)
 extract(params)
 generateBackupAndRestore(params)

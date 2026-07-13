@@ -1,122 +1,279 @@
 #!/bin/bash
 
-databaseToBackup=$1
-databasesContainer=${instance}Databases
-accountsContainer=${instance}AccountsDatabase
-backupDirectory=~/${instance}/backupDirectory
+set -Eeuo pipefail
 
-rm -rf "$backupDirectory"
+databaseToBackup=${1-}
+instancePath="${home}/${instance}"
+backupStaging="$instancePath/backupStaging"
+databasesContainer="${instance}Databases"
+storageProvider="${storageProvider}"
 
-if [ -n "$databaseToBackup" ]; then
-    mkdir -p $backupDirectory/databases
-    echo "----------------------------"
-    echo "----------------------------"
-    echo "Backing up $databaseToBackup ..."
-    echo "----------------------------"
-    echo "----------------------------"
-    docker exec $databasesContainer bash -c "rm -rf /tmp/$databaseToBackup.archive"
-    docker exec $databasesContainer mongodump \
-        --username=${databasesUser} \
-        --password=${databasesPassword} \
-        --authenticationDatabase=admin \
-        --db=$databaseToBackup \
-        --archive=/tmp/$databaseToBackup.archive \
-        --gzip
-    docker cp $databasesContainer:/tmp/$databaseToBackup.archive $backupDirectory/databases/$databaseToBackup.archive 1>/dev/null
-    echo "Backup complete for $databaseToBackup"
-    exit 0
-fi
+log() {
+    echo "$(date '+%Y-%m-%d %H:%M:%S') $*"
+}
 
-echo "----------------------------"
-echo "----------------------------"
-echo "Backing up ${instance} ..."
-echo "----------------------------"
-echo "----------------------------"
-
-mkdir -p $backupDirectory/databases
-
-docker exec $databasesContainer bash -c "mongosh --quiet --username \"${databasesUser}\" --password \"${databasesPassword}\" --authenticationDatabase admin --eval 'db.adminCommand({ listDatabases: 1 }).databases.map(d => d.name).join(\"\n\")'" |
-while read database; do
-    if [[ $database == admin || $database == local || $database == config ]]; then
-        continue
+requireCommand() {
+    if ! command -v "$1" >/dev/null 2>&1; then
+        echo "Required command not found: $1" >&2
+        exit 1
     fi
-    docker exec $databasesContainer bash -c "rm -rf /tmp/$database.archive"
-    docker exec $databasesContainer mongodump \
-        --username=${databasesUser} \
-        --password=${databasesPassword} \
+}
+
+dumpDatabase() {
+    local database=$1
+    local destination="$backupStaging/databases/dumps/$database.archive"
+
+    log "Backing up MongoDB database: $database"
+    docker exec "$databasesContainer" mongodump \
+        --username="${databasesUser}" \
+        --password="${databasesPassword}" \
         --authenticationDatabase=admin \
-        --db=$database \
+        --db="$database" \
+        --archive \
+        --gzip \
+        --quiet > "$destination"
+}
+
+prepareStaging() {
+    log "Preparing $backupStaging"
+    rm -rf "$backupStaging"
+    mkdir -p "$backupStaging/databases/dumps"
+
+    rsync -a --no-links \
+        --exclude='/backup' \
+        --exclude='/restore' \
+        --exclude='/backupLog' \
+        --exclude='/backupStaging/' \
+        --exclude='/storage/' \
+        --exclude='/databases/data/' \
+        --exclude='/databases/dumps/' \
+        --exclude='/statics/fonts/' \
+        --exclude='/*/compose.yaml' \
+        --exclude='/*/webServer/' \
+        --exclude='/*/basicAuth' \
+        --exclude='**/node_modules/' \
+        "$instancePath/" "$backupStaging/"
+}
+
+backupDatabases() {
+    local databaseList
+    local database
+
+    if [ -n "$databaseToBackup" ]; then
+        dumpDatabase "$databaseToBackup"
+        return
+    fi
+
+    databaseList=$(docker exec "$databasesContainer" mongosh \
         --quiet \
-        --archive=/tmp/$database.archive \
-        --gzip
-    docker cp $databasesContainer:/tmp/$database.archive $backupDirectory/databases/$database.archive 1>/dev/null
-    echo $database
-done
+        --username="${databasesUser}" \
+        --password="${databasesPassword}" \
+        --authenticationDatabase=admin \
+        --eval 'db.adminCommand({ listDatabases: 1 }).databases.map(database => database.name).join("\n")')
 
-if [ -d ~/${instance}/accounts ]; then
-    mkdir -p $backupDirectory/accounts/databases
-    docker exec $accountsContainer bash -c "rm -rf /tmp/keycloak.sql"
-    docker exec $accountsContainer bash -c "mariadb-dump -u ${accountsMariaUser} -p${accountsMariaPassword} accounts > keycloak.sql"
-    docker cp $accountsContainer:/tmp/keycloak.sql $backupDirectory/accounts/databases/keycloak.sql 1>/dev/null
-    echo "Accounts database"
-fi
+    while IFS= read -r database; do
+        if [ -z "$database" ] || [ "$database" = admin ] || [ "$database" = local ] || [ "$database" = config ]; then
+            continue
+        fi
+        dumpDatabase "$database"
+    done <<< "$databaseList"
+}
 
-echo "Copying non-database files ..."
-rsync -a --no-times \
-    --exclude="backupDirectory/" \
-    --exclude="databases/" \
-    --exclude="**/node_modules/" \
-    ~/${instance}/ $backupDirectory/
+configureAws() {
+    awsRemote=":s3:${awsBucket}"
+    awsOptions=(
+        --s3-provider Other
+        --s3-endpoint "${awsEndpoint}"
+        --s3-access-key-id "${awsAccessKey}"
+        --s3-secret-access-key "${awsSecretKey}"
+        --s3-acl private
+    )
+}
 
-timestamp=$(date +%Y-%m-%d_%H-%M-%S)
-echo "Uploading ..."
-if ( which azcopy 1>/dev/null ); then
-    azcopy copy "$backupDirectory/*" "https://${azureStorage}.blob.core.windows.net/backup/$timestamp/$}sas}" --recursive=true 1>/dev/null
-else
-    /azcopy copy "$backupDirectory/*" "https://${azureStorage}.blob.core.windows.net/backup/$timestamp/$}sas}" --recursive=true 1>/dev/null
-fi
-echo "Uploaded"
+validateStorageProvider() {
+    case "$storageProvider" in
+        azure)
+            requireCommand az
+            requireCommand azcopy
+            ;;
+        aws)
+            requireCommand rclone
+            configureAws
+            ;;
+        *)
+            echo "Unsupported storageProvider: $storageProvider" >&2
+            exit 1
+            ;;
+    esac
+}
 
-echo "Deleting old backups ..."
-retainingDates=()
-for i in {0..29}; do
-    retainingDates+=($(date -d "-$i days" +%Y-%m-%d))
-done
-for i in {30..119}; do
-    day=$(date -d "-$i days" +%Y-%m-%d)
-    if [ $(date -d "$day" +%u) -eq 6 ]; then
-        retainingDates+=($day)
-    fi
-done
-for i in {30..119}; do
-    retainingDates+=($(date -d "-$i days" +%Y-%m-01))
-done
-for i in {4..12}; do
-    retainingDates+=($(date -d "-$i months" +%Y-%m-01))
-done
-export retainingDates=($(echo "${retainingDates[@]}" | tr ' ' '\n' | sort -u))
+uploadBackup() {
+    local timestamp=$1
+    local destination
+    log "Uploading backup/$timestamp using $storageProvider"
 
-for date in "${retainingDates[@]}"; do
-    echo $date
-done
+    case "$storageProvider" in
+        azure)
+            destination="https://${azureStorage}.blob.core.windows.net/backup/$timestamp?${azureSas}"
+            azcopy sync "$backupStaging" "$destination" --recursive=true
+            ;;
+        aws)
+            rclone copy "$backupStaging" "$awsRemote/backup/$timestamp" "${awsOptions[@]}"
+            ;;
+        *)
+            echo "Unsupported storageProvider: $storageProvider" >&2
+            exit 1
+            ;;
+    esac
+}
 
-blobs=$(az storage blob list --account-name ${azureStorage} --container-name backup --sas-token "$}sas}" --query "[].name" -o tsv)
-for blob in $blobs; do
-    keep=false
-    for date in "${retainingDates[@]}"; do
-        if [[ $blob == $date* ]]; then
-            keep=true
-            break
+uploadCompletedMarker() {
+    local timestamp=$1
+    local completedFile="$backupStaging/completed"
+    local destination
+    : > "$completedFile"
+
+    log "Marking backup/$timestamp as completed"
+    case "$storageProvider" in
+        azure)
+            destination="https://${azureStorage}.blob.core.windows.net/backup/$timestamp/completed?${azureSas}"
+            azcopy copy "$completedFile" "$destination"
+            ;;
+        aws)
+            rclone copyto "$completedFile" "$awsRemote/backup/$timestamp/completed" "${awsOptions[@]}"
+            ;;
+    esac
+}
+
+listBackupTimestamps() {
+    case "$storageProvider" in
+        azure)
+            az storage blob list \
+                --account-name="${azureStorage}" \
+                --container-name=backup \
+                --sas-token="${azureSas}" \
+                --query='[].name' \
+                --output=tsv |
+                awk -F/ 'NF > 1 { print $1 }' |
+                sort -u
+            ;;
+        aws)
+            rclone lsf "$awsRemote/backup" --dirs-only "${awsOptions[@]}" | sed 's:/$::'
+            ;;
+    esac
+}
+
+deleteBackup() {
+    local timestamp=$1
+    local blob
+    log "Deleting backup: $timestamp"
+
+    case "$storageProvider" in
+        azure)
+            az storage blob list \
+                --account-name="${azureStorage}" \
+                --container-name=backup \
+                --sas-token="${azureSas}" \
+                --prefix="$timestamp/" \
+                --query='[].name' \
+                --output=tsv |
+            while IFS= read -r blob; do
+                [ -n "$blob" ] || continue
+                az storage blob delete \
+                    --account-name="${azureStorage}" \
+                    --container-name=backup \
+                    --sas-token="${azureSas}" \
+                    --name="$blob" \
+                    --output=none
+            done
+            ;;
+        aws)
+            rclone purge "$awsRemote/backup/$timestamp" "${awsOptions[@]}"
+            ;;
+    esac
+}
+
+buildRetainingDates() {
+    local i
+    local day
+
+    retainingDates=''
+
+    for i in {0..29}; do
+        retainingDates="$retainingDates $(date -d "-$i days" +%Y-%m-%d)"
+    done
+
+    for i in {30..119}; do
+        day=$(date -d "-$i days" +%Y-%m-%d)
+        if [ "$(date -d "$day" +%u)" -eq 6 ]; then
+            retainingDates="$retainingDates $day"
         fi
     done
 
-    if [ "$keep" = false ]; then
-        echo "Deleting blob: $blob"
-        az storage blob delete --account-name ${azureStorage} --container-name backup --name "$blob" --sas-token "$}sas}"
-    else
-        echo "Keeping blob: $blob"
-    fi
-done
+    for i in {30..119}; do
+        retainingDates="$retainingDates $(date -d "-$i days" +%Y-%m-01)"
+    done
 
-echo "Deleted old backups"
-date >> ~/${instance}/backupLog
+    for i in {4..12}; do
+        retainingDates="$retainingDates $(date -d "-$i months" +%Y-%m-01)"
+    done
+
+    retainingDates=$(printf '%s\n' $retainingDates | sort -u | tr '\n' ' ')
+}
+
+shouldKeepBackup() {
+    local snapshotDate=$1
+    local retainingDate
+
+    for retainingDate in $retainingDates; do
+        if [ "$snapshotDate" = "$retainingDate" ]; then
+            return 0
+        fi
+    done
+    return 1
+}
+
+deleteExpiredBackups() {
+    local snapshots
+    local snapshot
+    local snapshotDate
+
+    log 'Applying backup retention policy'
+    buildRetainingDates
+    snapshots=$(listBackupTimestamps)
+
+    while IFS= read -r snapshot; do
+        [ -n "$snapshot" ] || continue
+        if ! [[ "$snapshot" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}_[0-9]{2}-[0-9]{2}-[0-9]{2}$ ]]; then
+            log "Ignoring unrecognized backup path: $snapshot"
+            continue
+        fi
+
+        snapshotDate=${snapshot%%_*}
+        if shouldKeepBackup "$snapshotDate"; then
+            log "Keeping backup: $snapshot"
+        else
+            deleteBackup "$snapshot"
+        fi
+    done <<< "$snapshots"
+}
+
+main() {
+    local timestamp
+
+    requireCommand docker
+    requireCommand rsync
+    validateStorageProvider
+    prepareStaging
+    backupDatabases
+
+    timestamp=$(date +%Y-%m-%d_%H-%M-%S)
+    uploadBackup "$timestamp"
+    uploadCompletedMarker "$timestamp"
+    deleteExpiredBackups
+
+    date --iso-8601=seconds >> "$instancePath/backupLog"
+    log 'Backup completed successfully'
+}
+
+main "$@"

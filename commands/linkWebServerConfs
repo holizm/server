@@ -9,7 +9,7 @@ const cwd = process.cwd()
 
 function findConfFiles() {
     try {
-        const command = `find ${cwd} -type f -name '*.conf' -path '*/webServer/*' -not -path '*/backupDirectory/*'`
+        const command = `find ${cwd} -type f -name '*.conf' -path '*/webServer/*' -not -path '*/backupDirectory/*' -not -path '*/backupStaging/*'`
         const output = runOnTerminal(command, false, true).trim()
         return output ? output.split('\n') : []
     } catch {
