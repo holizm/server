@@ -4,7 +4,7 @@ set -Eeuo pipefail
 
 databaseToBackup=${1-}
 instancePath="${home}/${instance}"
-backupStaging="$instancePath/backupStaging"
+backupDirectory="$instancePath/backupDirectory"
 databasesContainer="${instance}Databases"
 storageProvider="${storageProvider}"
 
@@ -21,7 +21,7 @@ requireCommand() {
 
 dumpDatabase() {
     local database=$1
-    local destination="$backupStaging/databases/dumps/$database.archive"
+    local destination="$backupDirectory/databases/dumps/$database.archive"
 
     log "Backing up MongoDB database: $database"
     docker exec "$databasesContainer" mongodump \
@@ -35,15 +35,15 @@ dumpDatabase() {
 }
 
 prepareStaging() {
-    log "Preparing $backupStaging"
-    rm -rf "$backupStaging"
-    mkdir -p "$backupStaging/databases/dumps"
+    log "Preparing $backupDirectory"
+    rm -rf "$backupDirectory"
+    mkdir -p "$backupDirectory/databases/dumps"
 
     rsync -a --no-links \
         --exclude='/backup' \
         --exclude='/restore' \
         --exclude='/backupLog' \
-        --exclude='/backupStaging/' \
+        --exclude='/backupDirectory/' \
         --exclude='/storage/' \
         --exclude='/databases/data/' \
         --exclude='/databases/dumps/' \
@@ -52,7 +52,7 @@ prepareStaging() {
         --exclude='/*/webServer/' \
         --exclude='/*/basicAuth' \
         --exclude='**/node_modules/' \
-        "$instancePath/" "$backupStaging/"
+        "$instancePath/" "$backupDirectory/"
 }
 
 backupDatabases() {
@@ -115,10 +115,10 @@ uploadBackup() {
     case "$storageProvider" in
         azure)
             destination="https://${azureStorage}.blob.core.windows.net/backup/$timestamp?${azureSas}"
-            azcopy sync "$backupStaging" "$destination" --recursive=true
+            azcopy sync "$backupDirectory" "$destination" --recursive=true
             ;;
         aws)
-            rclone copy "$backupStaging" "$awsRemote/backup/$timestamp" "${awsOptions[@]}"
+            rclone copy "$backupDirectory" "$awsRemote/backup/$timestamp" "${awsOptions[@]}"
             ;;
         *)
             echo "Unsupported storageProvider: $storageProvider" >&2
@@ -129,7 +129,7 @@ uploadBackup() {
 
 uploadCompletedMarker() {
     local timestamp=$1
-    local completedFile="$backupStaging/completed"
+    local completedFile="$backupDirectory/completed"
     local destination
     : > "$completedFile"
 
