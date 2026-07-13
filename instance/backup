@@ -34,25 +34,48 @@ dumpDatabase() {
         --quiet > "$destination"
 }
 
-prepareStaging() {
+copyBackupFile() {
+    local relativePath=$1
+    local source="$instancePath/$relativePath"
+    local destination="$backupDirectory/$relativePath"
+
+    if [ ! -f "$source" ] || [ -L "$source" ]; then
+        log "Skipping unavailable backup file: $relativePath"
+        return
+    fi
+
+    mkdir -p "$(dirname "$destination")"
+    cp -p "$source" "$destination"
+}
+
+prepareBackupDirectory() {
+    local processPath
+    local settingsOverrideFile
+    local relativePath
+
     log "Preparing $backupDirectory"
     rm -rf "$backupDirectory"
-    mkdir -p "$backupDirectory/databases/dumps"
 
-    rsync -a --no-links \
-        --exclude='/backup' \
-        --exclude='/restore' \
-        --exclude='/backupLog' \
-        --exclude='/backupDirectory/' \
-        --exclude='/storage/' \
-        --exclude='/databases/data/' \
-        --exclude='/databases/dumps/' \
-        --exclude='/statics/fonts/' \
-        --exclude='/*/compose.yaml' \
-        --exclude='/*/webServer/' \
-        --exclude='/*/basicAuth' \
-        --exclude='**/node_modules/' \
-        "$instancePath/" "$backupDirectory/"
+    copyBackupFile params
+    copyBackupFile tenants
+    copyBackupFile org
+    copyBackupFile common/privateSettings.json
+    copyBackupFile common/publicSettings.json
+    copyBackupFile common/connectionStrings.json
+
+    if [ -f "$instancePath/repo" ] && [ ! -L "$instancePath/repo" ]; then
+        copyBackupFile repo
+    fi
+
+    for processPath in "$instancePath"/*/; do
+        settingsOverrideFile="${processPath%/}/settingsOverride.json"
+        if [ -f "$settingsOverrideFile" ] && [ ! -L "$settingsOverrideFile" ]; then
+            relativePath=${settingsOverrideFile#"$instancePath/"}
+            copyBackupFile "$relativePath"
+        fi
+    done
+
+    mkdir -p "$backupDirectory/databases/dumps"
 }
 
 backupDatabases() {
@@ -262,10 +285,16 @@ main() {
     local timestamp
 
     requireCommand docker
-    requireCommand rsync
-    validateStorageProvider
-    prepareStaging
+    if [ -z "$databaseToBackup" ]; then
+        validateStorageProvider
+    fi
+    prepareBackupDirectory
     backupDatabases
+
+    if [ -n "$databaseToBackup" ]; then
+        log "Local backup completed for MongoDB database: $databaseToBackup"
+        return
+    fi
 
     timestamp=$(date +%Y-%m-%d_%H-%M-%S)
     uploadBackup "$timestamp"
