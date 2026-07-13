@@ -34,17 +34,17 @@ const {
     runningReverseProxyPort,
 } = getReverseProxyPort(params)
 
-const pid = runOnTerminal(
-    `/usr/local/node/bin/pm2 pid ${fullProcessName}`,
-    true
-).trim()
+let command = `pm2 pid ${fullProcessName}`
+info(command)
+const pid = runOnTerminal(command).trim()
 
+command = `lsof -Pan -p ${pid} -iTCP -sTCP:LISTEN | awk 'NR==2 {print $9}' | sed 's/.*://'`
+info(command)
 const runningProcessPort = pid
-    ? runOnTerminal(
-        `lsof -Pan -p ${pid} -iTCP -sTCP:LISTEN | awk 'NR==2 {print $9}' | sed 's/.*://'`,
-        true
-    ).trim()
-    : ''
+    ?
+    runOnTerminal(command).trim()
+    :
+    ''
 
 info(`${fullProcessName}`)
 info(`runningReverseProxyPort: ${runningReverseProxyPort}`)
