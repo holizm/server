@@ -1,48 +1,91 @@
-if [ "$1" == "" ]; then
-    echo "Specify the filters"
-    exit
-fi
-DatabasesContainer=${Instance}Databases
+#!/bin/bash
 
+if [ -z "$1" ]; then
+    echo "Specify the filters"
+    exit 1
+fi
+
+DatabasesContainer=${Instance}Databases
 IFS=',' read -ra params <<< "$1"
-query=""
-for param in "${params[@]}"; do
-    if [ -z "$query" ]; then
-        query="contains(name, '$param')"
-    else
-        query="$query && contains(name, '$param')"
-    fi
-done
+
+Prefix="$2"
 
 NextMarker=""
-Blobs=""
+AllBlobs=""
 
+echo "Fetching all blob names from Azure..."
 while :; do
-    Result=$(az storage blob list --account-name $AzureStorage --container-name backup --sas-token "$Sas" \
-        --query "[?$query].{name:name}" --marker "$NextMarker" -o tsv)
+    Response=$(az storage blob list \
+        --account-name "$AzureStorage" \
+        --container-name backup \
+        --sas-token "$Sas" \
+        --marker "$NextMarker" \
+        --output json 2> >(tee /tmp/az_warnings >&2))
 
-    Blobs+="$Result"$'\n'
+    Names=$(echo "$Response" | jq -r '.[].name')
+    AllBlobs+="$Names"$'\n'
 
-    NextMarker=$(az storage blob list --account-name $AzureStorage --container-name backup --sas-token "$Sas" \
-        --query "nextMarker" -o tsv)
+    NextMarker=$(grep -oP '(?<=WARNING: ).+' /tmp/az_warnings | tail -n1)
 
     if [ -z "$NextMarker" ]; then
         break
     fi
 done
 
-for Blob in $Blobs; do
-    FileName=$(basename "$Blob")
-    DatabaseName=Temp$(echo $FileName | cut -d"." -f1)
-    TempFileName="Temp$Instance$FileName"
-    TempPath="/tmp/$TempFileName"
-    echo "Downloading blob $Blob to $TempPath"
-    az storage blob download --account-name $AzureStorage --container-name backup --name "$Blob" --sas-token "$Sas" --file "$TempPath" 1>/dev/null
+if [ -z "$AllBlobs" ]; then
+    echo "No blobs found."
+    exit 1
+fi
 
-    if [ -f $TempPath ]; then
-        docker cp $TempPath $DatabasesContainer:/
-        docker exec $DatabasesContainer bash -c "mariadb -u root -p${DatabasesPassword} -e 'drop database if exists $DatabaseName'"
-        docker exec $DatabasesContainer bash -c "mariadb -u root -p${DatabasesPassword} -e 'create database if not exists $DatabaseName'"
-        docker exec $DatabasesContainer bash -c "mariadb -u root -p${DatabasesPassword} $DatabaseName < /$TempFileName"
+FilteredBlobs="$AllBlobs"
+for param in "${params[@]}"; do
+    FilteredBlobs=$(echo "$FilteredBlobs" | grep "$param")
+done
+
+if [ -z "$FilteredBlobs" ]; then
+    echo "No blobs matched the filters: $1"
+    exit 1
+fi
+
+docker exec "$DatabasesContainer" bash -c "mkdir -p /Temp"
+
+for Blob in $FilteredBlobs; do
+    FileName=$(basename "$Blob")
+    BaseName=$(echo "$FileName" | cut -d"." -f1)
+
+    if [ -n "$Prefix" ]; then
+        DatabaseName="${Prefix}${BaseName}"
+        TempFileName="${Prefix}${Instance}${FileName}"
+    else
+        DatabaseName="$BaseName"
+        TempFileName="${Instance}${FileName}"
+    fi
+
+    TempPath="/Temp/$TempFileName"
+
+    echo "Downloading blob $Blob to $TempPath"
+    az storage blob download \
+        --account-name "$AzureStorage" \
+        --container-name backup \
+        --name "$Blob" \
+        --sas-token "$Sas" \
+        --file "$TempPath" 1>/dev/null
+
+    if [ -f "$TempPath" ]; then
+        docker cp "$TempPath" "$DatabasesContainer:/Temp/$TempFileName"
+
+        docker exec "$DatabasesContainer" mongorestore \
+            --archive="/Temp/$TempFileName" \
+            --drop \
+            --gzip \
+            --nsInclude="${DatabaseName}.*" \
+            --username="$DatabasesUser" \
+            --password="$DatabasesPassword" \
+            --authenticationDatabase=admin \
+            --quiet
+
+        echo "Restored $DatabaseName"
+    else
+        echo "Failed to download blob: $Blob"
     fi
 done
