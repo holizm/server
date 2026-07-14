@@ -1,308 +1,376 @@
-#!/bin/bash
+#!/usr/bin/env node
 
-set -Eeuo pipefail
+import fs from 'fs'
+import path from 'path'
+import { execFileSync } from 'child_process'
+import {
+    divide,
+    errorAndExit,
+    info,
+    success,
+    warning,
+} from '${environmentRoot}/server/scripts/logger.js'
+import {
+    createDirIfNotExists,
+    getDirs,
+} from '${environmentRoot}/server/scripts/os.js'
 
-databaseToBackup=${1-}
-instancePath="${home}/${instance}"
-backupDirectory="$instancePath/backupDirectory"
-databasesContainer="${instance}Databases"
-storageProvider="${storageProvider}"
+const timestampPattern = /^\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}$/
 
-log() {
-    echo "$(date '+%Y-%m-%d %H:%M:%S') $*"
+const config = {
+    instance: '${instance}',
+    home: '${home}',
+    storageProvider: '${storageProvider}',
+    databasesUser: '${databasesUser}',
+    databasesPassword: '${databasesPassword}',
+    azureStorage: '${azureStorage}',
+    azureSas: '${azureSas}',
+    awsEndpoint: '${awsEndpoint}',
+    awsAccessKey: '${awsAccessKey}',
+    awsSecretKey: '${awsSecretKey}',
+    awsBucket: '${awsBucket}',
 }
 
-requireCommand() {
-    if ! command -v "$1" >/dev/null 2>&1; then
-        echo "Required command not found: $1" >&2
-        exit 1
-    fi
-}
+const instancePath = path.join(config.home, config.instance)
+const backupDirectory = path.join(instancePath, 'backupDirectory')
+const databasesContainer = config.instance + 'Databases'
+const awsRemote = ':s3:' + config.awsBucket
+const awsOptions = [
+    '--s3-provider', 'Other',
+    '--s3-endpoint', config.awsEndpoint,
+    '--s3-access-key-id', config.awsAccessKey,
+    '--s3-secret-access-key', config.awsSecretKey,
+    '--s3-acl', 'private',
+]
 
-dumpDatabase() {
-    local database=$1
-    local destination="$backupDirectory/databases/dumps/$database.archive"
+const run = (command, args) => execFileSync(command, args, { stdio: 'inherit' })
 
-    log "Backing up MongoDB database: $database"
-    docker exec "$databasesContainer" mongodump \
-        --username="${databasesUser}" \
-        --password="${databasesPassword}" \
-        --authenticationDatabase=admin \
-        --db="$database" \
-        --archive \
-        --gzip \
-        --quiet > "$destination"
-}
+const capture = (command, args) => execFileSync(command, args, {
+    encoding: 'utf8',
+    stdio: ['ignore', 'pipe', 'inherit'],
+})
 
-copyBackupFile() {
-    local relativePath=$1
-    local source="$instancePath/$relativePath"
-    local destination="$backupDirectory/$relativePath"
+const copyBackupFile = relativePath => {
+    const source = path.join(instancePath, relativePath)
+    const destination = path.join(backupDirectory, relativePath)
+    let sourceStat
 
-    if [ ! -f "$source" ] || [ -L "$source" ]; then
-        log "Skipping unavailable backup file: $relativePath"
+    try {
+        sourceStat = fs.lstatSync(source)
+    } catch {
+        warning('Skipping unavailable backup file: ' + relativePath)
         return
-    fi
+    }
 
-    mkdir -p "$(dirname "$destination")"
-    cp -p "$source" "$destination"
-}
-
-prepareBackupDirectory() {
-    local processPath
-    local settingsOverrideFile
-    local relativePath
-
-    log "Preparing $backupDirectory"
-    rm -rf "$backupDirectory"
-
-    copyBackupFile params
-    copyBackupFile tenants
-    copyBackupFile org
-    copyBackupFile common/privateSettings.json
-    copyBackupFile common/publicSettings.json
-    copyBackupFile common/connectionStrings.json
-
-    if [ -f "$instancePath/repo" ] && [ ! -L "$instancePath/repo" ]; then
-        copyBackupFile repo
-    fi
-
-    for processPath in "$instancePath"/*/; do
-        settingsOverrideFile="${processPath%/}/settingsOverride.json"
-        if [ -f "$settingsOverrideFile" ] && [ ! -L "$settingsOverrideFile" ]; then
-            relativePath=${settingsOverrideFile#"$instancePath/"}
-            copyBackupFile "$relativePath"
-        fi
-    done
-
-    mkdir -p "$backupDirectory/databases/dumps"
-}
-
-backupDatabases() {
-    local databaseList
-    local database
-
-    if [ -n "$databaseToBackup" ]; then
-        dumpDatabase "$databaseToBackup"
+    if (!sourceStat.isFile() || sourceStat.isSymbolicLink()) {
+        warning('Skipping unavailable backup file: ' + relativePath)
         return
-    fi
+    }
 
-    databaseList=$(docker exec "$databasesContainer" mongosh \
-        --quiet \
-        --username="${databasesUser}" \
-        --password="${databasesPassword}" \
-        --authenticationDatabase=admin \
-        --eval 'db.adminCommand({ listDatabases: 1 }).databases.map(database => database.name).join("\n")')
+    createDirIfNotExists(path.dirname(destination))
+    fs.cpSync(source, destination, { preserveTimestamps: true })
+}
 
-    while IFS= read -r database; do
-        if [ -z "$database" ] || [ "$database" = admin ] || [ "$database" = local ] || [ "$database" = config ]; then
+const prepareBackupDirectory = () => {
+    info('Preparing ' + backupDirectory)
+    fs.rmSync(backupDirectory, { recursive: true, force: true })
+
+    for (const relativePath of [
+        'params',
+        'tenants',
+        'org',
+        'repo',
+        'common/privateSettings.json',
+        'common/publicSettings.json',
+        'common/connectionStrings.json',
+    ]) {
+        copyBackupFile(relativePath)
+    }
+
+    const processDirectories = getDirs(instancePath).sort()
+
+    for (const processName of processDirectories) {
+        const relativePath = path.join(processName, 'settingsOverride.json')
+        const settingsOverrideFile = path.join(instancePath, relativePath)
+        try {
+            const settingsOverrideStat = fs.lstatSync(settingsOverrideFile)
+            if (settingsOverrideStat.isFile() && !settingsOverrideStat.isSymbolicLink()) {
+                copyBackupFile(relativePath)
+            }
+        } catch { }
+    }
+
+    createDirIfNotExists(path.join(backupDirectory, 'databases', 'dumps'))
+}
+
+const dumpDatabase = database => {
+    const destination = path.join(backupDirectory, 'databases', 'dumps', database + '.archive')
+    const destinationFile = fs.openSync(destination, 'w')
+
+    info('Backing up MongoDB database: ' + database)
+    try {
+        execFileSync('docker', [
+            'exec', databasesContainer, 'mongodump',
+            '--username=' + config.databasesUser,
+            '--password=' + config.databasesPassword,
+            '--authenticationDatabase=admin',
+            '--db=' + database,
+            '--archive',
+            '--gzip',
+            '--quiet',
+        ], {
+            stdio: ['ignore', destinationFile, 'inherit'],
+        })
+    } catch (error) {
+        fs.rmSync(destination, { force: true })
+        throw error
+    } finally {
+        fs.closeSync(destinationFile)
+    }
+}
+
+const backupDatabases = databaseToBackup => {
+    const databaseList = capture('docker', [
+        'exec', databasesContainer, 'mongosh',
+        '--quiet',
+        '--username=' + config.databasesUser,
+        '--password=' + config.databasesPassword,
+        '--authenticationDatabase=admin',
+        '--eval', 'db.adminCommand({ listDatabases: 1 }).databases.map(database => database.name).join("\\n")',
+    ]).split(/\r?\n/).filter(Boolean)
+
+    if (databaseToBackup) {
+        if (!databaseList.includes(databaseToBackup)) {
+            errorAndExit('Database not found: ' + databaseToBackup)
+        }
+        dumpDatabase(databaseToBackup)
+        return
+    }
+
+    for (const database of databaseList) {
+        if (database === 'admin' || database === 'local' || database === 'config') {
             continue
-        fi
-        dumpDatabase "$database"
-    done <<< "$databaseList"
+        }
+        dumpDatabase(database)
+    }
 }
 
-configureAws() {
-    awsRemote=":s3:${awsBucket}"
-    awsOptions=(
-        --s3-provider Other
-        --s3-endpoint "${awsEndpoint}"
-        --s3-access-key-id "${awsAccessKey}"
-        --s3-secret-access-key "${awsSecretKey}"
-        --s3-acl private
-    )
-}
-
-validateStorageProvider() {
-    case "$storageProvider" in
-        azure)
-            requireCommand az
-            requireCommand azcopy
-            ;;
-        aws)
-            requireCommand rclone
-            configureAws
-            ;;
-        *)
-            echo "Unsupported storageProvider: $storageProvider" >&2
-            exit 1
-            ;;
-    esac
-}
-
-uploadBackup() {
-    local timestamp=$1
-    local destination
-    log "Uploading backup/$timestamp using $storageProvider"
-
-    case "$storageProvider" in
-        azure)
-            destination="https://${azureStorage}.blob.core.windows.net/backup/$timestamp?${azureSas}"
-            azcopy sync "$backupDirectory" "$destination" --recursive=true
-            ;;
-        aws)
-            rclone copy "$backupDirectory" "$awsRemote/backup/$timestamp" "${awsOptions[@]}"
-            ;;
-        *)
-            echo "Unsupported storageProvider: $storageProvider" >&2
-            exit 1
-            ;;
-    esac
-}
-
-uploadCompletedMarker() {
-    local timestamp=$1
-    local completedFile="$backupDirectory/completed"
-    local destination
-    : > "$completedFile"
-
-    log "Marking backup/$timestamp as completed"
-    case "$storageProvider" in
-        azure)
-            destination="https://${azureStorage}.blob.core.windows.net/backup/$timestamp/completed?${azureSas}"
-            azcopy copy "$completedFile" "$destination"
-            ;;
-        aws)
-            rclone copyto "$completedFile" "$awsRemote/backup/$timestamp/completed" "${awsOptions[@]}"
-            ;;
-    esac
-}
-
-listBackupTimestamps() {
-    case "$storageProvider" in
-        azure)
-            az storage blob list \
-                --account-name="${azureStorage}" \
-                --container-name=backup \
-                --sas-token="${azureSas}" \
-                --query='[].name' \
-                --output=tsv |
-                awk -F/ 'NF > 1 { print $1 }' |
-                sort -u
-            ;;
-        aws)
-            rclone lsf "$awsRemote/backup" --dirs-only "${awsOptions[@]}" | sed 's:/$::'
-            ;;
-    esac
-}
-
-deleteBackup() {
-    local timestamp=$1
-    local blob
-    log "Deleting backup: $timestamp"
-
-    case "$storageProvider" in
-        azure)
-            az storage blob list \
-                --account-name="${azureStorage}" \
-                --container-name=backup \
-                --sas-token="${azureSas}" \
-                --prefix="$timestamp/" \
-                --query='[].name' \
-                --output=tsv |
-            while IFS= read -r blob; do
-                [ -n "$blob" ] || continue
-                az storage blob delete \
-                    --account-name="${azureStorage}" \
-                    --container-name=backup \
-                    --sas-token="${azureSas}" \
-                    --name="$blob" \
-                    --output=none
-            done
-            ;;
-        aws)
-            rclone purge "$awsRemote/backup/$timestamp" "${awsOptions[@]}"
-            ;;
-    esac
-}
-
-buildRetainingDates() {
-    local i
-    local day
-
-    retainingDates=''
-
-    for i in {0..29}; do
-        retainingDates="$retainingDates $(date -d "-$i days" +%Y-%m-%d)"
-    done
-
-    for i in {30..119}; do
-        day=$(date -d "-$i days" +%Y-%m-%d)
-        if [ "$(date -d "$day" +%u)" -eq 6 ]; then
-            retainingDates="$retainingDates $day"
-        fi
-    done
-
-    for i in {30..119}; do
-        retainingDates="$retainingDates $(date -d "-$i days" +%Y-%m-01)"
-    done
-
-    for i in {4..12}; do
-        retainingDates="$retainingDates $(date -d "-$i months" +%Y-%m-01)"
-    done
-
-    retainingDates=$(printf '%s\n' $retainingDates | sort -u | tr '\n' ' ')
-}
-
-shouldKeepBackup() {
-    local snapshotDate=$1
-    local retainingDate
-
-    for retainingDate in $retainingDates; do
-        if [ "$snapshotDate" = "$retainingDate" ]; then
-            return 0
-        fi
-    done
-    return 1
-}
-
-deleteExpiredBackups() {
-    local snapshots
-    local snapshot
-    local snapshotDate
-
-    log 'Applying backup retention policy'
-    buildRetainingDates
-    snapshots=$(listBackupTimestamps)
-
-    while IFS= read -r snapshot; do
-        [ -n "$snapshot" ] || continue
-        if ! [[ "$snapshot" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}_[0-9]{2}-[0-9]{2}-[0-9]{2}$ ]]; then
-            log "Ignoring unrecognized backup path: $snapshot"
-            continue
-        fi
-
-        snapshotDate=${snapshot%%_*}
-        if shouldKeepBackup "$snapshotDate"; then
-            log "Keeping backup: $snapshot"
-        else
-            deleteBackup "$snapshot"
-        fi
-    done <<< "$snapshots"
-}
-
-main() {
-    local timestamp
-
-    requireCommand docker
-    if [ -z "$databaseToBackup" ]; then
-        validateStorageProvider
-    fi
-    prepareBackupDirectory
-    backupDatabases
-
-    if [ -n "$databaseToBackup" ]; then
-        log "Local backup completed for MongoDB database: $databaseToBackup"
+const validateStorageProvider = () => {
+    if (config.storageProvider === 'azure' || config.storageProvider === 'aws') {
         return
-    fi
-
-    timestamp=$(date +%Y-%m-%d_%H-%M-%S)
-    uploadBackup "$timestamp"
-    uploadCompletedMarker "$timestamp"
-    deleteExpiredBackups
-
-    date --iso-8601=seconds >> "$instancePath/backupLog"
-    log 'Backup completed successfully'
+    }
+    errorAndExit('Unsupported storageProvider: ' + config.storageProvider)
 }
 
-main "$@"
+const uploadBackup = timestamp => {
+    info('Uploading backup/' + timestamp + ' using ' + config.storageProvider)
+
+    if (config.storageProvider === 'azure') {
+        const destination = 'https://' + config.azureStorage + '.blob.core.windows.net/backup/' + timestamp + '?' + config.azureSas
+        run('azcopy', ['sync', backupDirectory, destination, '--recursive=true'])
+        return
+    }
+
+    run('rclone', [
+        'copy',
+        backupDirectory,
+        awsRemote + '/backup/' + timestamp,
+        ...awsOptions,
+    ])
+}
+
+const uploadCompletedMarker = timestamp => {
+    const completedFile = path.join(backupDirectory, 'completed')
+    fs.writeFileSync(completedFile, '')
+    info('Marking backup/' + timestamp + ' as completed')
+
+    if (config.storageProvider === 'azure') {
+        const destination = 'https://' + config.azureStorage + '.blob.core.windows.net/backup/' + timestamp + '/completed?' + config.azureSas
+        run('azcopy', ['copy', completedFile, destination])
+        return
+    }
+
+    run('rclone', [
+        'copyto',
+        completedFile,
+        awsRemote + '/backup/' + timestamp + '/completed',
+        ...awsOptions,
+    ])
+}
+
+const listBackupTimestamps = () => {
+    let paths
+
+    if (config.storageProvider === 'azure') {
+        paths = capture('az', [
+            'storage', 'blob', 'list',
+            '--account-name=' + config.azureStorage,
+            '--container-name=backup',
+            '--sas-token=' + config.azureSas,
+            '--query=[].name',
+            '--output=tsv',
+        ])
+    } else {
+        paths = capture('rclone', [
+            'lsf',
+            awsRemote + '/backup',
+            '--dirs-only',
+            ...awsOptions,
+        ])
+    }
+
+    return [...new Set(paths
+        .split(/\r?\n/)
+        .filter(Boolean)
+        .filter(cloudPath => cloudPath.includes('/'))
+        .map(cloudPath => cloudPath.split('/')[0])
+        .filter(Boolean))]
+        .sort()
+}
+
+const deleteBackup = timestamp => {
+    info('Deleting backup: ' + timestamp)
+
+    if (config.storageProvider === 'azure') {
+        const blobs = capture('az', [
+            'storage', 'blob', 'list',
+            '--account-name=' + config.azureStorage,
+            '--container-name=backup',
+            '--sas-token=' + config.azureSas,
+            '--prefix=' + timestamp + '/',
+            '--query=[].name',
+            '--output=tsv',
+        ])
+
+        for (const blob of blobs.split(/\r?\n/).filter(Boolean)) {
+            run('az', [
+                'storage', 'blob', 'delete',
+                '--account-name=' + config.azureStorage,
+                '--container-name=backup',
+                '--sas-token=' + config.azureSas,
+                '--name=' + blob,
+                '--output=none',
+            ])
+        }
+        return
+    }
+
+    run('rclone', [
+        'purge',
+        awsRemote + '/backup/' + timestamp,
+        ...awsOptions,
+    ])
+}
+
+const pad = number => String(number).padStart(2, '0')
+
+const formatDate = date => [
+    date.getFullYear(),
+    pad(date.getMonth() + 1),
+    pad(date.getDate()),
+].join('-')
+
+const formatTimestamp = date => formatDate(date) + '_' + [
+    pad(date.getHours()),
+    pad(date.getMinutes()),
+    pad(date.getSeconds()),
+].join('-')
+
+const formatIsoSeconds = date => {
+    const offsetMinutes = -date.getTimezoneOffset()
+    const offsetSign = offsetMinutes >= 0 ? '+' : '-'
+    const absoluteOffset = Math.abs(offsetMinutes)
+    const time = [pad(date.getHours()), pad(date.getMinutes()), pad(date.getSeconds())].join(':')
+    const offset = offsetSign + pad(Math.floor(absoluteOffset / 60)) + ':' + pad(absoluteOffset % 60)
+    return formatDate(date) + 'T' + time + offset
+}
+
+const getDateDaysAgo = (now, days) => {
+    const date = new Date(now)
+    date.setHours(0, 0, 0, 0)
+    date.setDate(date.getDate() - days)
+    return date
+}
+
+const buildRetainingDates = now => {
+    const retainingDates = new Set()
+
+    for (let days = 0; days <= 29; days++) {
+        retainingDates.add(formatDate(getDateDaysAgo(now, days)))
+    }
+
+    for (let days = 30; days <= 119; days++) {
+        const date = getDateDaysAgo(now, days)
+        if (date.getDay() === 6) {
+            retainingDates.add(formatDate(date))
+        }
+        retainingDates.add(formatDate(date).slice(0, 7) + '-01')
+    }
+
+    for (let months = 4; months <= 12; months++) {
+        const date = new Date(now.getFullYear(), now.getMonth() - months, 1)
+        retainingDates.add(formatDate(date))
+    }
+
+    return retainingDates
+}
+
+const deleteExpiredBackups = now => {
+    info('Applying backup retention policy')
+    const retainingDates = buildRetainingDates(now)
+
+    for (const snapshot of listBackupTimestamps()) {
+        if (!timestampPattern.test(snapshot)) {
+            warning('Ignoring unrecognized backup path: ' + snapshot)
+            continue
+        }
+
+        const snapshotDate = snapshot.split('_')[0]
+        if (retainingDates.has(snapshotDate)) {
+            info('Keeping backup: ' + snapshot)
+        } else {
+            deleteBackup(snapshot)
+        }
+    }
+}
+
+const main = args => {
+    if (args.length > 1) {
+        errorAndExit('Usage: backup [database]')
+    }
+
+    const databaseToBackup = args[0] || ''
+
+    if (!databaseToBackup) {
+        validateStorageProvider()
+    }
+
+    divide()
+    prepareBackupDirectory()
+    backupDatabases(databaseToBackup)
+
+    if (databaseToBackup) {
+        success('Local backup completed for MongoDB database: ' + databaseToBackup)
+        divide()
+        return
+    }
+
+    const now = new Date()
+    const timestamp = formatTimestamp(now)
+
+    divide()
+    uploadBackup(timestamp)
+    uploadCompletedMarker(timestamp)
+
+    divide()
+    deleteExpiredBackups(now)
+    fs.appendFileSync(path.join(instancePath, 'backupLog'), formatIsoSeconds(new Date()) + '\n')
+    success('Backup completed successfully')
+    divide()
+}
+
+try {
+    main(process.argv.slice(2))
+} catch (error) {
+    errorAndExit(error.message || String(error))
+}
