@@ -86,13 +86,13 @@ const listCloudFiles = () => {
             '--recursive',
             '--files-only',
             '--include', '*/completed',
-            '--include', '*/databases/dumps/*.archive',
+            '--include', '*/databases/*.archive',
             ...getAwsOptions(),
         ], true)
     }
 
     if (config.storageProvider === 'azure') {
-        const query = "[?ends_with(name, '/completed') || (contains(name, '/databases/dumps/') && ends_with(name, '.archive'))].name"
+        const query = "[?ends_with(name, '/completed') || (contains(name, '/databases/') && ends_with(name, '.archive'))].name"
         return run('az', [
             'storage', 'blob', 'list',
             '--account-name', config.azureStorage,
@@ -124,7 +124,7 @@ const selectSnapshot = (cloudFiles, snapshotFilter, databaseFilter) => {
         .reverse()
 
     for (const snapshot of matchingSnapshots) {
-        const archivePrefix = snapshot + '/databases/dumps/'
+        const archivePrefix = snapshot + '/databases/'
         const databases = [...files]
             .filter(file => file.startsWith(archivePrefix) && file.endsWith('.archive'))
             .map(file => file.slice(archivePrefix.length, -'.archive'.length))
@@ -145,7 +145,7 @@ const selectSnapshot = (cloudFiles, snapshotFilter, databaseFilter) => {
 
 const downloadArchive = (snapshot, database, archivePath) => {
     const temporaryPath = archivePath + '.download-' + process.pid
-    const cloudPath = snapshot + '/databases/dumps/' + database + '.archive'
+    const cloudPath = snapshot + '/databases/' + database + '.archive'
 
     fs.mkdirSync(path.dirname(archivePath), { recursive: true })
     fs.rmSync(temporaryPath, { force: true })
@@ -238,7 +238,7 @@ const main = args => {
     success('Selected database: ' + database)
 
     const backupDirectory = path.join(config.home, config.instance, 'backupDirectory')
-    const archivePath = path.join(backupDirectory, 'databases', 'dumps', database + '.archive')
+    const archivePath = path.join(backupDirectory, 'databases', database + '.archive')
     const destinationDatabase = getDestinationDatabase(database, mode)
 
     divide()

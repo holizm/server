@@ -100,11 +100,11 @@ const prepareBackupDirectory = () => {
         } catch { }
     }
 
-    createDirIfNotExists(path.join(backupDirectory, 'databases', 'dumps'))
+    createDirIfNotExists(path.join(backupDirectory, 'databases'))
 }
 
 const dumpDatabase = database => {
-    const destination = path.join(backupDirectory, 'databases', 'dumps', database + '.archive')
+    const destination = path.join(backupDirectory, 'databases', database + '.archive')
     const destinationFile = fs.openSync(destination, 'w')
 
     info('Backing up MongoDB database: ' + database)
