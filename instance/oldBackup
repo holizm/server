@@ -21,7 +21,7 @@ requireCommand() {
 
 dumpDatabase() {
     local database=$1
-    local destination="$backupDirectory/databases/dumps/$database.archive"
+    local destination="$backupDirectory/databases/$database.archive"
 
     log "Backing up MongoDB database: $database"
     docker exec "$databasesContainer" mongodump \
@@ -75,7 +75,7 @@ prepareBackupDirectory() {
         fi
     done
 
-    mkdir -p "$backupDirectory/databases/dumps"
+    mkdir -p "$backupDirectory/databases"
 }
 
 backupDatabases() {
