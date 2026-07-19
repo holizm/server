@@ -7,4 +7,34 @@ installRclone() {
     success "Installed Rclone"
 }
 
+configureRclone() {
+    for homeDir in /home/*; do
+        [ -d "$homeDir" ] || continue
+
+        configDir="$homeDir/.config/rclone"
+        configFile="$configDir/rclone.conf"
+
+        if [ ! -f "$configFile" ]; then
+            mkdir -p "$configDir"
+
+            cat > "$configFile" << 'EOF'
+[paydar]
+type = s3
+provider = Other
+access_key_id = someKey
+secret_access_key = someSecret
+endpoint = s3.ir-thr-at1.arvanstorage.ir
+acl = public-read
+region = ir-thr-at1
+force_path_style = true
+EOF
+
+            chown -R "$(stat -c '%U:%G' "$homeDir")" "$configDir"
+
+            success "Created rclone config for $(basename "$homeDir")"
+        fi
+    done
+}
+
 install rclone installRclone
+configureRclone
