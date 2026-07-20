@@ -151,7 +151,7 @@ export default params => {
             const result = runOnTerminal(
                 `cat ~/${instance}/siteApi/compose.yaml | grep :5000 | cut -d ':' -f2 | cut -d '-' -f2`,
             ).trim()
-            params.randomPort = result
+            params.deterministicPort = result
             generate({
                 ...params,
                 file: 'storage',

@@ -21,7 +21,7 @@ services:
             - ${home}/${instance}/${process}:${home}/${instance}/${process}/webServerCache
             - ${home}/server/machine.json:${home}/server/machine.json
         ports:
-            - 127.0.0.1:${randomPort}:3000
+            - 127.0.0.1:${deterministicPort}:3000
         restart: always
         networks:
             - ${instance}Network

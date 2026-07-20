@@ -11,7 +11,7 @@ server {
     }
 
     location / {
-        proxy_pass http://localhost:${randomPort};
+        proxy_pass http://localhost:${deterministicPort};
         include ${home}/${instance}/${process}/webServer/${tenant}/proxy;
     }
 

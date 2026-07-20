@@ -12,7 +12,7 @@ services:
             - ${home}/${instance}/common/publicSettings.json:${home}/${repo}/${githubImageNameOrProcess}/publicSettings.json
             - ${home}/${instance}/${process}/settingsOverride.json:${home}/${repo}/${githubImageNameOrProcess}/settingsOverride.json
         ports:
-            - 127.0.0.1:${randomPort}:3000
+            - 127.0.0.1:${deterministicPort}:3000
         restart: always
         networks:
             - ${instance}Network

@@ -15,7 +15,7 @@ export default params => {
     const [lowerPort, upperPort] = getContent('/proc/sys/net/ipv4/ip_local_port_range').split(/\s+/).map(Number)
     const hashVal = crypto.createHash('md5').update(seed).digest('hex')
     const intHash = parseInt(hashVal.slice(0, 8), 16)
-    const randomDeterministicPort = lowerPort + (intHash % (upperPort - lowerPort))
-    params[propertyName || 'randomPort'] = randomDeterministicPort
-    return randomDeterministicPort
+    const deterministicPort = lowerPort + (intHash % (upperPort - lowerPort))
+    params[propertyName || 'deterministicPort'] = deterministicPort
+    return deterministicPort
 }

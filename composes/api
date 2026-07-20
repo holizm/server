@@ -21,7 +21,7 @@ services:
             - ${home}/${instance}/common/connectionStrings.json:${home}/${repo}/${githubImageNameOrProcess}/connectionStrings.json
             - ${home}/${instance}/${process}/settingsOverride.json:${home}/${repo}/${githubImageNameOrProcess}/settingsOverride.json
         ports:
-            - 127.0.0.1:${randomPort}:5000
+            - 127.0.0.1:${deterministicPort}:5000
         restart: always
         networks:
             - ${instance}Network

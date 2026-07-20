@@ -4,7 +4,7 @@ services:
         container_name: ${instance}Search
         hostname: ${instance}Search
         ports:
-            - 127.0.0.1:${randomPort}:7700
+            - 127.0.0.1:${deterministicPort}:7700
         environment:
             - MEILI_MASTER_KEY=${searchMasterKey}
         volumes:

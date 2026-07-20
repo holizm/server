@@ -23,7 +23,7 @@ export default params => {
         process,
     } = params
     calculateSubdomain(params)
-    params[`${instance}${pascalize(process)}Port`] = params.randomPort
+    params[`${instance}${pascalize(process)}Port`] = params.deterministicPort
     params.dockerImageName = `ghcr.io/${params.lowercaseOrg}/${params.lowercaseRepo}/${params.lowercaseGitHubImageNameOrProcess}:latest`
     generateCompose(params)
     generateWebServerConfig(params)

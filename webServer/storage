@@ -66,7 +66,7 @@ server {
     location @imageApi {
         rewrite ^(.*).webp$ /image/resize$1 break;
         proxy_set_header Host $host;
-        proxy_pass http://localhost:${randomPort};
+        proxy_pass http://localhost:${deterministicPort};
         add_header Cache-Control "public, max-age=31536000, immutable";
         include ${home}/${instance}/${process}/webServer/${tenant}/proxy;
     }
@@ -74,7 +74,7 @@ server {
     location @audioApi {
         rewrite ^(.*)$ /audio/stream$1 break;
         proxy_set_header Host $host;
-        proxy_pass http://localhost:${randomPort};
+        proxy_pass http://localhost:${deterministicPort};
         add_header Cache-Control "public, max-age=31536000, immutable";
         include ${home}/${instance}/${process}/webServer/${tenant}/proxy;
     }
@@ -82,7 +82,7 @@ server {
     location @videoApi {
         rewrite ^(.*)$ /video/stream$1 break;
         proxy_set_header Host $host;
-        proxy_pass http://localhost:${randomPort};
+        proxy_pass http://localhost:${deterministicPort};
         add_header Cache-Control "public, max-age=31536000, immutable";
         include ${home}/${instance}/${process}/webServer/${tenant}/proxy;
     }
@@ -90,7 +90,7 @@ server {
     location @fileApi {
         rewrite ^(.*)$ /file/get$1 break;
         proxy_set_header Host $host;
-        proxy_pass http://localhost:${randomPort};
+        proxy_pass http://localhost:${deterministicPort};
         add_header Cache-Control "public, max-age=31536000, immutable";
         include ${home}/${instance}/${process}/webServer/${tenant}/proxy;
     }

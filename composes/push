@@ -4,6 +4,6 @@ services:
         container_name: push
         working_dir: /holism/push
         ports:
-            - 127.0.0.1:${{randomPort}}:3000
+            - 127.0.0.1:${{deterministicPort}}:3000
         restart: always
         command: node server.js
