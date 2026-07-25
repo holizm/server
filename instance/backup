@@ -171,7 +171,7 @@ const uploadBackup = timestamp => {
         return
     }
 
-    run('rclone', [
+    run('/usr/local/bin/rclone', [
         'copy',
         backupDirectory,
         awsRemote + '/backup/' + timestamp,
@@ -190,7 +190,7 @@ const uploadCompletedMarker = timestamp => {
         return
     }
 
-    run('rclone', [
+    run('/usr/local/bin/rclone', [
         'copyto',
         completedFile,
         awsRemote + '/backup/' + timestamp + '/completed',
@@ -211,7 +211,7 @@ const listBackupTimestamps = () => {
             '--output=tsv',
         ])
     } else {
-        paths = capture('rclone', [
+        paths = capture('/usr/local/bin/rclone', [
             'lsf',
             awsRemote + '/backup',
             '--dirs-only',
@@ -255,7 +255,7 @@ const deleteBackup = timestamp => {
         return
     }
 
-    run('rclone', [
+    run('/usr/local/bin/rclone', [
         'purge',
         awsRemote + '/backup/' + timestamp,
         ...awsOptions,
