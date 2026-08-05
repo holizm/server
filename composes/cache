@@ -12,7 +12,7 @@ services:
             - --appendonly
             - "no"
         ports:
-            - ${cache}:6379
+            - ${deterministicPort}:6379
         logging:
             driver: none
         networks:
