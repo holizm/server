@@ -17,8 +17,8 @@ if (!containerName) {
     const params = {}
     params.baseDir = process.cwd()
     params.home = process.env.HOME
-    params.directoryPath = baseDir
-    params.depth = getDepth(baseDir)
+    params.directoryPath = params.baseDir
+    params.depth = getDepth(params.baseDir)
     containerName = extract(params).containerName
 }
 
