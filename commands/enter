@@ -7,12 +7,20 @@ import {
     errorAndExit,
     info,
 } from "../scripts/logger.js"
+import { getDepth } from '../scripts/os.js'
+import loadParams from '../scripts/loadParams.js'
 import { runOnTerminal } from "../scripts/terminal.js"
 import extract from "../scripts/extract.js"
 
 let containerName = process.argv[2] || ""
 if (!containerName) {
-    containerName = extract().containerName
+    const baseDir = process.cwd()
+    const params = loadParams(baseDir)
+    params.baseDir = baseDir
+    params.home = process.env.HOME
+    params.directoryPath = baseDir
+    params.depth = getDepth(baseDir)
+    containerName = extract(params).containerName
 }
 
 const lines = runOnTerminal(`docker ps -a --format "{{.Names}}||{{.Status}}"`).split("\n").filter(Boolean)
