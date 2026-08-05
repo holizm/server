@@ -14,9 +14,8 @@ import extract from "../scripts/extract.js"
 
 let containerName = process.argv[2] || ""
 if (!containerName) {
-    const baseDir = process.cwd()
-    const params = loadParams(baseDir)
-    params.baseDir = baseDir
+    const params = {}
+    params.baseDir = process.cwd()
     params.home = process.env.HOME
     params.directoryPath = baseDir
     params.depth = getDepth(baseDir)
