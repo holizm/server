@@ -37,6 +37,8 @@ export default params => {
         subdomain = 'storage'
     } else if (process === 'statics') {
         subdomain = 'statics'
+    } else if (process === 'cache') {
+        subdomain = 'cache'
     }
     subdomain = subdomain === '' ? '' : `${subdomain.toLowerCase()}.`
     info(`Subdomain is ${subdomain}`)

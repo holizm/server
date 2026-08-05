@@ -58,6 +58,12 @@ export default params => {
         user,
     } = params
     remove(`${processPath}/webServer`)
+    const processesWithoutWebServer = [
+        'cache',
+    ]
+    if (processesWithoutWebServer.includes(process)) {
+        return
+    }
     for (const tenant of tenants) {
         let tenantName, domain, locales, defaultLocale, roles
         if (tenant.length === 5) {
