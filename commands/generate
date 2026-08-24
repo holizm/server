@@ -19,6 +19,10 @@ import extract from '../scripts/extract.js'
 import { clear } from '../scripts/terminal.js'
 import generateBackupAndRestore from '../scripts/generateBackupAndRestore.js'
 
+if (process.getuid?.() === 0) {
+    errorAndExit('This command must not be run by the root user')
+}
+
 clear()
 
 const findDirectories = (filter, exact) => {
