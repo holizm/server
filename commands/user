@@ -1,0 +1,14 @@
+#!/bin/bash
+
+user="$1"
+timestamp=$(last -F "$user" | awk '/still logged in| - / {print $4, $5, $6, $7, $8; exit}')
+
+if [ -z "$timestamp" ]; then
+    echo "$user: never logged in"
+    exit
+fi
+
+seconds=$(( $(date +%s) - $(date -d "$timestamp" +%s) ))
+days=$(( seconds / 86400 ))
+
+echo "$user: $timestamp ($days days ago)"
