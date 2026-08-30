@@ -2,6 +2,7 @@
 
 import { ensure } from '../scripts/ensure.js'
 import {
+    createDirIfNotExists,
     excludedDirs,
     getDepth,
     getDirs,
@@ -11,9 +12,9 @@ import {
 import {
     divide,
     errorAndExit,
+    info,
 } from '../scripts/logger.js'
 import loadParams from '../scripts/loadParams.js'
-import { info } from '../scripts/logger.js'
 import generateForDirectory from '../scripts/generateForDirectory.js'
 import extract from '../scripts/extract.js'
 import { clear } from '../scripts/terminal.js'
@@ -62,6 +63,7 @@ const filterValue = args[0] || ''
 const exactMatch = args.length > 1 && String(args[1]).toLowerCase() === 'only'
 const directories = findDirectories(filterValue, exactMatch)
 const tenants = readTenants()
+let needsCache = false
 for (const directoryName of directories) {
     const p = `${baseDir}/${directoryName}`
     params.directoryName = directoryName
@@ -71,8 +73,27 @@ for (const directoryName of directories) {
     divide()
     info(directoryName)
     divide()
+    const generatedParams = generateForDirectory({
+        ...params,
+        tenants,
+    })
+    needsCache = needsCache || ['api', 'site'].includes(generatedParams.file)
+    process.chdir(baseDir)
+}
+
+if (needsCache && !directories.includes('cache')) {
+    const directoryName = 'cache'
+    const directoryPath = `${baseDir}/${directoryName}`
+    createDirIfNotExists(directoryPath)
+    process.chdir(directoryPath)
+    divide()
+    info(directoryName)
+    divide()
     generateForDirectory({
         ...params,
+        directoryName,
+        directoryPath,
+        depth: getDepth(directoryPath),
         tenants,
     })
     process.chdir(baseDir)

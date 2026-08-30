@@ -30,4 +30,5 @@ export default params => {
     if (process === 'statics') {
         runOnTerminal(`rsync -a --delete --exclude='.git' /holism/fonts ${home}/${instance}/statics`)
     }
+    return params
 }
