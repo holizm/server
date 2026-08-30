@@ -1,8 +1,11 @@
 #!/usr/local/node/bin/node
 
-import fs from 'fs'
-import path from 'path'
-import { execFileSync } from 'child_process'
+import {
+    execFileSync,
+    spawn,
+} from 'node:child_process'
+import fs from 'node:fs'
+import path from 'node:path'
 import {
     divide,
     errorAndExit,
@@ -14,6 +17,7 @@ import {
     createDirIfNotExists,
     getDirs,
 } from '${environmentRoot}/server/scripts/os.js'
+import { parallelize } from '${environmentRoot}/server/scripts/parallelize.js'
 
 const timestampPattern = /^\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}$/
 
@@ -103,33 +107,44 @@ const prepareBackupDirectory = () => {
     createDirIfNotExists(path.join(backupDirectory, 'databases'))
 }
 
-const dumpDatabase = database => {
+const dumpDatabase = database => new Promise((resolve, reject) => {
     const destination = path.join(backupDirectory, 'databases', database + '.archive')
     const destinationFile = fs.openSync(destination, 'w')
+    let finished = false
 
     info('Backing up MongoDB database: ' + database)
-    try {
-        execFileSync('docker', [
-            'exec', databasesContainer, 'mongodump',
-            '--username=' + config.databasesUser,
-            '--password=' + config.databasesPassword,
-            '--authenticationDatabase=admin',
-            '--db=' + database,
-            '--archive',
-            '--gzip',
-            '--quiet',
-        ], {
-            stdio: ['ignore', destinationFile, 'inherit'],
-        })
-    } catch (error) {
-        fs.rmSync(destination, { force: true })
-        throw error
-    } finally {
-        fs.closeSync(destinationFile)
-    }
-}
+    const child = spawn('docker', [
+        'exec', databasesContainer, 'mongodump',
+        '--username=' + config.databasesUser,
+        '--password=' + config.databasesPassword,
+        '--authenticationDatabase=admin',
+        '--db=' + database,
+        '--archive',
+        '--gzip',
+        '--quiet',
+    ], {
+        stdio: ['ignore', destinationFile, 'inherit'],
+    })
 
-const backupDatabases = databaseToBackup => {
+    const finish = e => {
+        if (finished) {
+            return
+        }
+        finished = true
+        fs.closeSync(destinationFile)
+        if (e) {
+            fs.rmSync(destination, { force: true })
+            reject(e)
+            return
+        }
+        resolve()
+    }
+
+    child.on('error', finish)
+    child.on('close', code => finish(code === 0 ? null : new Error('mongodump exited with code ' + code + ' for database ' + database)))
+})
+
+const backupDatabases = async databaseToBackup => {
     const databaseList = capture('docker', [
         'exec', databasesContainer, 'mongosh',
         '--quiet',
@@ -143,16 +158,16 @@ const backupDatabases = databaseToBackup => {
         if (!databaseList.includes(databaseToBackup)) {
             errorAndExit('Database not found: ' + databaseToBackup)
         }
-        dumpDatabase(databaseToBackup)
+        await dumpDatabase(databaseToBackup)
         return
     }
 
-    for (const database of databaseList) {
-        if (database === 'admin' || database === 'local' || database === 'config') {
-            continue
-        }
-        dumpDatabase(database)
-    }
+    const databases = databaseList.filter(database =>
+        database !== 'admin' &&
+        database !== 'config' &&
+        database !== 'local'
+    )
+    await parallelize(databases, dumpDatabase)
 }
 
 const validateStorageProvider = () => {
@@ -334,7 +349,7 @@ const deleteExpiredBackups = now => {
     }
 }
 
-const main = args => {
+const main = async args => {
     if (args.length > 1) {
         errorAndExit('Usage: backup [database]')
     }
@@ -347,7 +362,7 @@ const main = args => {
 
     divide()
     prepareBackupDirectory()
-    backupDatabases(databaseToBackup)
+    await backupDatabases(databaseToBackup)
 
     if (databaseToBackup) {
         success('Local backup completed for MongoDB database: ' + databaseToBackup)
@@ -370,7 +385,7 @@ const main = args => {
 }
 
 try {
-    main(process.argv.slice(2))
-} catch (error) {
-    errorAndExit(error.message || String(error))
+    await main(process.argv.slice(2))
+} catch (e) {
+    errorAndExit(e.message || String(e))
 }
