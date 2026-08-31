@@ -67,7 +67,7 @@ export const errorAndExit = (...args) => {
 
 export const check = (...args) => {
     const checkMark = '\u2714'
-    log('\x1b[32m', ...args, checkMark)
+    log('\x1b[32m', false, checkMark, ...args)
 }
 
 export const divide = (toStderr) => {
