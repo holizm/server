@@ -20,6 +20,8 @@ from=$(openssl x509 -in "$certificatePath" -noout -startdate | sed 's/^notBefore
 to=$(openssl x509 -in "$certificatePath" -noout -enddate | sed 's/^notAfter=//')
 sans=$(openssl x509 -in "$certificatePath" -noout -ext subjectAltName | sed -n '2,$p' | tr ',' '\n' | sed -E 's/^[[:space:]]*//; s/^DNS://')
 
+info "Certificate Name: $1"
+divide
 info 'Certificate'
 divide
 info "Subject: $subject"
