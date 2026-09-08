@@ -35,7 +35,8 @@ const {
     runningReverseProxyPort,
 } = getReverseProxyPort(params)
 
-let command = `ps -eo pid,args | grep '${instance}' | grep '${params.process}' | grep -v grep | awk '{print $1}'`
+const user = home.slice('/home/'.length)
+let command = `su - ${user} -c 'pm2 pid ${fullProcessName}' | awk '/^[0-9]+$/ {print; exit}'`
 const pid = runOnTerminal(command).trim()
 
 command = `lsof -Pan -p ${pid} -iTCP -sTCP:LISTEN | awk 'NR==2 {print $9}' | sed 's/.*://'`
