@@ -5,6 +5,14 @@
 
 deleteCertificateFiles() {
     local domain="$1"
+    local certificateReference="/etc/letsencrypt/live/$domain/"
+
+    while IFS= read -r -d '' configPath; do
+        if grep -Fq "$certificateReference" "$configPath" 2>/dev/null; then
+            rm -f -- "$configPath"
+        fi
+    done < <(find /etc/nginx/conf.d -type l -print0 2>/dev/null)
+
     certbot delete --cert-name "$domain" --non-interactive >/dev/null 2>&1 || true
     rm -rf -- \
         "/etc/letsencrypt/live/$domain" \
