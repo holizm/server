@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+
+. "/holism/server/scripts/logger.sh"
+
+if [[ -z "$1" ]]; then
+    error "Error - Please provide the certificate domain argument"
+    exit 1
+fi
+
+domain="$1"
+certificatePath="/etc/letsencrypt/live/$domain"
+archivePath="/etc/letsencrypt/archive/$domain"
+renewalPath="/etc/letsencrypt/renewal/$domain.conf"
+
+if [[ ! -d "$certificatePath" && ! -d "$archivePath" && ! -f "$renewalPath" ]]; then
+    error "Error - Certificate not found: $domain"
+    exit 1
+fi
+
+certbot delete --cert-name "$domain" --non-interactive || true
+rm -rf -- "$certificatePath" "$archivePath" "$renewalPath"
+success "Deleted certificate: $domain"

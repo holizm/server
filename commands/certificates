@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+
+. "/holism/server/scripts/logger.sh"
+
+certbot certificates 2>/dev/null | sed -n 's/^  Certificate Name: //p' | while IFS= read -r domain; do
+    certificate "$domain"
+    divide
+done
