@@ -30,7 +30,13 @@ while IFS= read -r domain; do
     else
         healthyCertificates+=("$domain")
     fi
-done < <(certbot certificates 2>/dev/null | sed -n 's/^  Certificate Name: //p')
+done < <(
+    {
+        certbot certificates 2>/dev/null | sed -n 's/^  Certificate Name: //p'
+        find /etc/letsencrypt/archive /etc/letsencrypt/live -mindepth 1 -maxdepth 1 -type d -printf '%f\n' 2>/dev/null
+        find /etc/letsencrypt/renewal -mindepth 1 -maxdepth 1 -type f -name '*.conf' -printf '%f\n' 2>/dev/null | sed 's/\.conf$//'
+    } | sort -u
+)
 
 divide
 info 'Healthy Certificates'
