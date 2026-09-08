@@ -1,33 +1,24 @@
 #!/usr/bin/env bash
 
-. "/holism/server/scripts/logger.sh"
+set -euo pipefail
 
-if [[ -z "$1" ]]; then
-    error "Error - Please provide the domain argument"
+if [[ -z "${1:-}" || -z "${2:-}" ]]; then
+    printf 'Usage: certificate <name> <san1>,<san2>,...\n' >&2
     exit 1
 fi
 
-certificatePath="/etc/letsencrypt/live/$1/fullchain.pem"
+name="$1"
+sanCsv="$2"
+read -ra subjectAlternativeNames <<< "${sanCsv//,/ }"
 
-if [[ ! -f "$certificatePath" ]]; then
-    error "Error - Certificate not found: $certificatePath"
+if [[ "${#subjectAlternativeNames[@]}" -eq 0 ]]; then
+    printf 'At least one subject alternative name is required\n' >&2
     exit 1
 fi
 
-subject=$(openssl x509 -in "$certificatePath" -noout -subject | sed 's/^subject=//')
-issuer=$(openssl x509 -in "$certificatePath" -noout -issuer | sed 's/^issuer=//')
-from=$(openssl x509 -in "$certificatePath" -noout -startdate | sed 's/^notBefore=//')
-to=$(openssl x509 -in "$certificatePath" -noout -enddate | sed 's/^notAfter=//')
-sans=$(openssl x509 -in "$certificatePath" -noout -ext subjectAltName | sed -n '2,$p' | tr ',' '\n' | sed -E 's/^[[:space:]]*//; s/^DNS://')
-
-info "Certificate: $1"
-divide
-info "Subject: $subject"
-info "Issuer: $issuer"
-success "From: $from"
-warning "To: $to"
-divide
-info 'Subject Alternative Names'
-printf '%s\n' "$sans" | while IFS= read -r san; do
-    info "  $san"
+args=(certbot certonly --cert-name "$name")
+for subjectAlternativeName in "${subjectAlternativeNames[@]}"; do
+    args+=(-d "$subjectAlternativeName")
 done
+
+"${args[@]}"
