@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+
+. "/holism/server/scripts/logger.sh"
+. "/holism/server/scripts/certificateStatus.sh"
+
+deleteCertificateFiles() {
+    local domain="$1"
+    certbot delete --cert-name "$domain" --non-interactive >/dev/null 2>&1 || true
+    rm -rf -- \
+        "/etc/letsencrypt/live/$domain" \
+        "/etc/letsencrypt/archive/$domain" \
+        "/etc/letsencrypt/renewal/$domain.conf"
+    success "Deleted certificate: $domain"
+}
+
+loadCertificateStatus
+
+if [[ -n "$1" ]]; then
+    IFS=',' read -ra requestedCertificates <<< "$1"
+    for domain in "${requestedCertificates[@]}"; do
+        domain=$(printf '%s' "$domain" | sed -E 's/^[[:space:]]+//; s/[[:space:]]+$//')
+        if [[ -n "$domain" ]]; then
+            deleteCertificateFiles "$domain"
+        fi
+    done
+else
+    for domain in "${expiredCertificates[@]}" "${brokenCertificates[@]}"; do
+        deleteCertificateFiles "$domain"
+    done
+fi
