@@ -3,27 +3,47 @@
 . "/holism/server/scripts/logger.sh"
 maxRetries=3
 
+pullRepo() {
+    local dir="$1"
+    local retryCount=0
+
+    echo "Pulling $dir..."
+
+    while [ $retryCount -lt $maxRetries ]; do
+        if timeout -s KILL 5s git -C "$dir" pull; then
+            return 0
+        fi
+
+        retryCount=$((retryCount + 1))
+        echo "Attempt $retryCount failed for $dir. Retrying in 1 second..."
+        sleep 1
+    done
+
+    echo "Error: Failed to pull $dir after $maxRetries attempts." >&2
+    return 1
+}
+
+pids=()
+
 for dir in /holism/*/; do
     dir="${dir%/}"
 
     if [ -e "$dir/.git" ]; then
-        echo "Pulling $dir..."
-
-        retryCount=0
-        while [ $retryCount -lt $maxRetries ]; do
-            if timeout -s KILL 5s git -C "$dir" pull; then
-                break
-            fi
-
-            retryCount=$((retryCount + 1))
-            echo "Attempt $retryCount failed. Retrying in 1 second..."
-            sleep 1
-        done
-
-        if [ $retryCount -eq $maxRetries ]; then
-            echo "Error: Failed to pull $dir after $maxRetries attempts." >&2
-        fi
+        pullRepo "$dir" &
+        pids+=("$!")
     fi
 done
+
+failed=0
+for pid in "${pids[@]}"; do
+    if ! wait "$pid"; then
+        failed=1
+    fi
+done
+
+if [ $failed -eq 1 ]; then
+    echo "Completed with pull failures." >&2
+    exit 1
+fi
 
 echo "Done updating all repositories."
