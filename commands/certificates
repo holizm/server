@@ -2,7 +2,59 @@
 
 . "/holism/server/scripts/logger.sh"
 
-certbot certificates 2>/dev/null | sed -n 's/^  Certificate Name: //p' | while IFS= read -r domain; do
-    certificate "$domain"
-    divide
+healthyCertificates=()
+expiredCertificates=()
+brokenCertificates=()
+
+formatRemainingTime() {
+    local seconds="$1"
+    local years=$((seconds / 31536000))
+    local months=$(((seconds % 31536000) / 2592000))
+    local days=$(((seconds % 2592000) / 86400))
+    local hours=$(((seconds % 86400) / 3600))
+    local result=''
+
+    ((years)) && result+="$years years "
+    ((months)) && result+="$months months "
+    ((days)) && result+="$days days "
+    ((hours)) && result+="$hours hours"
+    printf '%s' "${result:-less than 1 hour}"
+}
+
+while IFS= read -r domain; do
+    certificatePath="/etc/letsencrypt/live/$domain/fullchain.pem"
+    if [[ ! -f "$certificatePath" ]] || ! openssl x509 -in "$certificatePath" -noout >/dev/null 2>&1; then
+        brokenCertificates+=("$domain")
+    elif ! openssl x509 -in "$certificatePath" -noout -checkend 0 >/dev/null 2>&1; then
+        expiredCertificates+=("$domain")
+    else
+        healthyCertificates+=("$domain")
+    fi
+done < <(certbot certificates 2>/dev/null | sed -n 's/^  Certificate Name: //p')
+
+info 'Healthy Certificates'
+divide
+{
+    printf 'Certificate Name\tRemaining Time\n'
+    for domain in "${healthyCertificates[@]}"; do
+        certificatePath="/etc/letsencrypt/live/$domain/fullchain.pem"
+        expiration=$(openssl x509 -in "$certificatePath" -noout -enddate | sed 's/^notAfter=//')
+        expirationTimestamp=$(date -d "$expiration" +%s)
+        remainingSeconds=$((expirationTimestamp - $(date +%s)))
+        printf '%s\t%s\n' "$domain" "$(formatRemainingTime "$remainingSeconds")"
+    done
+} | column -t -s $'\t'
+
+divide
+info 'Expired Certificates'
+divide
+for domain in "${expiredCertificates[@]}"; do
+    error "$domain"
+done
+
+divide
+info 'Broken Certificates'
+divide
+for domain in "${brokenCertificates[@]}"; do
+    error "$domain"
 done
