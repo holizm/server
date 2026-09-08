@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+
+. "/holism/server/scripts/logger.sh"
+
+if [[ -z "$1" ]]; then
+    error "Error - Please provide the certificate domain argument"
+    exit 1
+fi
+
+domain="$1"
+
+if ! certbot certificates --cert-name "$domain" >/dev/null 2>&1; then
+    error "Error - Certificate not found: $domain"
+    exit 1
+fi
+
+info "Renewing certificate: $domain"
+
+if certbot renew --cert-name "$domain" --force-renewal; then
+    systemctl reload nginx
+    success "Renewed certificate: $domain"
+else
+    error "Error - Failed to renew certificate: $domain"
+    exit 1
+fi
