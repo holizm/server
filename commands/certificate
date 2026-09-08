@@ -12,11 +12,26 @@ if [[ ! -f "$certificatePath" ]]; then
     exit 1
 fi
 
-openssl x509 -in "$certificatePath" -noout \
-    -subject \
-    -issuer \
-    -serial \
-    -dates \
-    -fingerprint -sha256 \
-    -ext subjectAltName \
-    -text
+reset='\033[0m'
+blue='\033[1;34m'
+cyan='\033[1;36m'
+green='\033[1;32m'
+yellow='\033[1;33m'
+
+subject=$(openssl x509 -in "$certificatePath" -noout -subject | sed 's/^subject=//')
+issuer=$(openssl x509 -in "$certificatePath" -noout -issuer | sed 's/^issuer=//')
+from=$(openssl x509 -in "$certificatePath" -noout -startdate | sed 's/^notBefore=//')
+to=$(openssl x509 -in "$certificatePath" -noout -enddate | sed 's/^notAfter=//')
+sans=$(openssl x509 -in "$certificatePath" -noout -ext subjectAltName | sed -n '2,$p' | tr ',' '\n' | sed -E 's/^[[:space:]]*//; s/^DNS://')
+
+printf "${blue}Certificate${reset}\n"
+printf '%s\n' '────────────────────────────────────────'
+printf "${cyan}Subject${reset}: %s\n" "$subject"
+printf "${cyan}Issuer${reset}: %s\n" "$issuer"
+printf "${green}From${reset}: %s\n" "$from"
+printf "${yellow}To${reset}: %s\n" "$to"
+printf '%s\n' '────────────────────────────────────────'
+printf "${blue}Subject Alternative Names${reset}\n"
+printf '%s\n' "$sans" | while IFS= read -r san; do
+    printf "  ${cyan}%s${reset}\n" "$san"
+done
