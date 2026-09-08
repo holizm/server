@@ -32,6 +32,7 @@ while IFS= read -r domain; do
     fi
 done < <(certbot certificates 2>/dev/null | sed -n 's/^  Certificate Name: //p')
 
+divide
 info 'Healthy Certificates'
 divide
 {
