@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+. '/holism/server/scripts/logger.sh'
+
+info 'CONTAINER     NAME     CPU     MEM USAGE/LIMIT     BLOCK I/O'
+
+docker stats --no-stream --format 'table {{.Container}}\t{{.Name}}\t{{.CPUPerc}}\t{{.MemUsage}}\t{{.BlockIO}}' \
+    | tail -n +2 \
+    | awk '{print $4,$0}' \
+    | sort -k1nr \
+    | cut -d ' ' -f 2-
