@@ -1,47 +1,61 @@
 #!/usr/bin/env node
 
-const fs = require("fs");
-const { spawnSync } = require("child_process");
+const fs = require('fs')
+const { spawnSync } = require('child_process')
+
+const sortValue = value => {
+    if (Array.isArray(value)) {
+        return value.map(sortValue)
+    }
+    if (value && typeof value === 'object') {
+        const sorted = {}
+        Object.keys(value).sort().forEach(key => {
+            sorted[key] = sortValue(value[key])
+        })
+        return sorted
+    }
+    return value
+}
 
 const result = spawnSync(
-    "find",
+    'find',
     [
-        ".",
-        "(",
-        "-name", "privateSettings.json",
-        "-o",
-        "-name", "publicSettings.json",
-        "-o",
-        "-name", "settingsOverride.json",
-        "-o",
-        "-name", "connectionStrings.json",
-        ")",
-        "-type", "f",
+        '.',
+        '(',
+        '-name', 'privateSettings.json',
+        '-o',
+        '-name', 'publicSettings.json',
+        '-o',
+        '-name', 'settingsOverride.json',
+        '-o',
+        '-name', 'connectionStrings.json',
+        ')',
+        '-type', 'f',
     ],
     {
-        encoding: "utf8",
-        stdio: ["ignore", "pipe", "ignore"],
+        encoding: 'utf8',
+        stdio: ['ignore', 'pipe', 'ignore'],
     },
-);
+)
 
 const files = result.stdout
     .trim()
-    .split("\n")
-    .filter(Boolean);
+    .split('\n')
+    .filter(Boolean)
 
 for (const file of files) {
     try {
-        const json = JSON.parse(fs.readFileSync(file, "utf8"));
+        const json = JSON.parse(fs.readFileSync(file, 'utf8'))
 
         fs.writeFileSync(
             file,
-            JSON.stringify(json, null, 4) + "\n",
-            "utf8",
-        );
+            `${JSON.stringify(sortValue(json), null, 4)}\n`,
+            'utf8',
+        )
 
-        console.log(`Formatted: ${file}`);
-    } catch (err) {
-        console.error(`Failed: ${file}`);
-        console.error(err.message);
+        console.log(`Formatted: ${file}`)
+    } catch (e) {
+        console.error(`Failed: ${file}`)
+        console.error(e.message)
     }
 }
