@@ -11,6 +11,7 @@ server
     proxy_buffer_size 16k;
 
     include ${home}/${instance}/${process}/webServer/${tenant}/certificate;
+    include ${home}/${instance}/${process}/webServer/${tenant}/siteBlobs;
 
     location /
     {
