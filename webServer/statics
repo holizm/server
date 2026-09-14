@@ -5,12 +5,17 @@ server {
     include ${home}/${instance}/statics/webServer/${tenant}/listen;
 
     include ${home}/${instance}/statics/webServer/${tenant}/certificate;
-    
+
     include ${home}/${instance}/statics/webServer/${tenant}/compression;
 
     include ${home}/${instance}/statics/webServer/${tenant}/cors;
 
     root ${home}/${instance}/statics;
+
+    location / {
+        add_header Cache-Control "public, max-age=31536000, immutable";
+        try_files $uri =404;
+    }
 
     location = /robots.txt {
         default_type text/plain;
