@@ -22,7 +22,8 @@ const getFileAndParams = params => {
     } else if (process.endsWith('Panel')) {
         params.file = 'panel'
     } else if (process === 'cache') {
-        params.file = 'cache'
+        params.cacheServerPassword = params.cacheServerPassword || params.cachePassword
+        params.file = 'cacheServer'
     } else if (process.endsWith('Api')) {
         params.file = 'api'
     } else {
