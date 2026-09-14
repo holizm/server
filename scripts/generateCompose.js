@@ -12,10 +12,10 @@ const getCacheServerPassword = instancePath => {
         errorAndExit(`Private settings not found at ${privateSettingsPath}`)
     }
     const privateSettings = JSON.parse(getContent(privateSettingsPath))
-    if (!privateSettings.cacheServerPassword) {
-        errorAndExit(`cacheServerPassword not found in ${privateSettingsPath}`)
+    if (!privateSettings.cache?.serverPassword) {
+        errorAndExit(`cache.serverPassword not found in ${privateSettingsPath}`)
     }
-    return privateSettings.cacheServerPassword
+    return privateSettings.cache.serverPassword
 }
 
 const getFileAndParams = params => {
