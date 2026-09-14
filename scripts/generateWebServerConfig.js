@@ -1,10 +1,28 @@
 import fs from 'fs'
+import camelize from './camelize.js'
+import getDeterministicPort from './getDeterministicPort.js'
 import {
+    getContent,
     isFile,
     remove,
     replaceVariables,
 } from './os.js'
 import { runOnTerminal } from './terminal.js'
+
+const setSiteApiPort = params => {
+    const {
+        home,
+        instance,
+    } = params
+    const siteApiProcess = 'siteApi'
+    const githubImageName = getContent(
+        `${home}/${instance}/${siteApiProcess}/githubImageName`
+    ).trim()
+    const fullProcessName = camelize(
+        `${instance} ${githubImageName || siteApiProcess}`
+    )
+    params.siteApiPort = getDeterministicPort({ fullProcessName })
+}
 
 const generate = params => {
     const includes = [
@@ -15,6 +33,7 @@ const generate = params => {
         'listen',
         'cacheConfig',
         'cacheUsage',
+        'siteBlobs',
         'wwwRedirect',
         'proxy',
         'wwwRedirect',
@@ -107,6 +126,7 @@ export default params => {
             })
         }
         if (process === 'site' || isFile('./site')) {
+            setSiteApiPort(params)
             generate({
                 ...params,
                 file: 'wwwRedirect',
@@ -114,6 +134,10 @@ export default params => {
             generate({
                 ...params,
                 file: 'compression',
+            })
+            generate({
+                ...params,
+                file: 'siteBlobs',
             })
             if (isFile('./withCache')) {
                 generate({

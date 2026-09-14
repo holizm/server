@@ -1,0 +1,23 @@
+location = /robots.txt {
+    error_page 404 = @robotsApi;
+    default_type text/plain;
+    root ${home}/${instance}/site/blobs/${tenant};
+}
+
+location = /sitemap.xml {
+    error_page 404 = @sitemapApi;
+    default_type application/xml;
+    root ${home}/${instance}/site/blobs/${tenant};
+}
+
+location @robotsApi {
+    rewrite ^ /tenants/blob/getFile?key=robots break;
+    proxy_pass http://localhost:${siteApiPort};
+    include ${home}/${instance}/${process}/webServer/${tenant}/proxy;
+}
+
+location @sitemapApi {
+    rewrite ^ /tenants/blob/getFile?key=sitemap break;
+    proxy_pass http://localhost:${siteApiPort};
+    include ${home}/${instance}/${process}/webServer/${tenant}/proxy;
+}
