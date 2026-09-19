@@ -29,22 +29,22 @@ setNginxDefaultSite() {
 }
 
 registerHolismCommands() {
-    if grep -q "holism" /etc/environment; then
-        success "Holism commands $checkMark"
+    local bashLine='export PATH="/holism/server/commands:$PATH"'
+    local environmentLine='PATH="/holism/server/commands:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"'
+
+    if grep -Fq '/holism/server/commands' /etc/environment; then
+        sed -i "\|/holism/server/commands|c\\$environmentLine" /etc/environment
     else
-        info "Registering holism commands ..."
         chmod 644 /etc/environment
-        echo 'PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/holism/server/commands"' | tee -a /etc/environment > /dev/null
-        success "Registered holism commands"
+        printf '%s\n' "$environmentLine" | tee -a /etc/environment > /dev/null
     fi
-    if grep -q "holism" /etc/bash.bashrc; then
-        success "Holism commands $checkMark"
+    if grep -Fq '/holism/server/commands' /etc/bash.bashrc; then
+        sed -i "\|/holism/server/commands|c\\$bashLine" /etc/bash.bashrc
     else
-        info "Registering Holism commands ..."
         chmod 644 /etc/bash.bashrc
-        echo 'PATH="${PATH}:/holism/server/commands"' | tee -a /etc/bash.bashrc > /dev/null
-        success "Registered Holism commands"
+        printf '%s\n' "$bashLine" | tee -a /etc/bash.bashrc > /dev/null
     fi
+    success "Registered Holism commands"
 }
 
 setTimeZone() {
