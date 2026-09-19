@@ -1,0 +1,93 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+. /holism/server/scripts/createUser.sh
+
+if [[ $# -ne 1 ]]; then
+    printf 'Usage: deleteUser username\n' >&2
+    exit 1
+fi
+
+user="$1"
+
+if [[ ${#user} -ne 20 ]] || ! isValidUserPrefix "$user" || ! id "$user" >/dev/null 2>&1; then
+    printf 'Invalid user.\n' >&2
+    exit 1
+fi
+
+homeDir=$(getent passwd "$user" | cut -d: -f6)
+
+if [[ "$homeDir" != "/home/$user" ]]; then
+    printf 'Refusing to delete a user with an unexpected home directory: %s\n' "$homeDir" >&2
+    exit 1
+fi
+
+mapfile -d '' ownedResources < <(
+    find / \
+        \( -type f -o -type d \) \
+        -user "$user" \
+        ! -path "$homeDir" \
+        ! -path "$homeDir/*" \
+        -print0 \
+        2>/dev/null
+)
+
+if [[ ${#ownedResources[@]} -gt 0 ]]; then
+    printf 'User %s owns resources outside %s:\n' "$user" "$homeDir" >&2
+    printf '  %q\n' "${ownedResources[@]}" >&2
+    printf 'Delete or transfer these resources before deleting the user.\n' >&2
+    exit 1
+fi
+
+printf 'Top-level directories in %s:\n' "$homeDir"
+mapfile -d '' homeDirectories < <(
+    find "$homeDir" \
+        -mindepth 1 \
+        -maxdepth 1 \
+        -type d \
+        -print0 \
+        2>/dev/null
+)
+
+if [[ ${#homeDirectories[@]} -eq 0 ]]; then
+    printf '  None\n'
+else
+    printf '  %q\n' "${homeDirectories[@]}"
+fi
+
+printf 'Delete user %s and all data in %s? [y/N] ' "$user" "$homeDir"
+IFS= read -r confirmation
+
+if [[ "$confirmation" != 'y' && "$confirmation" != 'Y' ]]; then
+    printf 'Deletion cancelled.\n'
+    exit 0
+fi
+
+usersFile='/holism/users'
+usersFileReplacement=$(mktemp)
+cleanup() {
+    rm -f "$usersFileReplacement"
+}
+trap cleanup EXIT
+
+if [[ -f "$usersFile" ]]; then
+    while IFS= read -r listedUser || [[ -n "$listedUser" ]]; do
+        trimmedUser=$(printf '%s' "$listedUser" | xargs)
+        [[ "$trimmedUser" == "$user" ]] || printf '%s\n' "$listedUser" >> "$usersFileReplacement"
+    done < "$usersFile"
+fi
+
+pkill -KILL -u "$user" >/dev/null 2>&1 || true
+userdel --remove "$user"
+
+if [[ -f "$usersFile" ]]; then
+    chown --reference="$usersFile" "$usersFileReplacement"
+    chmod --reference="$usersFile" "$usersFileReplacement"
+    mv "$usersFileReplacement" "$usersFile"
+    usersFileReplacement=''
+else
+    rm -f "$usersFileReplacement"
+    usersFileReplacement=''
+fi
+
+printf 'Deleted user %s.\n' "$user"
