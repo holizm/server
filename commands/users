@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+getLastLogin() {
+    local epoch
+    local line
+    local timestamp
+    local user="$1"
+
+    line=$(LC_ALL=C last -F -n 1 "$user" 2>/dev/null | awk -v user="$user" '$1 == user { print; exit }')
+
+    if [[ -z "$line" ]]; then
+        lastLogin='Never'
+        relativeLogin='Never'
+        return
+    fi
+
+    timestamp=$(awk '{ print $4, $5, $6, $7, $8 }' <<< "$line")
+
+    if ! epoch=$(date -d "$timestamp" +%s 2>/dev/null); then
+        lastLogin='Unknown'
+        relativeLogin='Unknown'
+        return
+    fi
+
+    lastLogin=$(date -d "@$epoch" '+%Y-%m-%d %H:%M:%S %Z')
+    daysAgo=$(( ($(date +%s) - epoch) / 86400 ))
+
+    if [[ $daysAgo -lt 0 ]]; then
+        daysAgo=0
+    fi
+
+    if [[ $daysAgo -eq 1 ]]; then
+        relativeLogin='1 day ago'
+    else
+        relativeLogin="$daysAgo days ago"
+    fi
+}
+
+report=$(mktemp)
+trap 'rm -f "$report"' EXIT
+
+printf 'User\tLast login\tRelative\tPrivileges\n' > "$report"
+
+while IFS=: read -r user _ userId _ _ homeDir shell; do
+    [[ "$homeDir" == /home/* ]] || continue
+    [[ "$shell" != */nologin && "$shell" != */false ]] || continue
+
+    getLastLogin "$user"
+    privileges=$(id -nG "$user" | tr ' ' ',')
+    printf '%s\t%s\t%s\t%s\n' "$user" "$lastLogin" "$relativeLogin" "$privileges" >> "$report"
+done < <(getent passwd | sort -t: -k1,1)
+
+column -t -s $'\t' "$report"
