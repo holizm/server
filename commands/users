@@ -7,7 +7,7 @@ getLastLogin() {
     local timestamp
     local user="$1"
 
-    line=$(LC_ALL=C last -F -n 1 "$user" 2>/dev/null | awk -v user="$user" '$1 == user { print; exit }')
+    line=$(LC_ALL=C last -F -w -n 1 "$user" 2>/dev/null | awk -v user="$user" '$1 == user { print; exit }')
 
     if [[ -z "$line" ]]; then
         lastLogin='Never'
@@ -47,7 +47,13 @@ while IFS=: read -r user _ userId _ _ homeDir shell; do
     [[ "$shell" != */nologin && "$shell" != */false ]] || continue
 
     getLastLogin "$user"
-    privileges=$(id -nG "$user" | tr ' ' ',')
+    privileges=''
+    for privilege in $(id -nG "$user"); do
+        [[ "$privilege" == "$user" ]] && continue
+        [[ -z "$privileges" ]] || privileges+=','
+        privileges+="$privilege"
+    done
+    [[ -n "$privileges" ]] || privileges='None'
     printf '%s\t%s\t%s\t%s\n' "$user" "$lastLogin" "$relativeLogin" "$privileges" >> "$report"
 done < <(getent passwd | sort -t: -k1,1)
 
