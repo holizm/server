@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+. /holism/server/scripts/createUser.sh
+
+if [[ $# -ne 1 ]]; then
+    printf 'Usage: addPublicKey username\n' >&2
+    exit 1
+fi
+
+user="$1"
+
+if [[ ${#user} -ne 20 ]] || ! isValidUserPrefix "$user" || ! id "$user" >/dev/null 2>&1; then
+    printf 'Invalid user.\n' >&2
+    exit 1
+fi
+
+IFS= read -r publicKey
+
+if [[ ! "$publicKey" =~ ^(ssh-|ecdsa-|sk-ssh-|sk-ecdsa-) ]]; then
+    printf 'Invalid SSH public key.\n' >&2
+    exit 1
+fi
+
+homeDir=$(getent passwd "$user" | cut -d: -f6)
+authorizedKeys="$homeDir/.ssh/authorized_keys"
+
+if ! grep -qxF -- "$publicKey" "$authorizedKeys"; then
+    printf '%s\n' "$publicKey" >> "$authorizedKeys"
+fi
+
+chown "$user:$user" "$authorizedKeys"
+chmod 600 "$authorizedKeys"

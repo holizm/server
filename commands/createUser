@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+. /holism/server/scripts/createUser.sh
+
+if [[ $# -ne 1 ]]; then
+    printf 'Usage: createUser username\n' >&2
+    exit 1
+fi
+
+if ! isValidUserPrefix "$1"; then
+    printf 'Username must begin with three lowercase letters, contain only lowercase letters and digits, and be at most 20 characters.\n' >&2
+    exit 1
+fi
+
+createUser "$1"
