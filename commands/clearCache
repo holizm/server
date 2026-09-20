@@ -1,0 +1,102 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+showUsage() {
+    printf 'Usage: clearCache deploymentInstance [process [tenant [locale [part [type [item]]]]]]\n'
+}
+
+fail() {
+    printf 'Error: %s\n' "$1" >&2
+    exit 1
+}
+
+getPassword() {
+    local commandPart
+    local expectsPassword=false
+
+    while IFS= read -r commandPart; do
+        if [[ "$expectsPassword" == true ]]; then
+            cachePassword="$commandPart"
+            return
+        fi
+
+        if [[ "$commandPart" == '--requirepass' ]]; then
+            expectsPassword=true
+        fi
+    done < <(docker inspect --format '{{range .Config.Cmd}}{{println .}}{{end}}' "$cacheContainer")
+
+    fail "Could not find the Redis password for $cacheContainer."
+}
+
+deleteBatch() {
+    local deletedInBatch
+
+    [[ ${#cacheKeys[@]} -gt 0 ]] || return
+    deletedInBatch=$(docker exec "$cacheContainer" redis-cli \
+        --no-auth-warning \
+        --raw \
+        -a "$cachePassword" \
+        UNLINK "${cacheKeys[@]}")
+    deletedCount=$((deletedCount + deletedInBatch))
+    cacheKeys=()
+}
+
+if [[ $# -eq 0 || $# -gt 7 ]]; then
+    showUsage
+    exit 1
+fi
+
+if [[ "$1" == '--help' || "$1" == '-h' ]]; then
+    showUsage
+    exit
+fi
+
+for segment in "$@"; do
+    [[ "$segment" =~ ^[a-zA-Z0-9]+$ ]] || fail "Invalid cache segment: $segment"
+done
+
+cachePrefix=$(IFS=-; printf '%s' "$*")
+cacheContainer="${1}Cache"
+cachePassword=''
+keysFile=$(mktemp)
+trap 'rm -f "$keysFile"' EXIT
+
+docker inspect "$cacheContainer" >/dev/null 2>&1 || fail "Cache container not found: $cacheContainer"
+[[ "$(docker inspect --format '{{.State.Running}}' "$cacheContainer")" == true ]] || fail "Cache container is not running: $cacheContainer"
+
+getPassword
+
+if ! docker exec "$cacheContainer" redis-cli \
+    --no-auth-warning \
+    --raw \
+    -a "$cachePassword" \
+    --scan \
+    --pattern "$cachePrefix-*" > "$keysFile"; then
+    fail "Could not scan $cacheContainer."
+fi
+
+if [[ "$(docker exec "$cacheContainer" redis-cli \
+    --no-auth-warning \
+    --raw \
+    -a "$cachePassword" \
+    EXISTS "$cachePrefix")" == 1 ]]; then
+    printf '%s\n' "$cachePrefix" >> "$keysFile"
+fi
+
+matchCount=$(wc -l < "$keysFile")
+if [[ $matchCount -eq 0 ]]; then
+    printf 'No cache keys matched %s.\n' "$cachePrefix"
+    exit
+fi
+
+cacheKeys=()
+deletedCount=0
+while IFS= read -r cacheKey; do
+    cacheKeys+=("$cacheKey")
+    if [[ ${#cacheKeys[@]} -eq 500 ]]; then
+        deleteBatch
+    fi
+done < "$keysFile"
+deleteBatch
+
+printf 'Cleared %d cache keys matching %s.\n' "$deletedCount" "$cachePrefix"
