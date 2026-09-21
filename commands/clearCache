@@ -56,7 +56,13 @@ for segment in "$@"; do
 done
 
 cachePrefix=$(IFS=-; printf '%s' "$*")
-cacheContainer="${1}Cache"
+cacheRepo="$1"
+shopt -s nocasematch
+if [[ "$cacheRepo" =~ ^(.+)theme[0-9]+$ ]]; then
+    cacheRepo="${BASH_REMATCH[1]}"
+fi
+shopt -u nocasematch
+cacheContainer="${cacheRepo}Cache"
 cachePassword=''
 keysFile=$(mktemp)
 trap 'rm -f "$keysFile"' EXIT
