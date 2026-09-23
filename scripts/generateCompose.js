@@ -1,32 +1,24 @@
 import getRandomPort from './getRandomPort.js'
 import { errorAndExit } from './logger.js'
 import {
-    getContent,
     isFile,
     replaceVariables,
 } from './os.js'
 
-const getCacheServerPassword = instancePath => {
-    const privateSettingsPath = `${instancePath}/common/privateSettings.json`
-    if (!isFile(privateSettingsPath)) {
-        errorAndExit(`Private settings not found at ${privateSettingsPath}`)
+const getCacheServerPassword = params => {
+    const cacheServerPassword = params.cache?.serverPassword ?? params.cacheServerPassword
+    if (!cacheServerPassword) {
+        errorAndExit('cache.serverPassword not found in private settings')
     }
-    const privateSettings = JSON.parse(getContent(privateSettingsPath))
-    if (!privateSettings.cache?.serverPassword) {
-        errorAndExit(`cache.serverPassword not found in ${privateSettingsPath}`)
-    }
-    return privateSettings.cache.serverPassword
+    return cacheServerPassword
 }
 
 const getFileAndParams = params => {
     const {
         instance,
-        instancePath,
         process,
     } = params
     if (process === 'site' || isFile('./site')) {
-        if (!params.authSecret) params.authSecret = 'auth_secret'
-        if (!params.iamIssuer) params.iamIssuer = 'https://accounts.example.com/realm/production'
         params.file = 'site'
     } else if (process === 'accounts') {
         params.propertyName = `${instance}AccountsDatabaseRandomPort`
@@ -37,7 +29,7 @@ const getFileAndParams = params => {
     } else if (process.endsWith('Panel')) {
         params.file = 'panel'
     } else if (process === 'cache') {
-        params.cacheServerPassword = getCacheServerPassword(instancePath)
+        params.cacheServerPassword = getCacheServerPassword(params)
         params.file = 'cacheServer'
     } else if (process.endsWith('Api')) {
         params.file = 'api'

@@ -14,7 +14,7 @@ import {
     errorAndExit,
     info,
 } from '../scripts/logger.js'
-import loadParams from '../scripts/loadParams.js'
+import loadSettings from '../scripts/loadSettings.js'
 import generateForDirectory from '../scripts/generateForDirectory.js'
 import extract from '../scripts/extract.js'
 import { clear } from '../scripts/terminal.js'
@@ -52,7 +52,7 @@ const readTenants = () => {
     return tenants
 }
 const baseDir = process.cwd()
-const params = loadParams(baseDir)
+const params = loadSettings(baseDir)
 params.baseDir = baseDir
 params.home = process.env.HOME
 params.user = process.env.USER
