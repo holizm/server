@@ -15,16 +15,9 @@ const readSettings = filePath => {
 }
 
 export default baseDir => {
-    const commonPath = path.join(baseDir, 'common')
-    const privateSettingsPath = path.join(commonPath, 'privateSettings.json')
+    const privateSettingsPath = path.join(baseDir, 'common', 'privateSettings.json')
     if (!isFile(privateSettingsPath)) {
         errorAndExit(`Private settings not found at ${privateSettingsPath}`)
     }
-    const publicSettings = readSettings(path.join(commonPath, 'publicSettings.json'))
-    const privateSettings = readSettings(privateSettingsPath)
-    const settings = {
-        ...publicSettings,
-        ...privateSettings,
-    }
-    return settings
+    return readSettings(privateSettingsPath)
 }
