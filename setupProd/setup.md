@@ -99,6 +99,7 @@ reboot
 Perform this step as `root`. Create the shared platform directory and clone only the shared Holism repositories.
 
 ```bash
+apt-get install -y git
 mkdir -p /holism
 git clone https://github.com/holizm/accounts /holism/accounts
 git clone https://github.com/holizm/fonts /holism/fonts
