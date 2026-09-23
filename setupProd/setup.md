@@ -2,20 +2,24 @@
 
 ## 1. Operating System
 
-* Debian Trixie
-  [https://cdimage.debian.org/debian-cd/current/amd64/iso-cd/debian-13.4.0-amd64-netinst.iso](https://www.debian.org/releases/trixie/)
-
----
-
-## 2. System Update
+- Connect to the server over SSH before performing any setup.
+- Read `/etc/os-release` and verify that the server runs the latest Debian stable release with an announced LTS lifecycle.
+- The current required release is Debian 13 (Trixie):
+  [Debian stable release information](https://www.debian.org/releases/stable/)
+- If the server runs an older Debian release, upgrade one major release at a time by following the official release notes. Reboot, reconnect, and verify `/etc/os-release` before continuing.
+- If the server does not run Debian, reinstall it with the current Debian stable installer before continuing:
+  [Debian stable installer](https://www.debian.org/distrib/)
 
 ```bash
 apt update && apt full-upgrade -y
+reboot
 ```
+
+Reconnect after the reboot and confirm that no further upgrades are pending before continuing.
 
 ---
 
-## 3. Change root password
+## 2. Change root password
 
 * Log in as `root`
 * Change root password:
@@ -26,7 +30,7 @@ passwd root
 
 ---
 
-## 4. Harden/Secure SSH
+## 3. Harden/Secure SSH
 
 > ⚠️ Do not close the current SSH session until everything is tested from a second session.
 > ⚠️ Choose a random port from the private/ephemeral range (49152–65535)
@@ -56,7 +60,7 @@ systemctl restart ssh
 ```
 ---
 
-## 5. Set Hostname
+## 4. Set Hostname
 
 * Change hostname:
 
@@ -81,7 +85,7 @@ reboot
 
 ---
 
-## 6. DNS / Nameservers (Optional)
+## 5. DNS / Nameservers (Optional)
 
 * Edit:
 
@@ -93,7 +97,7 @@ nano /etc/resolv.conf
 
 ---
 
-## 8. Docker Login
+## 6. Docker Login
 
 ```bash
 docker login
@@ -102,7 +106,7 @@ docker login ghcr.io
 
 ---
 
-## 9. CPU Feature Check (SSE4.2)
+## 7. CPU Feature Check (SSE4.2)
 
 Required for UBI9 / Keycloak:
 
@@ -112,7 +116,7 @@ cat /proc/cpuinfo | grep sse4
 
 ---
 
-## 11. Security Checklist
+## 8. Security Checklist
 
 * Enable firewall (allow only required ports):
 
