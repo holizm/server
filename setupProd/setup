@@ -100,61 +100,6 @@ setTimeZone
 source "$setupProd/normalizeShells.sh"
 addSbinToUserPath
 
-source $setupProd/secureUsers.sh
-source $setupProd/setPermissions.sh
+source "$setupProd/secureUsers.sh"
+source "$setupProd/setPermissions.sh"
 $setupProd/includeUpdateTerminalTitleConfig.js
-
-# apt-get -y install uidmap
-# systemctl disable --now docker.service docker.socket
-# rm /var/run/docker.sock
-
-# per user:
-
-# curl -fsSL https://get.docker.com/rootless | sh
-
-# echo 'export XDG_RUNTIME_DIR=$HOME/.docker/run' >> ~/.bashrc
-# echo 'export PATH=$HOME/bin:$PATH' >> ~/.bashrc
-# echo 'export DOCKER_HOST=unix://$XDG_RUNTIME_DIR/docker.sock' >> ~/.bashrc
-
-# mkdir -p $HOME/.docker/run
-# chmod 700 $HOME/.docker/run
-
-# mkdir -p ~/.config/docker
-# micro ~/.config/docker/daemon.json
-# {
-#   "exec-opts": ["native.cgroupdriver=cgroupfs"]
-# }
-
-# dockerd-rootless.sh &
-
-# for the entire server
-
-# ------------------
-# tee /etc/systemd/system/docker-rootless-all.service > /dev/null <<'EOF'
-# [Unit]
-# Description=Rootless Docker Daemon for all users
-# After=network.target
-
-# [Service]
-# Type=forking
-# ExecStart=/bin/bash -c '
-# for dir in /home/*/.docker/run; do
-#   user=$(basename $(dirname $dir))
-#   export XDG_RUNTIME_DIR=$dir
-#   export PATH=/home/$user/bin:/usr/bin:/bin
-#   -u $user /home/$user/bin/dockerd-rootless.sh >/home/$user/.docker/dockerd.log 2>&1 &
-# done
-# wait
-# '
-# Restart=always
-# RestartSec=10s
-
-# [Install]
-# WantedBy=multi-user.target
-# EOF
-
-# ---------------------------
-
-# systemctl daemon-reload
-# systemctl enable docker-rootless-all
-# systemctl start docker-rootless-all

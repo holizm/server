@@ -3,13 +3,37 @@
 . "$scripts/installer.sh"
 
 installDocker() {
+    local architecture
+    local distribution
+    local versionCodename
+
+    . /etc/os-release
+    architecture=$(dpkg --print-architecture)
+    distribution="$ID"
+    versionCodename="$VERSION_CODENAME"
     apt-get update -y
     apt-get install -y ca-certificates curl gnupg
     /usr/bin/install -m 0755 -d /etc/apt/keyrings
-    curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
-    echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list >/dev/null
+    curl -fsSL "https://download.docker.com/linux/$distribution/gpg" | gpg --dearmor --yes -o /etc/apt/keyrings/docker.gpg
+    echo "deb [arch=$architecture signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/$distribution $versionCodename stable" | tee /etc/apt/sources.list.d/docker.list >/dev/null
     apt-get update -y
-    apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+    apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin docker-ce-rootless-extras
 }
 
 install docker installDocker
+apt-get install -y dbus-user-session docker-ce-rootless-extras fuse-overlayfs slirp4netns uidmap
+systemctl disable --now docker.service docker.socket
+systemctl disable --now containerd.service
+systemctl mask docker.service docker.socket containerd.service
+rm -f /var/run/docker.sock
+
+. "$scripts/configureRootlessDocker.sh"
+
+while IFS=: read -r user _ userId _ _ homeDir shell; do
+    if [[ "$userId" -ge 1000 ]] && [[ "$homeDir" == /home/* ]] && [[ "$shell" != */nologin ]] && [[ "$shell" != */false ]]; then
+        if getent group docker >/dev/null; then
+            gpasswd -d "$user" docker >/dev/null 2>&1 || true
+        fi
+        configureRootlessDocker "$user"
+    fi
+done < /etc/passwd
