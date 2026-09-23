@@ -19,48 +19,46 @@ Reconnect after the reboot and confirm that no further upgrades are pending befo
 
 ---
 
-## 2. Change root password
-
-* Log in as `root`
-* Change root password:
-
-```bash
-passwd root
-```
-
----
-
-## 3. Harden/Secure SSH
+## 2. Harden/Secure SSH
 
 > ⚠️ Do not close the current SSH session until everything is tested from a second session.
 > ⚠️ Choose a random port from the private/ephemeral range (49152–65535)
 
-* Copy this file:
+- Identify the provider-defined account used to set up the VPS. It may be `root`, `debian`, or another account.
+- Install `dev`'s public SSH key for the setup account and `root`.
+- Verify key authentication on the current SSH port.
+- Choose a random port and replace the `Port` value in:
 
 ```text
 /home/dev/server/setupProd/hardenedSshConfig
 ```
 
-* To:
+- Copy the configuration to:
 
 ```text
 /etc/ssh/sshd_config
 ```
 
-* Then make sure SSH config is correct (no log should be printed)
+- Validate the configuration before restarting SSH:
 
 ```bash
 sshd -t
 ```
 
-* Then run:
+- Restart SSH while keeping the current session open:
 
 ```bash
 systemctl restart ssh
 ```
+
+- Open a second connection using the key and new port.
+- Verify root and setup-account access using public keys.
+- Verify that password authentication is disabled before closing the original session.
+- Do not grant sudo access to non-root server users.
+
 ---
 
-## 4. Set Hostname
+## 3. Set Hostname
 
 * Change hostname:
 
@@ -68,11 +66,14 @@ systemctl restart ssh
 hostnamectl set-hostname new-hostname
 ```
 
-* Update `/etc/hosts`:
+* In `/etc/hosts`, remove every existing line that starts with `127.0.1.1`, including mappings containing the provider's stale hostname.
+* Add exactly one `127.0.1.1` mapping for the new hostname:
 
 ```text
 127.0.1.1   new-hostname
 ```
+
+* If cloud-init manages the server, set `preserve_hostname: true` in `/etc/cloud/cloud.cfg`.
 
 * Reboot:
 
@@ -80,12 +81,15 @@ hostnamectl set-hostname new-hostname
 reboot
 ```
 
+* Reconnect and verify the hostname with `hostnamectl --static`.
+* Confirm that `/etc/hosts` still contains exactly one `127.0.1.1` mapping and that it contains only the new hostname.
+
 > Naming convention suggestion:
 > `<owner-name>-001`, `<owner-name>-002`, etc.
 
 ---
 
-## 5. DNS / Nameservers (Optional)
+## 4. DNS / Nameservers (Optional)
 
 * Edit:
 
@@ -97,7 +101,7 @@ nano /etc/resolv.conf
 
 ---
 
-## 6. Docker Login
+## 5. Docker Login
 
 ```bash
 docker login
@@ -106,7 +110,7 @@ docker login ghcr.io
 
 ---
 
-## 7. CPU Feature Check (SSE4.2)
+## 6. CPU Feature Check (SSE4.2)
 
 Required for UBI9 / Keycloak:
 
@@ -116,7 +120,7 @@ cat /proc/cpuinfo | grep sse4
 
 ---
 
-## 8. Security Checklist
+## 7. Security Checklist
 
 * Enable firewall (allow only required ports):
 
@@ -124,8 +128,20 @@ cat /proc/cpuinfo | grep sse4
   * HTTPS (443)
   * SSH (custom port)
 * Install and configure `fail2ban`
-* Disable root SSH login
+* Allow root SSH login only by public key
 * Use SSH key authentication only
+* Do not grant sudo access to non-root server users
 * Restrict database access (VPN-only exposure)
+
+---
+
+## 8. Change root password
+
+* Log in as `root`
+* Change root password:
+
+```bash
+passwd root
+```
 
 ---
