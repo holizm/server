@@ -67,7 +67,7 @@ addSbinToUserPath() {
     fi
 }
 
-# updateApt
+updateApt
 
 install curl
 install git

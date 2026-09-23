@@ -7,7 +7,6 @@ secureUser() {
     local homeDir="$2"
     local user="$1"
 
-    groupadd -f shared
     usermod -aG shared,www-data "$user"
     passwd -l "$user" >/dev/null
     rm -f "/etc/sudoers.d/$user"
@@ -28,6 +27,8 @@ secureUser() {
 
     success "Secured $user"
 }
+
+groupadd -f shared
 
 while IFS=: read -r user _ _ _ _ homeDir _; do
     if [[ "$homeDir" == /home/* ]] && [[ -d "$homeDir" ]]; then
