@@ -15,7 +15,15 @@ installNode() {
 }
 
 getInstalledNodeVersion() {
-    node --version 2>/dev/null || true
+    local nodeExecutable
+
+    nodeExecutable=$(command -v node 2>/dev/null || true)
+    if [[ -z "$nodeExecutable" ]] && [[ -x /usr/local/node/bin/node ]]; then
+        nodeExecutable='/usr/local/node/bin/node'
+    fi
+    if [[ -n "$nodeExecutable" ]]; then
+        "$nodeExecutable" --version
+    fi
 }
 
 getLatestNodeLtsVersion() {
@@ -24,3 +32,14 @@ getLatestNodeLtsVersion() {
 }
 
 ensureLatestLts node getInstalledNodeVersion getLatestNodeLtsVersion installNode
+
+nodeExecutable=$(command -v node 2>/dev/null || true)
+if [[ -z "$nodeExecutable" ]] && [[ -x /usr/local/node/bin/node ]]; then
+    nodeExecutable='/usr/local/node/bin/node'
+fi
+if [[ -z "$nodeExecutable" ]]; then
+    errorAndExit 'Node.js executable was not found'
+fi
+nodeBinDirectory=$(dirname "$(readlink -f "$nodeExecutable")")
+export nodeBinDirectory
+export PATH="$nodeBinDirectory:$PATH"

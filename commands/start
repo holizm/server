@@ -26,17 +26,17 @@ const startProcess = params => {
     } = params
     if (isApi(params)) {
         runOnTerminal(
-            `/usr/local/node/bin/pm2 start process.js --name ${fullProcessName} --update-env -- ${port}`
+            `pm2 start process.js --name ${fullProcessName} --update-env -- ${port}`
         )
     }
     else if (isPanel(params)) {
         runOnTerminal(
-            `/usr/local/node/bin/pm2 start /usr/local/node/bin/serve --name ${fullProcessName} -- -s . -l ${port}`
+            `pm2 start serve --name ${fullProcessName} -- -s . -l ${port}`
         )
     }
     else if (isSite(params)) {
         runOnTerminal(
-            `PORT=${port} /usr/local/node/bin/pm2 start server/entry.express.js --name ${fullProcessName}`
+            `PORT=${port} pm2 start server/entry.express.js --name ${fullProcessName}`
         )
     }
     else {
@@ -74,7 +74,7 @@ if (level === 'instance') {
     if (isFile(packageFile) || isFile(`./index.html`)) {
         params.port = getComposePort(params)
         const pid = runOnTerminal(
-            `/usr/local/node/bin/pm2 pid ${params.fullProcessName}`,
+            `pm2 pid ${params.fullProcessName}`,
             true
         ).trim()
 
@@ -93,7 +93,7 @@ if (level === 'instance') {
                 info(`${params.fullProcessName} is already running`)
             }
             else {
-                runOnTerminal(`/usr/local/node/bin/pm2 delete ${params.fullProcessName}`)
+                runOnTerminal(`pm2 delete ${params.fullProcessName}`)
                 startProcess(params)
             }
         }

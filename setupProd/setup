@@ -30,7 +30,7 @@ setNginxDefaultSite() {
 
 registerHolismCommands() {
     local bashLine='export PATH="/holism/server/commands:$PATH"'
-    local environmentLine='PATH="/holism/server/commands:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"'
+    local environmentLine="PATH=\"/holism/server/commands:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:$nodeBinDirectory\""
 
     if grep -Fq '/holism/server/commands' /etc/environment; then
         sed -i "\|/holism/server/commands|c\\$environmentLine" /etc/environment
@@ -91,7 +91,7 @@ $setupProd/rclone
 
 $setupProd/docker
 
-$setupProd/node
+source "$setupProd/node"
 $setupProd/pm2
 npm install -g --registry='https://mirror-npm.runflare.com' serve
 

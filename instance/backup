@@ -1,4 +1,4 @@
-#!/usr/local/node/bin/node
+#!/usr/bin/env node
 
 import {
     execFileSync,
