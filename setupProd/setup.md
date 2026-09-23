@@ -55,6 +55,11 @@ systemctl restart ssh
 - Verify root and setup-account access using public keys.
 - Verify that password authentication is disabled before closing the original session.
 - Do not grant sudo access to non-root server users.
+- Reconnect as `root` and use that connection for every subsequent setup step:
+
+```bash
+ssh -p sshPort root@serverIp
+```
 
 ---
 
@@ -89,15 +94,16 @@ reboot
 
 ---
 
-## 4. DNS / Nameservers (Optional)
+## 4. Clone Holism Repositories
 
-* Edit:
+Perform this step as `root`. Create the shared platform directory and clone only the shared Holism repositories.
 
 ```bash
-nano /etc/resolv.conf
+mkdir -p /holism
+git clone https://github.com/holizm/accounts /holism/accounts
+git clone https://github.com/holizm/fonts /holism/fonts
+git clone https://github.com/holizm/server /holism/server
 ```
-
-> Note: This file may be overwritten by system services (use systemd-resolved if persistent config is needed).
 
 ---
 
