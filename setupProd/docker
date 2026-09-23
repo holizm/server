@@ -20,11 +20,43 @@ installDocker() {
     apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin docker-ce-rootless-extras
 }
 
+installRootlessPackages() {
+    local package
+    local packages=(
+        dbus-user-session
+        docker-ce-rootless-extras
+        fuse-overlayfs
+        slirp4netns
+        uidmap
+    )
+
+    for package in "${packages[@]}"; do
+        if ! dpkg-query -W -f='${Status}' "$package" 2>/dev/null | grep -q 'install ok installed'; then
+            apt-get install -y "${packages[@]}"
+            return
+        fi
+    done
+}
+
+disableRootfulService() {
+    local state
+    local unit="$1"
+
+    if systemctl is-active --quiet "$unit"; then
+        systemctl stop "$unit" >/dev/null
+    fi
+    state=$(systemctl is-enabled "$unit" 2>/dev/null || true)
+    if [[ "$state" != 'masked' ]]; then
+        systemctl disable "$unit" >/dev/null 2>&1 || true
+        systemctl mask "$unit" >/dev/null
+    fi
+}
+
 install docker installDocker
-apt-get install -y dbus-user-session docker-ce-rootless-extras fuse-overlayfs slirp4netns uidmap
-systemctl disable --now docker.service docker.socket
-systemctl disable --now containerd.service
-systemctl mask docker.service docker.socket containerd.service
+installRootlessPackages
+disableRootfulService docker.socket
+disableRootfulService docker.service
+disableRootfulService containerd.service
 rm -f /var/run/docker.sock
 
 . "$scripts/configureRootlessDocker.sh"
