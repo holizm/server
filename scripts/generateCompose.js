@@ -31,6 +31,11 @@ const getFileAndParams = params => {
     } else if (process === 'cache') {
         params.cacheServerPassword = getCacheServerPassword(params)
         params.file = 'cacheServer'
+    } else if (process === 'databases') {
+        if (!params.databasesUser || !params.databasesPassword) {
+            errorAndExit('database.user and database.password are required in private settings')
+        }
+        params.file = 'databases'
     } else if (process.endsWith('Api')) {
         params.file = 'api'
     } else {
