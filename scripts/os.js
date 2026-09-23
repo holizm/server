@@ -1,6 +1,5 @@
 import fs from 'fs'
 import path from 'path'
-import { runOnTerminal } from './terminal.js'
 
 export const isFile = path => {
     return fs.existsSync(path) && fs.statSync(path).isFile()
@@ -47,19 +46,13 @@ export const replaceVariables = (inputFile, outputFile, params) => readReplaceWr
 export const replaceVariablesAndAppend = (inputFile, outputFile, params) => readReplaceWrite(inputFile, outputFile, 'a', params)
 
 export const isDev = () => {
-    try {
-        const out = runOnTerminal('dpkg-vendor --query Vendor').trim()
-        if (out) return out === 'Ubuntu'
-    } catch { }
-    try {
-        const raw = getContent('/etc/os-release')
-        for (const line of raw.split('\n')) {
-            if (line.startsWith('ID=')) {
-                const id = line.slice(3).replace(/^'/, '').replace(/'$/, '')
-                return id === 'ubuntu'
-            }
+    const content = getContent('/etc/os-release')
+    for (const line of content.split('\n')) {
+        if (line.startsWith('ID=')) {
+            const id = line.slice(3).replace(/^['"]|['"]$/g, '')
+            return id === 'ubuntu'
         }
-    } catch { }
+    }
     return false
 }
 
