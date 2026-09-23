@@ -2,20 +2,35 @@
 set -euo pipefail
 
 . "$scripts/logger.sh"
-. "$scripts/createUser.sh"
 
-usersFile="/holism/users"
+secureUser() {
+    local homeDir="$2"
+    local user="$1"
 
-[[ -f "$usersFile" ]] || errorAndExit "User file '$usersFile' not found"
+    groupadd -f shared
+    usermod -aG shared,www-data "$user"
+    passwd -l "$user" >/dev/null
+    rm -f "/etc/sudoers.d/$user"
 
-while IFS= read -r rawUser || [[ -n "$rawUser" ]]; do
-    user="$(echo "$rawUser" | xargs)"
-    [[ -n "$user" ]] || continue
-
-    if [[ ${#user} -ne 20 ]] || ! isValidUserPrefix "$user"; then
-        warning "Skipping invalid username '$user'. Rules: exactly 20 chars, first 3 letters [a-z], remaining 17 letters or digits [a-z0-9], cannot be 'root'"
-        continue
+    if getent group sudo >/dev/null; then
+        gpasswd -d "$user" sudo >/dev/null 2>&1 || true
+    fi
+    if getent group admin >/dev/null; then
+        gpasswd -d "$user" admin >/dev/null 2>&1 || true
     fi
 
-    createUser "$user" >/dev/null
-done < "$usersFile"
+    chmod 0711 "$homeDir"
+    mkdir -p "$homeDir/.ssh"
+    touch "$homeDir/.ssh/authorized_keys"
+    chown -R "$user:$user" "$homeDir/.ssh"
+    chmod 0700 "$homeDir/.ssh"
+    chmod 0600 "$homeDir/.ssh/authorized_keys"
+
+    success "Secured $user"
+}
+
+while IFS=: read -r user _ _ _ _ homeDir _; do
+    if [[ "$homeDir" == /home/* ]] && [[ -d "$homeDir" ]]; then
+        secureUser "$user" "$homeDir"
+    fi
+done < /etc/passwd

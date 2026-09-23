@@ -8,22 +8,19 @@ installNode() {
     curl -fsSL https://deb.nodesource.com/setup_lts.x | bash -
     apt-get install -y nodejs
 
-    echo 'export NODE_OPTIONS="--trace-deprecation"' >> ~/.bashrc
+    if ! grep -qxF 'export NODE_OPTIONS="--trace-deprecation"' ~/.bashrc; then
+        echo 'export NODE_OPTIONS="--trace-deprecation"' >> ~/.bashrc
+    fi
     export NODE_OPTIONS="--trace-deprecation"
 }
 
-latestLts=$(curl -s https://nodejs.org/dist/index.json)
+getInstalledNodeVersion() {
+    node --version 2>/dev/null || true
+}
 
-if [[ -z "$latestLts" ]]; then
-    error 'Change your internet or DNS'
-fi
+getLatestNodeLtsVersion() {
+    curl -fsSL https://nodejs.org/dist/index.json \
+        | jq -r '[.[] | select(.lts != false)][0].version'
+}
 
-latestLts=$(echo "$latestLts" | jq -r '[.[] | select(.lts != false)][0].version')
-
-installedVersion=$(node --version 2>/dev/null || true)
-
-if [[ "$installedVersion" == "$latestLts" ]]; then
-    success "Node.js $checkMark"
-else
-    install node installNode
-fi
+ensureLatestLts node getInstalledNodeVersion getLatestNodeLtsVersion installNode

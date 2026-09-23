@@ -108,7 +108,17 @@ git clone https://github.com/holizm/server /holism/server
 
 ---
 
-## 5. Docker Login
+## 5. Install Server Dependencies
+
+Perform this step as `root` after cloning the shared repositories.
+
+```bash
+/holism/server/commands/setup
+```
+
+---
+
+## 6. Docker Login
 
 ```bash
 docker login
@@ -117,7 +127,7 @@ docker login ghcr.io
 
 ---
 
-## 6. CPU Feature Check (SSE4.2)
+## 7. CPU Feature Check (SSE4.2)
 
 Required for UBI9 / Keycloak:
 
@@ -127,7 +137,7 @@ cat /proc/cpuinfo | grep sse4
 
 ---
 
-## 7. Security Checklist
+## 8. Security Checklist
 
 * Enable firewall (allow only required ports):
 
@@ -142,7 +152,7 @@ cat /proc/cpuinfo | grep sse4
 
 ---
 
-## 8. Change root password
+## 9. Change root password
 
 * Log in as `root`
 * Change root password:
