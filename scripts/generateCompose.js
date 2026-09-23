@@ -13,6 +13,19 @@ const getCacheServerPassword = params => {
     return cacheServerPassword
 }
 
+const ensureAccountsCredentials = params => {
+    const requiredProperties = [
+        'accountsAdminPassword',
+        'accountsAdminUser',
+        'accountsDatabasePassword',
+        'accountsDatabaseUser',
+    ]
+    const missingProperties = requiredProperties.filter(property => !params[property])
+    if (missingProperties.length) {
+        errorAndExit('accounts.admin and accounts.database credentials are required in private settings')
+    }
+}
+
 const getFileAndParams = params => {
     const {
         instance,
@@ -21,6 +34,7 @@ const getFileAndParams = params => {
     if (process === 'site' || isFile('./site')) {
         params.file = 'site'
     } else if (process === 'accounts') {
+        ensureAccountsCredentials(params)
         params.propertyName = `${instance}AccountsDatabaseRandomPort`
         getRandomPort(params)
         params.propertyName = `${instance}AccountsAdminerRandomPort`
