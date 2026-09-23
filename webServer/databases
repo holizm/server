@@ -5,6 +5,6 @@ server {
     include ${home}/${instance}/${process}/webServer/${tenant}/certificate;
 
     location / {
-        proxy_pass http://localhost:${databases};
+        proxy_pass http://localhost:${deterministicPort};
     }
 }

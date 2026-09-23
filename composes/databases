@@ -9,7 +9,7 @@ services:
             - MONGO_INITDB_ROOT_USERNAME=${databasesUser}
             - MONGO_INITDB_ROOT_PASSWORD=${databasesPassword}
         ports:
-            - ${databases}:27017
+            - ${deterministicPort}:27017
         logging:
             driver: none
         networks:
