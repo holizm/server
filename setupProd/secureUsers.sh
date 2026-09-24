@@ -8,7 +8,7 @@ secureUser() {
     local user="$1"
 
     usermod -aG shared,www-data "$user"
-    passwd -l "$user" >/dev/null
+    passwd -d "$user" >/dev/null
     rm -f "/etc/sudoers.d/$user"
 
     if getent group sudo >/dev/null; then
