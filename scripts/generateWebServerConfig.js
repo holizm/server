@@ -167,12 +167,11 @@ export default params => {
                     file: 'site',
                 })
             }
-        } else if (process.endsWith('Panel')) {
+        } else if (process.endsWith('Panel') || process.endsWith('Api')) {
             generate({
                 ...params,
-                file: 'apiAndPanel',
+                file: 'compression',
             })
-        } else if (process.endsWith('Api')) {
             generate({
                 ...params,
                 file: 'apiAndPanel',
