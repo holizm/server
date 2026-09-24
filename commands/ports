@@ -4,10 +4,9 @@ import os from 'os'
 import { runOnTerminal } from '../scripts/terminal.js'
 import { info } from '../scripts/logger.js'
 import extract from '../scripts/extract.js'
-import camelize from '../scripts/camelize.js'
 import getComposePort from '../scripts/getComposePort.js'
+import getListeningPort from '../scripts/getListeningPort.js'
 import getReverseProxyPort from '../scripts/getReverseProxyPort.js'
-import { getDepth } from '../scripts/os.js'
 
 const directoryPath = process.cwd()
 
@@ -23,10 +22,7 @@ let params = {
 params = extract(params)
 
 const {
-    composeFile,
     fullProcessName,
-    instance,
-    processPath,
 } = params
 
 const processPort = getComposePort(params)
@@ -39,12 +35,7 @@ const user = home.slice('/home/'.length)
 let command = `su - ${user} -c 'pm2 pid ${fullProcessName}' | awk '/^[0-9]+$/ {print; exit}'`
 const pid = runOnTerminal(command).trim()
 
-command = `lsof -Pan -p ${pid} -iTCP -sTCP:LISTEN | awk 'NR==2 {print $9}' | sed 's/.*://'`
-const runningProcessPort = pid
-    ?
-    runOnTerminal(command).trim()
-    :
-    ''
+const runningProcessPort = getListeningPort(pid)
 
 info(`${fullProcessName}`)
 info(`runningReverseProxyPort: ${runningReverseProxyPort}`)

@@ -2,7 +2,6 @@
 
 import {
     excludedDirs,
-    getDepth,
     getDirs,
     isApi,
     isFile,
@@ -16,8 +15,8 @@ import {
     info,
     warning,
 } from '../scripts/logger.js'
-import camelize from '../scripts/camelize.js'
 import getComposePort from '../scripts/getComposePort.js'
+import getListeningPort from '../scripts/getListeningPort.js'
 
 const startProcess = params => {
     const {
@@ -78,18 +77,14 @@ if (level === 'instance') {
             true
         ).trim()
 
-        const listeningPort = pid
-            ?
-            runOnTerminal(`lsof -Pan -p ${pid} -iTCP -sTCP:LISTEN | awk 'NR==2 {print $9}' | sed 's/.*://'`, true).trim()
-            :
-            ''
+        const listeningPort = getListeningPort(pid)
         const list = runOnTerminal('pm2 list', true)
         const isRunning = list.includes(params.fullProcessName)
         if (!isRunning) {
             startProcess(params)
         }
         else {
-            if (params.port === pid) {
+            if (params.port === listeningPort) {
                 info(`${params.fullProcessName} is already running`)
             }
             else {
