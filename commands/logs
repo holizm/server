@@ -14,12 +14,11 @@ const {
     githubImageNameOrProcess,
     instance,
     packageFile,
-    processPath,
 } = params
 
 const tail = count && count !== '' ? count : 20
 let command = ''
-if (isFile(packageFile) || isFile(`${processPath}/index.html`)) {
+if (isFile(packageFile) || isFile('./index.html')) {
     const fullProcessName = camelize(
         `${instance} ${githubImageNameOrProcess}`
     )
