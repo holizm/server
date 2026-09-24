@@ -1,39 +1,29 @@
 #!/usr/bin/env node
 
-import { pathToFileURL } from 'url'
-import {
-    getDepth,
-    isFile,
-} from '../scripts/os.js'
-import extract from '../scripts/extract.js'
 import camelize from '../scripts/camelize.js'
+import extract from '../scripts/extract.js'
+import { isFile } from '../scripts/os.js'
 import { runStreaming } from '../scripts/terminal.js'
 
 const count = process.argv[2]
-let params = { directoryPath: process.cwd() }
-params = extract(params)
+const params = extract({ directoryPath: process.cwd() })
 
 const {
     composeFile,
     containerName,
     githubImageNameOrProcess,
     instance,
-    instancePath,
-    level,
-    lowercaseGitHubImageNameOrProcess,
-    lowercaseInstance,
     packageFile,
-    pascalizedProcess,
     processPath,
 } = params
 
 const tail = count && count !== '' ? count : 20
 let command = ''
-if (isFile(packageFile)) {
+if (isFile(packageFile) || isFile(`${processPath}/index.html`)) {
     const fullProcessName = camelize(
         `${instance} ${githubImageNameOrProcess}`
     )
-    command = `pm2 logs ${fullProcessName}`
+    command = `pm2 logs ${fullProcessName} --lines ${tail}`
 }
 else if (isFile(composeFile)) {
     command = `docker logs --follow --tail ${tail} ${containerName}`
