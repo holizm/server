@@ -67,7 +67,10 @@ cachePassword=''
 keysFile=$(mktemp)
 trap 'rm -f "$keysFile"' EXIT
 
-docker inspect "$cacheContainer" >/dev/null 2>&1 || fail "Cache container not found: $cacheContainer"
+if ! docker inspect "$cacheContainer" >/dev/null 2>&1; then
+    printf 'Cache container not found; skipping: %s\n' "$cacheContainer"
+    exit
+fi
 [[ "$(docker inspect --format '{{.State.Running}}' "$cacheContainer")" == true ]] || fail "Cache container is not running: $cacheContainer"
 
 getPassword
