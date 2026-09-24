@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 
+containerFormat='table {{.ID}}\t{{.Image}}\t{{.RunningFor}}\t{{.Status}}\t{{.Ports}}\t{{.Names}}'
+
 if [ $# -eq 0 ]; then
-    docker container ls -a --format "table {{.ID}}\t{{.Image}}\t{{.RunningFor}}\t{{.Status}}\t{{.Names}}"
+    docker container ls -a --format "$containerFormat"
 else
-    docker container ls -a --format "table {{.ID}}\t{{.Image}}\t{{.RunningFor}}\t{{.Status}}\t{{.Names}}" | grep "$1"
+    docker container ls -a --format "$containerFormat" | grep "$1"
 fi
