@@ -1,99 +1,84 @@
 #!/usr/bin/env node
 
 import { pathToFileURL } from 'url'
-import { isFile, getDirs } from '../scripts/os.js'
 import extract from '../scripts/extract.js'
+import {
+    divide,
+    info,
+    warning,
+} from '../scripts/logger.js'
+import {
+    getDirs,
+    isFile,
+} from '../scripts/os.js'
 import { runOnTerminal } from '../scripts/terminal.js'
-import { info, warning, divide } from '../scripts/logger.js'
 
-const restartApp = (dir, params) => {
-    const currentDir = params.currentDir
-    const target = `${currentDir}/${dir}`
-    const params = extract({ directoryPath: target, ...params })
+const restartProcess = params => {
     const {
+        composeFile,
+        fullProcessName,
+        lowercaseGitHubImageNameOrProcess,
+        lowercaseInstance,
+        packageFile,
         processPath,
-        process,
-        regex,
     } = params
+
+    divide()
+    info(`Restarting ${params.process}`)
+    divide()
+
+    if (isFile(packageFile) || isFile(`${processPath}/index.html`)) {
+        const pid = runOnTerminal(`pm2 pid ${fullProcessName}`, false, true).trim()
+        if (pid && pid !== '0') {
+            runOnTerminal(`pm2 restart ${fullProcessName} --update-env`, true)
+            return
+        }
+        runOnTerminal(`cd '${processPath}' && start`, true)
+        return
+    }
 
     if (isFile(composeFile)) {
-        divide()
-        info(`Restarting ${dir}`)
-        divide()
-
-        if (regex) {
-            if (process.includes(regex)) {
-                runOnTerminal(`cd "${processPath}" && restart`)
-            }
-        } else {
-            runOnTerminal(`cd "${processPath}" && restart`)
+        const compose = `docker compose -p ${lowercaseInstance}-${lowercaseGitHubImageNameOrProcess} -f '${composeFile}'`
+        const runningContainers = runOnTerminal(`${compose} ps -q --status running`, false, true)
+        if (runningContainers) {
+            runOnTerminal(`${compose} restart`, true)
+            return
         }
+        runOnTerminal(`cd '${processPath}' && start`, true)
+        return
     }
+
+    warning('What to restart?')
 }
 
-const start = params => {
-    const {
-        level,
-        filter,
-    } = params
+const restart = params => {
+    const resolved = extract(params)
+    if (resolved.level === 'process') {
+        restartProcess(resolved)
+        return
+    }
 
-    if (level === 'instance') {
-        params.currentDir = process.cwd()
-
-        const dirs = getDirs()
-
-        const match = (pattern, list) => {
-            return list.filter(name => {
-                if (filter) {
-                    if (!new RegExp(filter).test(name)) return false
-                }
-                return pattern.test(name)
-            })
+    const directories = getDirs().filter(directory => {
+        if (!params.filter) return true
+        return new RegExp(params.filter).test(directory)
+    })
+    for (const directory of directories) {
+        const directoryPath = `${resolved.instancePath}/${directory}`
+        const processParams = extract({ directoryPath })
+        if (
+            isFile(processParams.packageFile)
+            || isFile(`${processParams.processPath}/index.html`)
+            || isFile(processParams.composeFile)
+        ) {
+            restartProcess(processParams)
         }
-
-        const databases = match(/databases/, dirs)
-        const apis = match(/api/, dirs)
-        const panels = match(/panel/, dirs)
-
-        const sites = dirs.filter(name => {
-            if (filter && !new RegExp(filter).test(name)) return false
-            if (/site/.test(name)) return true
-            try {
-                runOnTerminal(`ls "${params.currentDir}/${name}/site"`, {
-                    throwOnError: true,
-                    hideError: true,
-                })
-                return true
-            } catch {
-                return false
-            }
-        })
-
-        for (const dir of databases) restartApp(dir, params)
-        for (const dir of apis) restartApp(dir, params)
-        for (const dir of panels) restartApp(dir, params)
-        for (const dir of sites) restartApp(dir, params)
-
-    } else {
-        console.log()
-        warning('This means pull, stop, start')
-        warning('Latest image would be pulled')
-
-        runOnTerminal('pull')
-        runOnTerminal('stop')
-
-        if (isFile('cache')) {
-            runOnTerminal('rm -rf cache')
-        }
-
-        runOnTerminal('start')
     }
 }
 
 const isMain = import.meta.url === pathToFileURL(process.argv[1]).href
 if (isMain) {
-    await start({
-        filter: process.argv[2] || '',
+    restart({
         directoryPath: process.cwd(),
+        filter: process.argv[2] || '',
     })
 }
