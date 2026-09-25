@@ -25,9 +25,11 @@ export default params => {
     calculateSubdomain(params)
     params[`${instance}${pascalize(process)}Port`] = params.deterministicPort
     params.dockerImageName = `ghcr.io/${params.lowercaseOrg}/${params.lowercaseRepo}/${params.lowercaseGitHubImageNameOrProcess}:latest`
-    generateCompose(params)
+    if (!params.tenantOnly) {
+        generateCompose(params)
+    }
     generateWebServerConfig(params)
-    if (process === 'statics') {
+    if (process === 'statics' && !params.tenantOnly) {
         runOnTerminal(`rsync -a --delete --exclude='.git' /holism/fonts ${home}/${instance}/statics`)
     }
     return params

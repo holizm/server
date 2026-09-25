@@ -1,13 +1,10 @@
 #!/usr/bin/env node
 
-import { ensure } from '../scripts/ensure.js'
 import {
     createDirIfNotExists,
     excludedDirs,
     getDepth,
     getDirs,
-    getLines,
-    isFile,
 } from '../scripts/os.js'
 import {
     divide,
@@ -19,6 +16,8 @@ import generateForDirectory from '../scripts/generateForDirectory.js'
 import extract from '../scripts/extract.js'
 import { clear } from '../scripts/terminal.js'
 import generateBackupAndRestore from '../scripts/generateBackupAndRestore.js'
+import parseGenerateArguments from '../scripts/parseGenerateArguments.js'
+import readGeneratorTenants from '../scripts/readGeneratorTenants.js'
 
 if (process.getuid?.() === 0) {
     errorAndExit('This command must not be run by the root user')
@@ -45,12 +44,6 @@ const validateDepth = params => {
     }
 }
 
-const readTenants = () => {
-    const tenantsFile = 'tenants'
-    ensure(isFile(tenantsFile), 'Tenants file not found in the current directoryName')
-    const tenants = getLines(tenantsFile).map(l => l.split(/\s+/))
-    return tenants
-}
 const baseDir = process.cwd()
 const params = loadSettings(baseDir)
 params.baseDir = baseDir
@@ -58,11 +51,14 @@ params.home = process.env.HOME
 params.user = process.env.USER
 validateDepth(params)
 
-const args = process.argv.slice(2)
-const filterValue = args[0] || ''
-const exactMatch = args.length > 1 && String(args[1]).toLowerCase() === 'only'
+const {
+    exactMatch,
+    filterValue,
+    tenantNames,
+} = parseGenerateArguments(process.argv.slice(2))
 const directories = findDirectories(filterValue, exactMatch)
-const tenants = readTenants()
+const tenants = readGeneratorTenants(tenantNames)
+params.tenantOnly = tenantNames.length > 0
 let needsCache = false
 for (const directoryName of directories) {
     const p = `${baseDir}/${directoryName}`
@@ -81,7 +77,7 @@ for (const directoryName of directories) {
     process.chdir(baseDir)
 }
 
-if (needsCache && !directories.includes('cache')) {
+if (needsCache && !params.tenantOnly && !directories.includes('cache')) {
     const directoryName = 'cache'
     const directoryPath = `${baseDir}/${directoryName}`
     createDirIfNotExists(directoryPath)
@@ -100,7 +96,9 @@ if (needsCache && !directories.includes('cache')) {
 }
 
 divide()
-params.directoryPath = baseDir
-params.depth = getDepth(baseDir)
-extract(params)
-generateBackupAndRestore(params)
+if (!params.tenantOnly) {
+    params.directoryPath = baseDir
+    params.depth = getDepth(baseDir)
+    extract(params)
+    generateBackupAndRestore(params)
+}
