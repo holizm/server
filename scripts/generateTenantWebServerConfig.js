@@ -4,6 +4,7 @@ import getDeterministicPort from './getDeterministicPort.js'
 import {
     getContent,
     isFile,
+    remove,
 } from './os.js'
 import { runOnTerminal } from './terminal.js'
 
@@ -35,6 +36,9 @@ export default (params, tenant) => {
     } = params
     if (!shouldGenerate(process, params.role, roles)) {
         return
+    }
+    if (params.tenantOnly) {
+        remove(`${params.processPath}/webServer/${tenantName}`)
     }
     const replacements = {
         ...params,

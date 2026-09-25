@@ -13,12 +13,7 @@ export default params => {
         return
     }
     const webServerPath = `${processPath}/webServer`
-    if (tenantOnly) {
-        for (const tenant of tenants) {
-            remove(`${webServerPath}/${tenant[0]}`)
-        }
-    }
-    else {
+    if (!tenantOnly) {
         remove(webServerPath)
     }
     for (const tenant of tenants) {

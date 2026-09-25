@@ -11,7 +11,7 @@ import {
     errorAndExit,
     info,
 } from '../scripts/logger.js'
-import loadSettings from '../scripts/loadSettings.js'
+import loadGeneratorSettings from '../scripts/loadGeneratorSettings.js'
 import generateForDirectory from '../scripts/generateForDirectory.js'
 import extract from '../scripts/extract.js'
 import { clear } from '../scripts/terminal.js'
@@ -45,7 +45,7 @@ const validateDepth = params => {
 }
 
 const baseDir = process.cwd()
-const params = loadSettings(baseDir)
+const params = loadGeneratorSettings(baseDir)
 params.baseDir = baseDir
 params.home = process.env.HOME
 params.user = process.env.USER
