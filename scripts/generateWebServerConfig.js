@@ -1,4 +1,3 @@
-import fs from 'fs'
 import camelize from './camelize.js'
 import getDeterministicPort from './getDeterministicPort.js'
 import {
@@ -31,8 +30,6 @@ const generate = params => {
         'cors',
         'httpsRedirect',
         'listen',
-        'cacheConfig',
-        'cacheUsage',
         'siteBlobs',
         'wwwRedirect',
         'proxy',
@@ -74,7 +71,6 @@ export default params => {
         processPath,
         role,
         tenants,
-        user,
     } = params
     remove(`${processPath}/webServer`)
     const processesWithoutWebServer = [
@@ -139,34 +135,10 @@ export default params => {
                 ...params,
                 file: 'siteBlobs',
             })
-            if (isFile('./withCache')) {
-                generate({
-                    ...params,
-                    file: 'cacheConfig',
-                })
-                generate({
-                    ...params,
-                    file: 'cacheUsage',
-                })
-                generate({
-                    ...params,
-                    file: 'siteWithCache',
-                })
-                const cacheDir = `${processPath}/webServer/${tenantName}/cache`
-                fs.mkdirSync(cacheDir, {
-                    recursive: true,
-                    mode: 0o2770,
-                })
-                runOnTerminal(`
-                    chown ${user}:www-data '${cacheDir}'
-                    chmod 2770 '${cacheDir}'
-                `)
-            } else {
-                generate({
-                    ...params,
-                    file: 'site',
-                })
-            }
+            generate({
+                ...params,
+                file: 'site',
+            })
         } else if (process.endsWith('Panel') || process.endsWith('Api')) {
             generate({
                 ...params,
