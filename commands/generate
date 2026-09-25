@@ -25,11 +25,9 @@ if (process.getuid?.() === 0) {
 
 clear()
 
-const findDirectories = (filter, exact) => {
+const findDirectories = () => {
     const dirs = getDirs().filter(d => !excludedDirs.includes(d))
-    if (!filter) return dirs.sort()
-    const f = filter.replaceAll('/', '')
-    return dirs.filter(d => exact ? d === f : d.includes(f)).sort()
+    return dirs.sort()
 }
 
 const validateDepth = params => {
@@ -51,12 +49,8 @@ params.home = process.env.HOME
 params.user = process.env.USER
 validateDepth(params)
 
-const {
-    exactMatch,
-    filterValue,
-    tenantNames,
-} = parseGenerateArguments(process.argv.slice(2))
-const directories = findDirectories(filterValue, exactMatch)
+const tenantNames = parseGenerateArguments(process.argv.slice(2))
+const directories = findDirectories()
 const tenants = readGeneratorTenants(tenantNames)
 params.tenantOnly = tenantNames.length > 0
 let needsCache = false
