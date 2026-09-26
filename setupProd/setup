@@ -89,6 +89,7 @@ $setupProd/micro
 $setupProd/rclone
 
 # $setupProd/az
+$setupProd/az
 # $setupProd/azcopy
 
 $setupProd/docker

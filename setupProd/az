@@ -3,7 +3,7 @@
 . "$scripts/installer.sh"
 
 installAzureCli() {
-    curl -sL https://aka.ms/InstallAzureCLIDeb | bash || error "Failed to install Azure CLI"
+    curl -fsSL https://aka.ms/InstallAzureCLIDeb | bash || error "Failed to install Azure CLI"
     success "Installed Azure CLI"
 }
 
