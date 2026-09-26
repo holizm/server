@@ -12,6 +12,7 @@ import {
     success,
     warning,
 } from '${environmentRoot}/server/scripts/logger.js'
+import { resolveStorageProvider } from '${environmentRoot}/server/scripts/resolveStorageProvider.js'
 
 const usage = 'restore <snapshot-filter>,<database> [override|prefix]'
 const timestampPattern = /^\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}$/
@@ -32,6 +33,7 @@ const config = {
 }
 
 const instancePath = path.join(config.home, config.instance)
+config.storageProvider = resolveStorageProvider(instancePath, config.storageProvider)
 const runAzure = config.storageProvider === 'azure'
     ?
     azureStorage(instancePath)

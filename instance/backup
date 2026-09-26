@@ -20,6 +20,7 @@ import {
     getDirs,
 } from '${environmentRoot}/server/scripts/os.js'
 import { parallelize } from '${environmentRoot}/server/scripts/parallelize.js'
+import { resolveStorageProvider } from '${environmentRoot}/server/scripts/resolveStorageProvider.js'
 
 const timestampPattern = /^\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}$/
 
@@ -36,6 +37,7 @@ const config = {
 }
 
 const instancePath = path.join(config.home, config.instance)
+config.storageProvider = resolveStorageProvider(instancePath, config.storageProvider)
 const runAzure = config.storageProvider === 'azure'
     ?
     azureStorage(instancePath)
