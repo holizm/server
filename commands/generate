@@ -90,9 +90,8 @@ if (needsCache && !params.tenantOnly && !directories.includes('cache')) {
 }
 
 divide()
-if (!params.tenantOnly) {
-    params.directoryPath = baseDir
-    params.depth = getDepth(baseDir)
-    extract(params)
-    generateBackupAndRestore(params)
-}
+
+params.directoryPath = baseDir
+params.depth = getDepth(baseDir)
+extract(params)
+generateBackupAndRestore(params)
