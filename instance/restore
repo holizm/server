@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 
+import { execFileSync } from 'child_process'
 import fs from 'fs'
 import path from 'path'
-import { execFileSync } from 'child_process'
+import { azureStorage } from '${environmentRoot}/server/scripts/azureStorage.js'
 import camelize from '${environmentRoot}/server/scripts/camelize.js'
 import {
     divide,
@@ -24,13 +25,18 @@ const config = {
     storageProvider: '${storageProvider}',
     databasesUser: '${databasesUser}',
     databasesPassword: '${databasesPassword}',
-    azureStorage: '${azureStorage}',
-    azureSas: '${azureSas}',
     awsEndpoint: '${awsEndpoint}',
     awsAccessKey: '${awsAccessKey}',
     awsSecretKey: '${awsSecretKey}',
     awsBucket: '${awsBucket}',
 }
+
+const instancePath = path.join(config.home, config.instance)
+const runAzure = config.storageProvider === 'azure'
+    ?
+    azureStorage(instancePath)
+    :
+    null
 
 const run = (command, args, captureOutput = false) => execFileSync(command, args, {
     encoding: 'utf8',
@@ -93,11 +99,9 @@ const listCloudFiles = () => {
 
     if (config.storageProvider === 'azure') {
         const query = "[?ends_with(name, '/completed') || (contains(name, '/databases/') && ends_with(name, '.archive'))].name"
-        return run('az', [
+        return runAzure([
             'storage', 'blob', 'list',
-            '--account-name', config.azureStorage,
             '--container-name', 'backup',
-            '--sas-token', config.azureSas,
             '--query', query,
             '--output', 'tsv',
             '--only-show-errors',
@@ -160,8 +164,13 @@ const downloadArchive = (snapshot, database, archivePath) => {
                 ...getAwsOptions(),
             ])
         } else {
-            const source = 'https://' + config.azureStorage + '.blob.core.windows.net/backup/' + cloudPath + '?' + config.azureSas
-            run('azcopy', ['copy', source, temporaryPath])
+            runAzure([
+                'storage', 'blob', 'download',
+                '--container-name', 'backup',
+                '--name', cloudPath,
+                '--file', temporaryPath,
+                '--output', 'none',
+            ])
         }
 
         info('Validating database archive')

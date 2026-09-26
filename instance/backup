@@ -7,6 +7,7 @@ import {
 import fs from 'node:fs'
 import { availableParallelism } from 'node:os'
 import path from 'node:path'
+import { azureStorage } from '${environmentRoot}/server/scripts/azureStorage.js'
 import {
     divide,
     errorAndExit,
@@ -28,8 +29,6 @@ const config = {
     storageProvider: '${storageProvider}',
     databasesUser: '${databasesUser}',
     databasesPassword: '${databasesPassword}',
-    azureStorage: '${azureStorage}',
-    azureSas: '${azureSas}',
     awsEndpoint: '${awsEndpoint}',
     awsAccessKey: '${awsAccessKey}',
     awsSecretKey: '${awsSecretKey}',
@@ -37,6 +36,11 @@ const config = {
 }
 
 const instancePath = path.join(config.home, config.instance)
+const runAzure = config.storageProvider === 'azure'
+    ?
+    azureStorage(instancePath)
+    :
+    null
 const backupDirectory = path.join(instancePath, 'backupDirectory')
 const databasesContainer = config.instance + 'Databases'
 const awsRemote = ':s3:' + config.awsBucket
@@ -193,8 +197,14 @@ const uploadBackup = timestamp => {
     info('Uploading backup/' + timestamp + ' using ' + config.storageProvider)
 
     if (config.storageProvider === 'azure') {
-        const destination = 'https://' + config.azureStorage + '.blob.core.windows.net/backup/' + timestamp + '?' + config.azureSas
-        run('azcopy', ['sync', backupDirectory, destination, '--recursive=true'])
+        runAzure([
+            'storage', 'blob', 'upload-batch',
+            '--destination', 'backup',
+            '--destination-path', timestamp,
+            '--source', backupDirectory,
+            '--overwrite', 'true',
+            '--output', 'none',
+        ])
         return
     }
 
@@ -212,8 +222,14 @@ const uploadCompletedMarker = timestamp => {
     info('Marking backup/' + timestamp + ' as completed')
 
     if (config.storageProvider === 'azure') {
-        const destination = 'https://' + config.azureStorage + '.blob.core.windows.net/backup/' + timestamp + '/completed?' + config.azureSas
-        run('azcopy', ['copy', completedFile, destination])
+        runAzure([
+            'storage', 'blob', 'upload',
+            '--container-name', 'backup',
+            '--name', timestamp + '/completed',
+            '--file', completedFile,
+            '--overwrite', 'true',
+            '--output', 'none',
+        ])
         return
     }
 
@@ -229,14 +245,12 @@ const listBackupTimestamps = () => {
     let paths
 
     if (config.storageProvider === 'azure') {
-        paths = capture('az', [
+        paths = runAzure([
             'storage', 'blob', 'list',
-            '--account-name=' + config.azureStorage,
             '--container-name=backup',
-            '--sas-token=' + config.azureSas,
             '--query=[].name',
             '--output=tsv',
-        ])
+        ], true)
     } else {
         paths = capture('/usr/local/bin/rclone', [
             'lsf',
@@ -259,22 +273,18 @@ const deleteBackup = timestamp => {
     info('Deleting backup: ' + timestamp)
 
     if (config.storageProvider === 'azure') {
-        const blobs = capture('az', [
+        const blobs = runAzure([
             'storage', 'blob', 'list',
-            '--account-name=' + config.azureStorage,
             '--container-name=backup',
-            '--sas-token=' + config.azureSas,
             '--prefix=' + timestamp + '/',
             '--query=[].name',
             '--output=tsv',
-        ])
+        ], true)
 
         for (const blob of blobs.split(/\r?\n/).filter(Boolean)) {
-            run('az', [
+            runAzure([
                 'storage', 'blob', 'delete',
-                '--account-name=' + config.azureStorage,
                 '--container-name=backup',
-                '--sas-token=' + config.azureSas,
                 '--name=' + blob,
                 '--output=none',
             ])
