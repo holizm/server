@@ -70,6 +70,7 @@ addSbinToUserPath() {
 updateApt
 
 install curl
+install crontab cron
 install git
 install jq
 install nethogs
