@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+apt-get install -y \
+    apt-utils \
+    bsdmainutils \
+    ffmpeg \
+    file \
+    imagemagick \
+    libc6-dev \
+    libgdiplus \
+    procps \
+    webp

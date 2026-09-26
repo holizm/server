@@ -78,6 +78,8 @@ install telnet
 install unzip
 install zip
 
+$setupProd/apiDependencies
+
 $setupProd/nginx
 $setupProd/certbot
 $setupProd/htpasswd
