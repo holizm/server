@@ -189,10 +189,17 @@ const backupDatabases = async databaseToBackup => {
 }
 
 const validateStorageProvider = () => {
-    if (config.storageProvider === 'azure' || config.storageProvider === 'aws') {
+    if (config.storageProvider === 'azure') {
         return
     }
-    errorAndExit('Unsupported storageProvider: ' + config.storageProvider)
+    if (config.storageProvider !== 'aws') {
+        errorAndExit('Unsupported storageProvider: ' + config.storageProvider)
+    }
+    for (const property of ['awsEndpoint', 'awsAccessKey', 'awsSecretKey', 'awsBucket']) {
+        if (!config[property]) {
+            errorAndExit('Missing backup setting: ' + property)
+        }
+    }
 }
 
 const uploadBackup = timestamp => {

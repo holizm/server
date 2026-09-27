@@ -36,6 +36,7 @@ export default baseDir => {
     }
     const privateSettings = readSettings(privateSettingsPath)
     const settings = flattenSettings(privateSettings, '', {})
+    settings.awsEndpoint ??= settings.awsServiceUrl
     settings.databasesPassword ??= settings.databasePassword
     settings.databasesUser ??= settings.databasesUsername ?? settings.databaseUser ?? settings.databaseUsername
     settings.searchMasterKey ??= settings.searchEngineApiKey
