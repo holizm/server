@@ -2,11 +2,22 @@
 . "$scripts/installer.sh"
 . "$scripts/logger.sh"
 
+useNodeSourceExecutables() {
+    local executable
+
+    for executable in node npm npx; do
+        if [[ -x "/usr/bin/$executable" ]] && [[ -L "/usr/local/bin/$executable" ]] && [[ "$(readlink "/usr/local/bin/$executable")" == "/usr/local/node/bin/$executable" ]]; then
+            ln -sfn "/usr/bin/$executable" "/usr/local/bin/$executable"
+        fi
+    done
+}
+
 installNode() {
     apt-get update -y
     apt-get install -y curl ca-certificates gnupg jq
     curl -fsSL https://deb.nodesource.com/setup_lts.x | bash -
     apt-get install -y nodejs
+    useNodeSourceExecutables
 
     if ! grep -qxF 'export NODE_OPTIONS="--trace-deprecation"' ~/.bashrc; then
         echo 'export NODE_OPTIONS="--trace-deprecation"' >> ~/.bashrc
@@ -31,6 +42,7 @@ getLatestNodeLtsVersion() {
         | jq -r '[.[] | select(.lts != false)][0].version'
 }
 
+useNodeSourceExecutables
 ensureLatestLts node getInstalledNodeVersion getLatestNodeLtsVersion installNode
 
 nodeExecutable=$(command -v node 2>/dev/null || true)

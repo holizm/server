@@ -7,8 +7,7 @@ installNginxFromOfficialSource() {
 
     apt-get install -y curl gnupg2 ca-certificates lsb-release debian-archive-keyring
 
-    curl -fsSL https://nginx.org/keys/nginx_signing.key | gpg --dearmor \
-        -o /usr/share/keyrings/nginxArchiveKeyring.gpg || error "Failed to import NGINX signing key"
+    "$setupProd/nginxRepositoryKey" || error "Failed to import NGINX signing key"
 
     echo "deb [signed-by=/usr/share/keyrings/nginxArchiveKeyring.gpg] \
 https://nginx.org/packages/debian $(lsb_release -cs) nginx" | tee /etc/apt/sources.list.d/nginx.list > /dev/null

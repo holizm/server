@@ -54,7 +54,9 @@ configureRootlessDocker() {
     fi
     runForUser "$user" "$homeDir" "$userId" systemctl --user daemon-reload >/dev/null 2>&1
     runForUser "$user" "$homeDir" "$userId" systemctl --user enable --now docker.service >/dev/null 2>&1
-    if ! runForUser "$user" "$homeDir" "$userId" docker context inspect rootless >/dev/null 2>&1; then
+    if runForUser "$user" "$homeDir" "$userId" docker context inspect rootless >/dev/null 2>&1; then
+        runForUser "$user" "$homeDir" "$userId" docker context update rootless --docker "host=unix:///run/user/$userId/docker.sock" >/dev/null 2>&1
+    else
         runForUser "$user" "$homeDir" "$userId" docker context create rootless --docker "host=unix:///run/user/$userId/docker.sock" >/dev/null 2>&1
     fi
     runForUser "$user" "$homeDir" "$userId" docker context use rootless >/dev/null 2>&1

@@ -67,6 +67,10 @@ addSbinToUserPath() {
     fi
 }
 
+if [[ -f /etc/apt/sources.list.d/nginx.list ]]; then
+    "$setupProd/nginxRepositoryKey"
+fi
+
 updateApt
 
 install curl
@@ -97,7 +101,7 @@ $setupProd/docker
 
 source "$setupProd/node"
 $setupProd/pm2
-npm install -g --registry='https://mirror-npm.runflare.com' serve
+npm install -g --registry='https://registry.npmjs.org' serve
 
 registerHolismCommands
 setTimeZone

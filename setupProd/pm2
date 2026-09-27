@@ -3,7 +3,7 @@
 . "$scripts/installer.sh"
 
 installPm2() {
-    npm install -g --registry="https://mirror-npm.runflare.com" pm2
+    npm install -g --registry='https://registry.npmjs.org' pm2
 }
 
 install pm2 installPm2

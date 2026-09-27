@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+keyFile=$(mktemp)
+keyringFile=$(mktemp)
+trap 'rm -f "$keyFile" "$keyringFile"' EXIT
+
+curl -fsSL https://nginx.org/keys/nginx_signing.key -o "$keyFile"
+gpg --show-keys --with-colons "$keyFile" 2>/dev/null | grep -q '^fpr:::::::::8540A6F18833A80E9C1653A42FD21310B49F6B46:'
+gpg --batch --yes --dearmor -o "$keyringFile" "$keyFile"
+install -m 644 "$keyringFile" /usr/share/keyrings/nginxArchiveKeyring.gpg
+
+if [[ -f /etc/apt/sources.list.d/nginx.list ]]; then
+    sed -i 's|http://nginx.org/packages/debian|https://nginx.org/packages/debian|' /etc/apt/sources.list.d/nginx.list
+fi
