@@ -1,0 +1,25 @@
+#!/usr/bin/env node
+
+import fs from 'fs'
+import path from 'path'
+
+const cwd = process.cwd()
+const confDirectory = '/etc/nginx/conf.d'
+const confEntries = fs.readdirSync(confDirectory, { withFileTypes: true })
+
+for (const entry of confEntries) {
+    if (!entry.isSymbolicLink()) continue
+
+    const linkPath = path.join(confDirectory, entry.name)
+    const targetPath = path.resolve(confDirectory, fs.readlinkSync(linkPath))
+    const relativePath = path.relative(cwd, targetPath)
+    const pathSegments = relativePath.split(path.sep)
+    const directories = pathSegments.slice(0, -1)
+
+    if (path.isAbsolute(relativePath) || pathSegments[0] === '..') continue
+    if (!directories.includes('webServer') || directories.includes('backupDirectory')) continue
+    if (path.extname(targetPath) !== '.conf' || entry.name !== path.basename(targetPath)) continue
+
+    fs.unlinkSync(linkPath)
+    console.log(linkPath)
+}
