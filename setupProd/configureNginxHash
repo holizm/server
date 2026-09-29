@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+configPath='/etc/nginx/nginx.conf'
+candidatePath=$(mktemp /etc/nginx/nginxHashCandidate.XXXXXXXX)
+backupPath=$(mktemp /etc/nginx/nginxHashBackup.XXXXXXXX)
+trap 'rm -f "$candidatePath" "$backupPath"' EXIT
+
+node "$setupProd/configureNginxHash.js" "$configPath" "$candidatePath"
+
+if cmp -s "$configPath" "$candidatePath"; then
+    exit 0
+fi
+
+nginx -t -c "$candidatePath"
+cp -p "$configPath" "$backupPath"
+cat "$candidatePath" > "$configPath"
+
+if ! nginx -s reload; then
+    cp -p "$backupPath" "$configPath"
+    exit 1
+fi

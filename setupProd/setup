@@ -100,6 +100,7 @@ $setupProd/az
 $setupProd/docker
 
 source "$setupProd/node"
+"$setupProd/configureNginxHash"
 $setupProd/pm2
 npm install -g --registry='https://registry.npmjs.org' serve
 
