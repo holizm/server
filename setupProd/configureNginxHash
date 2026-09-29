@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+. "$scripts/logger.sh"
+
 configPath='/etc/nginx/nginx.conf'
 candidatePath=$(mktemp /etc/nginx/nginxHashCandidate.XXXXXXXX)
 backupPath=$(mktemp /etc/nginx/nginxHashBackup.XXXXXXXX)
@@ -9,10 +11,12 @@ trap 'rm -f "$candidatePath" "$backupPath"' EXIT
 node "$setupProd/configureNginxHash.js" "$configPath" "$candidatePath"
 
 if cmp -s "$configPath" "$candidatePath"; then
+    check 'Nginx server name hash settings already configured'
     exit 0
 fi
 
 nginx -t -c "$candidatePath"
+check 'Nginx configuration validated'
 cp -p "$configPath" "$backupPath"
 cat "$candidatePath" > "$configPath"
 
@@ -20,3 +24,6 @@ if ! nginx -s reload; then
     cp -p "$backupPath" "$configPath"
     exit 1
 fi
+
+check 'Configured Nginx server name hash settings'
+check 'Nginx reload requested'

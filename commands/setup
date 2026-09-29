@@ -18,4 +18,4 @@ divide
 
 $setupProd/setup
 
-success "setup complete"
+check 'setup complete'

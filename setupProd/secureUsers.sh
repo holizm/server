@@ -25,7 +25,7 @@ secureUser() {
     chmod 0700 "$homeDir/.ssh"
     chmod 0600 "$homeDir/.ssh/authorized_keys"
 
-    success "Secured $user"
+    check "Secured $user"
 }
 
 groupadd -f shared
