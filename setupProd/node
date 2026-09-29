@@ -10,6 +10,13 @@ useNodeSourceExecutables() {
             ln -sfn "/usr/bin/$executable" "/usr/local/bin/$executable"
         fi
     done
+
+    if [[ -x /usr/bin/node ]]; then
+        nodeBinDirectory='/usr/bin'
+        export nodeBinDirectory
+        export PATH="$nodeBinDirectory:$PATH"
+        hash -r
+    fi
 }
 
 installNode() {
