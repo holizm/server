@@ -12,17 +12,21 @@ chmod 0644 /etc/cron.d/holismPackageUpdates
 installUserSchedule() {
     local userName=$1
     local userHome
+    local backupLock='/tmp/osBackup.lock'
 
     [[ $userName =~ ^[a-z][a-z0-9]{2,19}$ ]] || return 1
     userHome=$(getent passwd "$userName" | cut -d: -f6)
     [[ -d $userHome ]] || return 1
+    if [[ -e $backupLock && $(stat -c '%U' "$backupLock") != "$userName" ]]; then
+        backupLock="/tmp/osBackup${userName}.lock"
+    fi
 
     cat > "/etc/cron.d/holismUserUpdates${userName}" <<EOF
 SHELL=/bin/bash
 PATH=/holism/server/commands:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 HOME=$userHome
-0 0 * * 0 $userName /usr/bin/flock -n /tmp/osBackup.lock /holism/server/commands/updateServerRuntime >> $userHome/serverUpdates.log 2>&1
-0 1 * * 0 $userName /usr/bin/flock -n /tmp/osBackup.lock /holism/server/commands/updateServerImages >> $userHome/serverUpdates.log 2>&1
+0 0 * * 0 $userName /usr/bin/flock -n $backupLock /holism/server/commands/updateServerRuntime >> $userHome/serverUpdates.log 2>&1
+0 1 * * 0 $userName /usr/bin/flock -n $backupLock /holism/server/commands/updateServerImages >> $userHome/serverUpdates.log 2>&1
 EOF
     chmod 0644 "/etc/cron.d/holismUserUpdates${userName}"
 }
