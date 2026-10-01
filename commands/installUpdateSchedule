@@ -14,9 +14,9 @@ installUserSchedule() {
     local userHome
     local backupLock='/tmp/osBackup.lock'
 
-    [[ $userName =~ ^[a-z][a-z0-9]{2,19}$ ]] || return 1
+    [[ ${#userName} -eq 20 && $userName =~ ^[a-z][a-z0-9]+$ ]] || return 1
     userHome=$(getent passwd "$userName" | cut -d: -f6)
-    [[ -d $userHome ]] || return 1
+    [[ $userHome == "/home/$userName" && -d $userHome ]] || return 1
     if [[ -e $backupLock && $(stat -c '%U' "$backupLock") != "$userName" ]]; then
         backupLock="/tmp/osBackup${userName}.lock"
     fi
@@ -33,10 +33,13 @@ EOF
 
 if (($#)); then
     installUserSchedule "$1"
-elif [[ -f /holism/users ]]; then
-    while IFS= read -r userName; do
-        [[ -n $userName ]] || continue
+else
+    for userHome in /home/*; do
+        [[ -d $userHome && ! -L $userHome ]] || continue
+        userName=${userHome##*/}
+        [[ ${#userName} -eq 20 ]] || continue
+        getent passwd "$userName" >/dev/null || continue
         installUserSchedule "$userName"
-    done < /holism/users
+    done
 fi
 systemctl enable --now cron
