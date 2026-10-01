@@ -112,3 +112,4 @@ addSbinToUserPath
 source "$setupProd/secureUsers.sh"
 source "$setupProd/setPermissions.sh"
 $setupProd/includeUpdateTerminalTitleConfig.js
+/holism/server/commands/installUpdateSchedule

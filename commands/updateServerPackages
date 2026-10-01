@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+export DEBIAN_FRONTEND=noninteractive
+
+apt-get update
+apt-get upgrade -y
+npm install -g --registry='https://registry.npmjs.org' pm2 serve
+
+if [[ -e /run/reboot-required ]]; then
+    printf '%s\n' 'A reboot is required to finish server updates'
+fi

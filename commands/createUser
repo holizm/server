@@ -13,4 +13,6 @@ if ! isValidUserPrefix "$1"; then
     exit 1
 fi
 
-createUser "$1"
+userName=$(createUser "$1")
+/holism/server/commands/installUpdateSchedule "$userName"
+printf '%s\n' "$userName"

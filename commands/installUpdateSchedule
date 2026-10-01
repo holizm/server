@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+cat > /etc/cron.d/holismPackageUpdates <<'EOF'
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+0 0 * * 6 root /usr/bin/flock -n /tmp/osBackup.lock /holism/server/commands/updateServerPackages >> /var/log/holismPackageUpdates.log 2>&1
+EOF
+
+chmod 0644 /etc/cron.d/holismPackageUpdates
+
+installUserSchedule() {
+    local userName=$1
+    local userHome
+
+    [[ $userName =~ ^[a-z][a-z0-9]{2,19}$ ]] || return 1
+    userHome=$(getent passwd "$userName" | cut -d: -f6)
+    [[ -d $userHome ]] || return 1
+
+    cat > "/etc/cron.d/holismUserUpdates${userName}" <<EOF
+SHELL=/bin/bash
+PATH=/holism/server/commands:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+HOME=$userHome
+0 0 * * 0 $userName /usr/bin/flock -n /tmp/osBackup.lock /holism/server/commands/updateServerRuntime >> $userHome/serverUpdates.log 2>&1
+0 1 * * 0 $userName /usr/bin/flock -n /tmp/osBackup.lock /holism/server/commands/updateServerImages >> $userHome/serverUpdates.log 2>&1
+EOF
+    chmod 0644 "/etc/cron.d/holismUserUpdates${userName}"
+}
+
+if (($#)); then
+    installUserSchedule "$1"
+elif [[ -f /holism/users ]]; then
+    while IFS= read -r userName; do
+        [[ -n $userName ]] || continue
+        installUserSchedule "$userName"
+    done < /holism/users
+fi
+systemctl enable --now cron

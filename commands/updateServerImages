@@ -1,0 +1,71 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+for instancePath in "$HOME"/*; do
+    [[ -d "$instancePath" && -x "$instancePath/backup" ]] || continue
+    backedUp=false
+
+    for processPath in "$instancePath"/*; do
+        [[ -f "$processPath/compose.yaml" && ! -f "$processPath/package.json" ]] || continue
+
+        instanceName=${instancePath##*/}
+        processName=${processPath##*/}
+        projectName=$(printf '%s-%s' "$instanceName" "$processName" | tr '[:upper:]' '[:lower:]')
+        compose=(docker compose -p "$projectName" -f "$processPath/compose.yaml")
+        mapfile -t containers < <("${compose[@]}" ps -q)
+        ((${#containers[@]})) || continue
+
+        if [[ $backedUp == false ]]; then
+            "$instancePath/backup"
+            backedUp=true
+        fi
+
+        mapfile -t images < <("${compose[@]}" config --images)
+        declare -A previousImages=()
+        for image in "${images[@]}"; do
+            previousImages["$image"]=$(docker image inspect "$image" --format '{{.Id}}')
+        done
+
+        "${compose[@]}" pull
+        changed=false
+        for image in "${images[@]}"; do
+            currentImage=$(docker image inspect "$image" --format '{{.Id}}')
+            [[ $currentImage == "${previousImages[$image]}" ]] || changed=true
+        done
+        if [[ $changed == false ]]; then
+            unset previousImages
+            continue
+        fi
+
+        if ! "${compose[@]}" up -d --remove-orphans; then
+            failed=true
+        else
+            failed=false
+            mapfile -t containers < <("${compose[@]}" ps -q)
+            for container in "${containers[@]}"; do
+                healthy=false
+                for attempt in {1..60}; do
+                    status=$(docker inspect "$container" --format '{{.State.Status}} {{if .State.Health}}{{.State.Health.Status}}{{end}}')
+                    if [[ $status == 'running ' || $status == 'running healthy' ]]; then
+                        healthy=true
+                        break
+                    fi
+                    [[ $status == 'running starting' ]] || break
+                    sleep 2
+                done
+                [[ $healthy == true ]] || failed=true
+            done
+            ((${#containers[@]})) || failed=true
+        fi
+
+        if [[ $failed == true ]]; then
+            for image in "${images[@]}"; do
+                docker image tag "${previousImages[$image]}" "$image"
+            done
+            "${compose[@]}" up -d --remove-orphans
+            printf 'Image update failed for %s; previous images restored\n' "$processPath" >&2
+            exit 1
+        fi
+        unset previousImages
+    done
+done
