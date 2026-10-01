@@ -1,5 +1,6 @@
 server {
     listen 80;
+    listen [::]:80;
     server_name ${subdomain}${domain};
 
     location ^~ /.well-known/acme-challenge/ {
