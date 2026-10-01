@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+instanceName=${1:?}
+hour=${2:?}
+instancePath="$HOME/$instanceName"
+backupPath="$instancePath/backup"
+
+[[ $instanceName =~ ^[a-z][a-zA-Z0-9]*$ ]] || exit 1
+[[ $hour =~ ^([0-9]|1[0-9]|2[0-3])$ ]] || exit 1
+[[ -x $backupPath ]] || exit 1
+
+scheduleFile=$(mktemp)
+trap 'rm -f "$scheduleFile"' EXIT
+
+while IFS= read -r line; do
+    [[ $line == *"$backupPath"* ]] && continue
+    printf '%s\n' "$line" >> "$scheduleFile"
+done < <(crontab -l 2>/dev/null || true)
+
+printf '0 %s * * * /usr/bin/flock -w 3600 /tmp/osBackup.lock %s >> %s/backupCron.log 2>&1\n' "$hour" "$backupPath" "$instancePath" >> "$scheduleFile"
+crontab "$scheduleFile"
