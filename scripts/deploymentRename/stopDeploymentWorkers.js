@@ -2,15 +2,16 @@ import { execFileSync } from 'child_process'
 import { readlinkSync } from 'fs'
 
 export default async plan => {
-    const lines = execFileSync('ps', ['-u', String(process.getuid()), '-o', 'pid=,comm='], { encoding: 'utf8' }).trim().split('\n')
+    const lines = execFileSync('ps', ['-u', String(process.getuid()), '-o', 'pid=,args='], { encoding: 'utf8' }).trim().split('\n')
     const workers = []
     for (const line of lines) {
-        const [pidText, command] = line.trim().split(/\s+/)
+        const [pidText, ...rest] = line.trim().split(/\s+/)
+        const command = rest.join(' ')
         const pid = Number(pidText)
-        if (command !== 'node' || pid === process.pid) continue
+        if (!/^(?:\S*\/)?node(?:\s|$)/.test(command) || pid === process.pid) continue
         try {
             const directory = readlinkSync('/proc/' + pid + '/cwd')
-            if (directory !== plan.oldPath && !directory.startsWith(plan.oldPath + '/')) continue
+            if (![plan.oldPath, plan.newPath].filter(Boolean).some(root => directory === root || directory.startsWith(root + '/'))) continue
             process.kill(pid, 'SIGTERM')
             workers.push(pid)
         }

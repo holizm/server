@@ -4,6 +4,7 @@ import path from 'path'
 import prepareDeploymentRename from '../scripts/deploymentRename/prepareDeploymentRename.js'
 import renameDeploymentFiles from '../scripts/deploymentRename/renameDeploymentFiles.js'
 import startRenamedDeployment from '../scripts/deploymentRename/startRenamedDeployment.js'
+import stopDeploymentWorkers from '../scripts/deploymentRename/stopDeploymentWorkers.js'
 import stopDeploymentForRename from '../scripts/deploymentRename/stopDeploymentForRename.js'
 import { loadRenamePlan } from '../scripts/deploymentRename/renamePlan.js'
 
@@ -20,7 +21,8 @@ const params = {
 if (stage === 'prepare') await prepareDeploymentRename(params)
 else {
     const plan = loadRenamePlan(params.planFile)
-    if (stage === 'stop') await stopDeploymentForRename(plan)
+    if (stage === 'workers') await stopDeploymentWorkers(plan)
+    else if (stage === 'stop') await stopDeploymentForRename(plan)
     else if (stage === 'rename') renameDeploymentFiles(plan)
     else if (stage === 'start') await startRenamedDeployment(plan)
     else throw new Error('Stage must be prepare, stop, rename, or start')
