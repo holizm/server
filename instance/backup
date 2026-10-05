@@ -56,6 +56,7 @@ const rclone = config.storageProvider === 'aws'
     :
     null
 const awsOptions = [
+    '--config', '/dev/null',
     '--s3-provider', 'Other',
     '--s3-endpoint', config.awsEndpoint,
     '--s3-access-key-id', config.awsAccessKey,
