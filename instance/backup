@@ -100,7 +100,6 @@ const prepareBackupDirectory = () => {
     fs.rmSync(backupDirectory, { recursive: true, force: true })
 
     for (const relativePath of [
-        'params',
         'tenants',
         'org',
         'common/privateSettings.json',
@@ -109,6 +108,7 @@ const prepareBackupDirectory = () => {
     ]) {
         copyBackupFile(relativePath, true)
     }
+    copyBackupFile('params', false)
     copyBackupFile('repo', false)
 
     const processDirectories = getDirs(instancePath).sort()
