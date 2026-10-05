@@ -12,7 +12,11 @@ export default async plan => {
     if (plan.stage !== 'renamed') throw new Error('Deployment must be renamed before restarting')
     for (const container of plan.containers) {
         const service = container.Config.Labels['com.docker.compose.service']
-        const directory = service === 'database' ? 'databases' : 'cache'
+        const directory = service === 'database'
+            ?
+            'databases'
+            :
+            'cache'
         execFileSync('docker', ['compose', '-p', container.Config.Labels['com.docker.compose.project'], '-f', path.join(plan.newPath, directory, 'compose.yaml'), 'up', '-d', '--pull', 'never'], { stdio: 'inherit' })
     }
     if (plan.databaseState) {

@@ -34,7 +34,11 @@ export default async params => {
         ...params,
         containers,
         crontab,
-        dataInode: existsSync(dataPath) ? statSync(dataPath).ino : null,
+        dataInode: existsSync(dataPath)
+            ?
+            statSync(dataPath).ino
+            :
+            null,
         newPath,
         oldPath,
         processes,

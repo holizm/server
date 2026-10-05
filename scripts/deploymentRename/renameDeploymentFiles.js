@@ -22,7 +22,11 @@ export default plan => {
     saveRenamePlan(plan)
     for (const file of renameFileList(plan.newPath)) {
         const symlink = lstatSync(file).isSymbolicLink()
-        const source = symlink ? readlinkSync(file) : readFileSync(file)
+        const source = symlink
+            ?
+            readlinkSync(file)
+            :
+            readFileSync(file)
         if (!symlink && source.includes(0)) continue
         const original = source.toString()
         const renamed = renameReferences(original, plan)

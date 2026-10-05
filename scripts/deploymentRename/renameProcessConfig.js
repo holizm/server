@@ -15,7 +15,11 @@ export default (process, plan) => {
         args: replace(previous.args || []),
         cwd: replace(previous.pm_cwd),
         env: replace(previous.env || {}),
-        exec_mode: previous.exec_mode === 'cluster_mode' ? 'cluster' : 'fork',
+        exec_mode: previous.exec_mode === 'cluster_mode'
+            ?
+            'cluster'
+            :
+            'fork',
         instances: previous.instances || 1,
         interpreter: previous.exec_interpreter,
         name: plan.newName + process.name.slice(plan.oldName.length),
