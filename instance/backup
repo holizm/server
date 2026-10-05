@@ -8,6 +8,7 @@ import fs from 'node:fs'
 import { availableParallelism } from 'node:os'
 import path from 'node:path'
 import { azureStorage } from '${environmentRoot}/server/scripts/azureStorage.js'
+import getExecutable from '${environmentRoot}/server/scripts/getExecutable.js'
 import {
     divide,
     errorAndExit,
@@ -46,6 +47,14 @@ const runAzure = config.storageProvider === 'azure'
 const backupDirectory = path.join(instancePath, 'backupDirectory')
 const databasesContainer = config.instance + 'Databases'
 const awsRemote = ':s3:' + config.awsBucket
+const rclone = config.storageProvider === 'aws'
+    ?
+    getExecutable('rclone', [
+        '/usr/local/bin/rclone',
+        '/usr/bin/rclone',
+    ])
+    :
+    null
 const awsOptions = [
     '--s3-provider', 'Other',
     '--s3-endpoint', config.awsEndpoint,
@@ -217,7 +226,7 @@ const uploadBackup = timestamp => {
         return
     }
 
-    run('/usr/local/bin/rclone', [
+    run(rclone, [
         'copy',
         backupDirectory,
         awsRemote + '/backup/' + timestamp,
@@ -242,7 +251,7 @@ const uploadCompletedMarker = timestamp => {
         return
     }
 
-    run('/usr/local/bin/rclone', [
+    run(rclone, [
         'copyto',
         completedFile,
         awsRemote + '/backup/' + timestamp + '/completed',
@@ -261,7 +270,7 @@ const listBackupTimestamps = () => {
             '--output=tsv',
         ], true)
     } else {
-        paths = capture('/usr/local/bin/rclone', [
+        paths = capture(rclone, [
             'lsf',
             awsRemote + '/backup',
             '--dirs-only',
@@ -301,7 +310,7 @@ const deleteBackup = timestamp => {
         return
     }
 
-    run('/usr/local/bin/rclone', [
+    run(rclone, [
         'purge',
         awsRemote + '/backup/' + timestamp,
         ...awsOptions,
