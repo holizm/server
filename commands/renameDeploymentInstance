@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import path from 'path'
+import finishDeploymentRename from '../scripts/deploymentRename/finishDeploymentRename.js'
 import prepareDeploymentRename from '../scripts/deploymentRename/prepareDeploymentRename.js'
 import renameDeploymentFiles from '../scripts/deploymentRename/renameDeploymentFiles.js'
 import startRenamedDeployment from '../scripts/deploymentRename/startRenamedDeployment.js'
@@ -25,5 +26,6 @@ else {
     else if (stage === 'stop') await stopDeploymentForRename(plan)
     else if (stage === 'rename') renameDeploymentFiles(plan)
     else if (stage === 'start') await startRenamedDeployment(plan)
-    else throw new Error('Stage must be prepare, stop, rename, or start')
+    else if (stage === 'finish') finishDeploymentRename(plan)
+    else throw new Error('Stage must be prepare, stop, workers, rename, start, or finish')
 }
