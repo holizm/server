@@ -1,0 +1,27 @@
+#!/usr/bin/env node
+
+import { execFileSync } from 'child_process'
+import {
+    lstatSync,
+    readdirSync,
+    readlinkSync,
+    symlinkSync,
+    unlinkSync,
+} from 'fs'
+import path from 'path'
+
+const [home, oldName, newName] = process.argv.slice(2)
+if (process.getuid() !== 0 || !home?.startsWith('/home/') || !/^[a-z][A-Za-z0-9]*$/.test(oldName || '') || !/^[a-z][A-Za-z0-9]*$/.test(newName || '')) throw new Error('Administrator and canonical deployment paths are required')
+const directory = '/etc/nginx/conf.d'
+for (const name of readdirSync(directory)) {
+    const file = path.join(directory, name)
+    if (!lstatSync(file).isSymbolicLink()) continue
+    const target = readlinkSync(file)
+    if (!target.startsWith(home + '/' + oldName + '/')) continue
+    const replacement = home + '/' + newName + target.slice((home + '/' + oldName).length)
+    unlinkSync(file)
+    symlinkSync(replacement, file)
+}
+execFileSync('nginx', ['-t'], { stdio: 'inherit' })
+execFileSync('systemctl', ['reload', 'nginx'], { stdio: 'inherit' })
+console.log('Updated Nginx links for ' + newName)

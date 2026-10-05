@@ -1,0 +1,27 @@
+#!/usr/bin/env node
+
+import path from 'path'
+import prepareDeploymentRename from '../scripts/deploymentRename/prepareDeploymentRename.js'
+import renameDeploymentFiles from '../scripts/deploymentRename/renameDeploymentFiles.js'
+import startRenamedDeployment from '../scripts/deploymentRename/startRenamedDeployment.js'
+import stopDeploymentForRename from '../scripts/deploymentRename/stopDeploymentForRename.js'
+import { loadRenamePlan } from '../scripts/deploymentRename/renamePlan.js'
+
+const [oldName, newName, stage] = process.argv.slice(2)
+if (!/^[a-z][A-Za-z0-9]*$/.test(oldName || '') || !/^[a-z][A-Za-z0-9]*$/.test(newName || '') || oldName === newName) {
+    throw new Error('Provide distinct camelCase deployment names and a stage')
+}
+const params = {
+    home: process.env.HOME,
+    newName,
+    oldName,
+    planFile: path.join(process.env.HOME, '.deploymentRenames', oldName + 'To' + newName + '.json'),
+}
+if (stage === 'prepare') await prepareDeploymentRename(params)
+else {
+    const plan = loadRenamePlan(params.planFile)
+    if (stage === 'stop') await stopDeploymentForRename(plan)
+    else if (stage === 'rename') renameDeploymentFiles(plan)
+    else if (stage === 'start') await startRenamedDeployment(plan)
+    else throw new Error('Stage must be prepare, stop, rename, or start')
+}
