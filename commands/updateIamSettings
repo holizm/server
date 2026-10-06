@@ -1,0 +1,26 @@
+#!/usr/bin/env node
+
+import fs from 'fs'
+import path from 'path'
+
+const [instance, source] = process.argv.slice(2)
+if (!/^[a-z][a-zA-Z0-9]*$/.test(instance || '') || !source) throw new Error('Usage: updateIamSettings instance source')
+const incoming = JSON.parse(fs.readFileSync(source, 'utf8'))
+const target = path.join(process.env.HOME, instance, 'common', 'privateSettings.json')
+const settings = JSON.parse(fs.readFileSync(target, 'utf8'))
+settings.iam = {
+    ...settings.iam,
+    ...incoming.iam,
+}
+const entries = incoming.production?.adminApi?.iamClientSecrets || []
+settings.production ??= {}
+settings.production.adminApi ??= {}
+const credentials = new Map()
+for (const entry of [...settings.production.adminApi.iamClientSecrets || [], ...entries]) {
+    credentials.set(`${entry.domain}/${entry.realm || ''}`, entry)
+}
+settings.production.adminApi.iamClientSecrets = [...credentials.values()]
+const temporary = `${target}.temporary`
+fs.writeFileSync(temporary, `${JSON.stringify(settings, null, 4)}\n`, { mode: 0o600 })
+fs.renameSync(temporary, target)
+console.log(`Updated private IAM settings for ${instance}`)
