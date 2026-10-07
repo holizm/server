@@ -1,0 +1,21 @@
+handle /robots.txt {
+    root * ${siteBlobRoot}
+    route {
+        file_server {
+            pass_thru
+        }
+        rewrite * /tenants/blob/getFile?key=robots
+        reverse_proxy 127.0.0.1:${siteApiPort}
+    }
+}
+
+handle /sitemap.xml {
+    root * ${siteBlobRoot}
+    route {
+        file_server {
+            pass_thru
+        }
+        rewrite * /tenants/blob/getFile?key=sitemap
+        reverse_proxy 127.0.0.1:${siteApiPort}
+    }
+}

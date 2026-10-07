@@ -1,0 +1,2 @@
+@${routeName} header_regexp Host ^www\.(.+)$
+redir @${routeName} https://{re.${routeName}.1}{uri} 301

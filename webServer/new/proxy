@@ -1,0 +1,4 @@
+@${routeName} header_regexp Host ${hostRegex}
+handle @${routeName} {
+    reverse_proxy 127.0.0.1:${deterministicPort}
+}

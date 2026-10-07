@@ -1,0 +1,10 @@
+@${routeName} header_regexp Host ${hostRegex}
+handle @${routeName} {
+    encode gzip
+    request_body {
+        max_size 128MB
+    }
+    header X-Robots-Tag "noindex, nofollow, noarchive"
+    respond /robots.txt "User-agent: *\nDisallow: /" 200
+    reverse_proxy 127.0.0.1:${deterministicPort}
+}

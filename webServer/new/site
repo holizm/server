@@ -1,0 +1,14 @@
+@${routeName} header_regexp Host ${hostRegex}
+handle @${routeName} {
+    encode gzip
+    import ${siteBlobRules}
+    @locale path_regexp locale ^/(${localesRegex})(?:/(.*))?$
+    handle @locale {
+        uri strip_prefix /{re.locale.1}
+        uri query locale {re.locale.1}
+        reverse_proxy 127.0.0.1:${deterministicPort}
+    }
+    handle {
+        reverse_proxy 127.0.0.1:${deterministicPort}
+    }
+}

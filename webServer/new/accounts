@@ -1,0 +1,10 @@
+@${routeName} header_regexp Host ${hostRegex}
+handle @${routeName} {
+    handle /js/keycloak.js {
+        root * /holism/server/temp
+        file_server
+    }
+    handle {
+        reverse_proxy 127.0.0.1:${deterministicPort}
+    }
+}

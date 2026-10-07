@@ -1,0 +1,16 @@
+@${routeName} header_regexp Host ${hostRegex}
+handle @${routeName} {
+    root * ${staticsRoot}
+    encode gzip
+    header {
+        Access-Control-Allow-Headers "Origin, X-Requested-With, Content-Type, Accept"
+        Access-Control-Allow-Methods "GET, OPTIONS"
+        Access-Control-Allow-Origin "*"
+        Access-Control-Max-Age 86400
+        Cache-Control "public, max-age=31536000, immutable"
+    }
+    @options method OPTIONS
+    respond @options "" 204
+    respond /robots.txt "User-agent: *\nAllow: /" 200
+    file_server
+}
