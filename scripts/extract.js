@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 import path from 'path'
+import camelize from './camelize.js'
+import isControlProcess from './isControlProcess.js'
 import {
     divide,
     errorAndExit,
@@ -11,13 +13,12 @@ import {
     isDev,
 } from './os.js'
 import pascalize from './pascalize.js'
-import camelize from './camelize.js'
 
 export default params => {
     let {
-        home,
         depth,
         directoryPath,
+        home,
     } = params
     if (!depth) {
         depth = getDepth(directoryPath)
@@ -54,7 +55,17 @@ export default params => {
     }
 
     const processToRun = depth === 4 ? path.posix.basename(directoryPath) : 'NA'
-    const role = ((processToRun.endsWith('Panel') || processToRun.endsWith('Api')) && processToRun !== 'site') ? processToRun.replace('Panel', '').replace('Api', '') : null
+    let role = ''
+    if (isControlProcess({
+        instance,
+        process: processToRun,
+        repo,
+    })) {
+        role = 'control'
+    }
+    else if ((processToRun.endsWith('Panel') || processToRun.endsWith('Api')) && processToRun !== 'site') {
+        role = processToRun.replace('Panel', '').replace('Api', '')
+    }
     const githubImageName = getContent('./githubImageName')
     const githubImageNameOrProcess = githubImageName || processToRun
 
@@ -62,7 +73,7 @@ export default params => {
     params.repo = repo
     params.instance = instance
     params.process = processToRun
-    params.role = role ? role : ''
+    params.role = role
     params.home = home
     params.depth = depth
     params.githubImageName = githubImageName || ''
@@ -73,7 +84,7 @@ export default params => {
     params.lowercaseRepo = repo.toLowerCase()
     params.lowercaseInstance = instance.toLowerCase()
     params.lowercaseProcess = processToRun.toLowerCase()
-    params.lowercaseRole = role ? role.toLowerCase() : ''
+    params.lowercaseRole = role.toLowerCase()
     params.pascalizedProcess = pascalize(params.process)
     params.instancePath = `${home}/${instance}`
     params.processPath = `${home}/${instance}/${processToRun}`

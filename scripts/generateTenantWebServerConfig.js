@@ -1,6 +1,7 @@
 import camelize from './camelize.js'
 import generateWebServerFile from './generateWebServerFile.js'
 import getDeterministicPort from './getDeterministicPort.js'
+import isControlProcess from './isControlProcess.js'
 import {
     getContent,
     isFile,
@@ -19,11 +20,18 @@ const setSiteApiPort = params => {
     params.siteApiPort = getDeterministicPort({ fullProcessName })
 }
 
-const shouldGenerate = (process, role, roles) => {
-    if (!process.endsWith('Panel') && !process.endsWith('Api')) {
+const isApiOrPanel = params => isControlProcess(params)
+    || params.process.endsWith('Panel')
+    || params.process.endsWith('Api')
+
+const shouldGenerate = (params, roles) => {
+    if (!isApiOrPanel(params)) {
         return true
     }
-    return process === 'siteApi' || role === 'admin' || role === 'site' || roles.includes(role)
+    return params.process === 'siteApi'
+        || params.role === 'admin'
+        || params.role === 'site'
+        || roles.includes(params.role)
 }
 
 export default (params, tenant) => {
@@ -34,7 +42,7 @@ export default (params, tenant) => {
         instance,
         process,
     } = params
-    if (!shouldGenerate(process, params.role, roles)) {
+    if (!shouldGenerate(params, roles)) {
         return
     }
     if (params.tenantOnly) {
@@ -56,7 +64,7 @@ export default (params, tenant) => {
         setSiteApiPort(replacements)
         files.push('wwwRedirect', 'compression', 'siteBlobs', 'site')
     }
-    else if (process.endsWith('Panel') || process.endsWith('Api')) {
+    else if (isApiOrPanel(params)) {
         files.push('compression', 'apiAndPanel')
     }
     else if (process === 'storage') {

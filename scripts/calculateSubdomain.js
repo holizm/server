@@ -1,4 +1,5 @@
 import path from 'path'
+import isControlProcess from './isControlProcess.js'
 import { info } from './logger.js'
 import {
     getContent,
@@ -17,6 +18,10 @@ export default params => {
         subdomain = getContent(subdomainFile).trim()
     } else if (process.toLowerCase().includes('site') && !process.includes('Api')) {
         subdomain = process.replace('site', '')
+    } else if (isControlProcess(params) && process === 'api') {
+        subdomain = 'api.control'
+    } else if (isControlProcess(params) && process === 'panel') {
+        subdomain = 'control'
     } else if (process.endsWith('Api')) {
         subdomain = process.replace('Api', '')
         if (subdomain === 'site') subdomain = 'api'

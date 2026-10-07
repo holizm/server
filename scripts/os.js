@@ -1,6 +1,17 @@
 import fs from 'fs'
 import path from 'path'
 
+export {
+    getDepth,
+    isAccounts,
+    isApi,
+    isHeadlessPanel,
+    isPanel,
+    isProcess,
+    isSite,
+    isWorker,
+} from './processTypes.js'
+
 export const isFile = path => {
     return fs.existsSync(path) && fs.statSync(path).isFile()
 }
@@ -71,8 +82,6 @@ export const remove = p => {
     }
 }
 
-export const getDepth = path => (path.match(/\//g) || []).length
-
 export const excludedDirs = [
     '.vscode',
     'backup',
@@ -91,33 +100,3 @@ export const setAsExecutableForTheCurrentUser = path => {
     fs.chmodSync(path, 0o755)
     // todo: this runs `chmod +x` which seems to add execution for user/group/world. limit it to the user only
 }
-
-export const isProcess = params => {
-    const { processPath } = params
-    if (getDepth(processPath) !== 4) return false
-    const folder = path.basename(processPath)
-    const keywords = ['accounts', 'api', 'panel', 'site', 'worker']
-    const folderLower = folder.toLowerCase()
-
-    if (keywords.some(k => folderLower.includes(k))) return true
-
-    const files = fs.readdirSync(processPath)
-    const pascalFiles = new Set(files.filter(f => fs.statSync(path.join(processPath, f)).isFile()))
-    for (const keyword of keywords) {
-        if (pascalFiles.has(pascalize(keyword))) return true
-    }
-    return false
-}
-
-export const isAccounts = params => isProcess(params) && path.basename(params.processPath) === 'accounts'
-export const isApi = params => isProcess(params) && (['process.js'].some(f => fs.existsSync(path.join(params.processPath, f))) || path.basename(params.processPath).endsWith('Api') || path.basename(params.processPath) === 'etl')
-export const isWorker = params => isProcess(params) && path.basename(params.processPath).includes('worker')
-export const isPanel = params => isProcess(params) && path.basename(params.processPath).endsWith('Panel')
-export const isSite = params => {
-    if (!isProcess(params)) return false
-    const folder = path.basename(params.processPath)
-    const hasSite = folder.toLowerCase().includes('site')
-    const hasApi = folder.toLowerCase().includes('api')
-    return hasSite && !hasApi
-}
-export const isHeadlessPanel = params => isPanel(params) && fs.existsSync(path.join(params.processPath, 'headless'))

@@ -1,4 +1,5 @@
 import getRandomPort from './getRandomPort.js'
+import isControlProcess from './isControlProcess.js'
 import { errorAndExit } from './logger.js'
 import {
     isFile,
@@ -40,7 +41,7 @@ const getFileAndParams = params => {
         params.propertyName = `${instance}AccountsAdminerRandomPort`
         getRandomPort(params)
         params.file = 'accounts'
-    } else if (process.endsWith('Panel')) {
+    } else if (process.endsWith('Panel') || (isControlProcess(params) && process === 'panel')) {
         params.file = 'panel'
     } else if (process === 'cache') {
         params.cacheServerPassword = getCacheServerPassword(params)
@@ -50,7 +51,7 @@ const getFileAndParams = params => {
             errorAndExit('database.user and database.password are required in private settings')
         }
         params.file = 'databases'
-    } else if (process.endsWith('Api')) {
+    } else if (process.endsWith('Api') || (isControlProcess(params) && process === 'api')) {
         params.file = 'api'
     } else {
         params.file = process
