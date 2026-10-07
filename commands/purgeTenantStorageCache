@@ -1,0 +1,39 @@
+#!/usr/bin/env node
+
+import fs from 'fs'
+import path from 'path'
+
+const tenant = process.argv[2]
+const instancePath = process.cwd()
+
+if (process.getuid?.() === 0) {
+    throw new Error('Run as the deployment user')
+}
+if (!fs.existsSync(path.join(instancePath, 'tenants'))) {
+    throw new Error('Run from a deployment instance')
+}
+if (!/^[a-z][a-zA-Z0-9]*$/.test(tenant || '')) {
+    throw new Error('Invalid tenant ID')
+}
+
+const storagePath = path.resolve(instancePath, 'storage')
+const tenantPath = path.resolve(storagePath, tenant)
+
+if (path.dirname(tenantPath) !== storagePath) {
+    throw new Error('Invalid tenant cache path')
+}
+if (!fs.existsSync(storagePath)) {
+    process.exit(0)
+}
+const storageDetails = fs.lstatSync(storagePath)
+if (!storageDetails.isDirectory() || storageDetails.isSymbolicLink()) {
+    throw new Error('Invalid storage cache directory')
+}
+if (fs.existsSync(tenantPath) && fs.lstatSync(tenantPath).isSymbolicLink()) {
+    throw new Error('Invalid tenant cache directory')
+}
+
+fs.rmSync(tenantPath, {
+    force: true,
+    recursive: true,
+})

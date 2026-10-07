@@ -14,8 +14,8 @@ The templates in this directory are source templates, not a deployable Caddy con
 | `statics`, `cors` | `statics` retains file serving, CORS preflight, caching, and robots response. Verify file permissions and cache headers on error responses. |
 | `accounts` | `accounts` retains the Keycloak script path and proxy. Nginx-specific proxy buffer tuning is not translated. |
 | `search`, `databases`, `accountsDatabase` | `proxy` provides the common route body; database exposure and authentication require individual review. |
-| `storage` | Not implemented. Per-tenant file roots, extension rewrites, media headers, local-file lookup, and API fallbacks need a runtime tenant-path solution. |
+| `storage` | A draft uses an exact hostname-to-tenant map and Caddy's file server for tenant-scoped cache paths, with API fallback on cache misses. It is not included by the generator yet. Tenant-data synchronization, runtime verification, and media-header parity remain. |
 | `basicAuth` | Not implemented. Caddy requires bcrypt or Argon2id hashes, not the existing htpasswd file format. The current Nginx generator produces `basicAuth` but no active template includes it. |
 | `default`, `defaultHtml` | Not implemented. Define behavior for unknown HTTP hosts separately from TLS authorization. |
 
-The certificate authorization endpoint decides whether Caddy may issue a certificate. It does not resolve a tenant, choose a deployment instance or process, or provide a tenant-specific file root. Those decisions require application-backed routing or generated configuration. A new tenant must not require another Caddyfile if zero-touch onboarding is the goal.
+The certificate authorization endpoint decides whether Caddy may issue a certificate. It does not resolve a tenant, choose a deployment instance or process, or provide a tenant-specific file root. The draft storage map can be refreshed without a per-tenant Caddyfile, but an automatic update from tenant data and a validated reload are still required for zero-touch onboarding.
