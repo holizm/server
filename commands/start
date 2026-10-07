@@ -36,7 +36,6 @@ const startProcess = params => {
         warning('Unknown process')
         return
     }
-    runOnTerminal('pm2 save', true)
 }
 
 const filter = process.argv[2]
@@ -88,6 +87,7 @@ if (level === 'instance') {
                 startProcess(params)
             }
         }
+        runOnTerminal('pm2 save', true)
     }
     else if (isFile(composeFile)) {
 
