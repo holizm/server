@@ -86,6 +86,7 @@ install zip
 $setupProd/apiDependencies
 
 $setupProd/nginx
+$setupProd/caddy
 $setupProd/certbot
 $setupProd/htpasswd
 setNginxDefaultSite
