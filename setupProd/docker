@@ -60,12 +60,15 @@ disableRootfulService containerd.service
 rm -f /var/run/docker.sock
 
 . "$scripts/configureRootlessDocker.sh"
+. "$scripts/forEachDeploymentUser.sh"
 
-while IFS=: read -r user _ userId _ _ homeDir shell; do
-    if [[ "$userId" -ge 1000 ]] && [[ "$homeDir" == /home/* ]] && [[ "$shell" != */nologin ]] && [[ "$shell" != */false ]]; then
-        if getent group docker >/dev/null; then
-            gpasswd -d "$user" docker >/dev/null 2>&1 || true
-        fi
-        configureRootlessDocker "$user"
+configureDockerForUser() {
+    local user="$1"
+
+    if getent group docker >/dev/null; then
+        gpasswd -d "$user" docker >/dev/null 2>&1 || true
     fi
-done < /etc/passwd
+    configureRootlessDocker "$user"
+}
+
+forEachDeploymentUser configureDockerForUser

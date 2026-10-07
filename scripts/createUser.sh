@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 . "$(dirname "${BASH_SOURCE[0]}")/configureRootlessDocker.sh"
+. "$(dirname "${BASH_SOURCE[0]}")/configurePm2.sh"
 
 isValidUserPrefix() {
     local user="$1"
@@ -50,6 +51,7 @@ createUser() {
     chmod 700 "$homeDir/.ssh"
     chmod 600 "$homeDir/.ssh/authorized_keys"
     configureRootlessDocker "$user"
+    configurePm2 "$user" >&2
 
     printf '%s\n' "$user"
 }

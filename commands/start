@@ -24,23 +24,19 @@ const startProcess = params => {
         port,
     } = params
     if (isApi(params)) {
-        runOnTerminal(
-            `pm2 start process.js --name ${fullProcessName} --update-env -- ${port}`
-        )
+        runOnTerminal(`pm2 start process.js --name ${fullProcessName} --update-env -- ${port}`, true)
     }
     else if (isPanel(params)) {
-        runOnTerminal(
-            `pm2 start serve --name ${fullProcessName} -- -s . -l ${port}`
-        )
+        runOnTerminal(`pm2 start serve --name ${fullProcessName} -- -s . -l ${port}`, true)
     }
     else if (isSite(params)) {
-        runOnTerminal(
-            `PORT=${port} pm2 start server/entry.express.js --name ${fullProcessName}`
-        )
+        runOnTerminal(`PORT=${port} pm2 start server/entry.express.js --name ${fullProcessName}`, true)
     }
     else {
         warning('Unknown process')
+        return
     }
+    runOnTerminal('pm2 save', true)
 }
 
 const filter = process.argv[2]
