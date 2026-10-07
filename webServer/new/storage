@@ -1,5 +1,5 @@
 map {host} {storageTenant} {
-    import ${home}/${instance}/webServer/storageTenantHosts
+    import ${home}/${instance}/tenantsHostIdMapping
     default ""
 }
 
