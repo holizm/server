@@ -1,3 +1,5 @@
+import findIamThemeMounts from './findIamThemeMounts.js'
+import formatIamThemeMounts from './formatIamThemeMounts.js'
 import getRandomPort from './getRandomPort.js'
 import isControlProcess from './isControlProcess.js'
 import { errorAndExit } from './logger.js'
@@ -36,6 +38,7 @@ const getFileAndParams = params => {
         params.file = 'site'
     } else if (process === 'accounts') {
         ensureAccountsCredentials(params)
+        params.iamThemeVolumes = formatIamThemeMounts(findIamThemeMounts(params.environmentRoot))
         params.propertyName = `${instance}AccountsDatabaseRandomPort`
         getRandomPort(params)
         params.propertyName = `${instance}AccountsAdminerRandomPort`

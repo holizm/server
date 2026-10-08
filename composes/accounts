@@ -28,7 +28,7 @@ services:
                 condition: service_healthy
         volumes:
             - ${environmentRoot}/accounts/dev.json:/opt/keycloak/data/import/dev.json
-            - ${environmentRoot}/accounts/themes:/opt/keycloak/themes
+${iamThemeVolumes}
 
     database:
         image: postgres:latest
