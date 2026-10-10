@@ -15,8 +15,11 @@ const setSiteApiPort = params => {
         instance,
     } = params
     const process = 'siteApi'
-    const githubImageName = getContent(`${home}/${instance}/${process}/githubImageName`).trim()
-    const fullProcessName = camelize(`${instance} ${githubImageName || process}`)
+    const apiInstance = instance.endsWith('Themes')
+        ? instance.slice(0, -'Themes'.length)
+        : instance
+    const githubImageName = getContent(`${home}/${apiInstance}/${process}/githubImageName`).trim()
+    const fullProcessName = camelize(`${apiInstance} ${githubImageName || process}`)
     params.siteApiPort = getDeterministicPort({ fullProcessName })
 }
 
