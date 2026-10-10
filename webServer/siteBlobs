@@ -11,13 +11,13 @@ location = /sitemap.xml {
 }
 
 location @robotsApi {
-    rewrite ^ /tenants/blob/getFile?key=robots break;
+    rewrite ^ /tenants/blob/getFile?key=robots&siteInstance=${instance} break;
     proxy_pass http://localhost:${siteApiPort};
     include ${home}/${instance}/${process}/webServer/${tenant}/proxy;
 }
 
 location @sitemapApi {
-    rewrite ^ /tenants/blob/getFile?key=sitemap break;
+    rewrite ^ /tenants/blob/getFile?key=sitemap&siteInstance=${instance} break;
     proxy_pass http://localhost:${siteApiPort};
     include ${home}/${instance}/${process}/webServer/${tenant}/proxy;
 }
