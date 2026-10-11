@@ -63,12 +63,12 @@ if (level === 'instance') {
     if (isFile(packageFile) || isFile(`./index.html`)) {
         params.port = getComposePort(params)
         const pid = runOnTerminal(
-            `pm2 pid ${params.fullProcessName}`,
+            `PM2_SILENT=true pm2 pid ${params.fullProcessName}`,
             true
         ).trim()
 
         const listeningPort = getListeningPort(pid)
-        const list = runOnTerminal('pm2 list', true)
+        const list = runOnTerminal('PM2_SILENT=true pm2 list', true)
         const isRunning = list.includes(params.fullProcessName)
         if (!isRunning) {
             startProcess(params)

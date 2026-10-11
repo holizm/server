@@ -5,6 +5,7 @@ import getListeningPort from './getListeningPort.js'
 const run = (command, args, cwd) => execFileSync(command, args, {
     cwd,
     encoding: 'utf8',
+    env: { ...process.env, PM2_SILENT: 'true' },
     stdio: ['ignore', 'pipe', 'pipe'],
 }).trim()
 
