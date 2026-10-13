@@ -5,5 +5,5 @@ containerFormat='table {{.ID}}\t{{.Image}}\t{{.RunningFor}}\t{{.Status}}\t{{.Por
 if [ $# -eq 0 ]; then
     docker container ls -a --format "$containerFormat"
 else
-    docker container ls -a --format "$containerFormat" | grep "$1"
+    docker container ls -a --format "$containerFormat" | rg "$1"
 fi

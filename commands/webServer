@@ -5,4 +5,4 @@ if [[ "$1" == "" ]]; then
     exit
 fi
 
-nginx -T | grep -A20 -B5 "$1"
+nginx -T | rg -A20 -B5 "$1"

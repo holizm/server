@@ -60,7 +60,7 @@ configureRootlessDocker() {
         runForUser "$user" "$homeDir" "$userId" docker context create rootless --docker "host=unix:///run/user/$userId/docker.sock" >/dev/null 2>&1
     fi
     runForUser "$user" "$homeDir" "$userId" docker context use rootless >/dev/null 2>&1
-    if ! runForUser "$user" "$homeDir" "$userId" docker info --format '{{json .SecurityOptions}}' | grep -q rootless; then
+    if ! runForUser "$user" "$homeDir" "$userId" docker info --format '{{json .SecurityOptions}}' | rg -q rootless; then
         printf 'Rootless Docker verification failed for %s.\n' "$user" >&2
         return 1
     fi

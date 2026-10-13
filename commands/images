@@ -5,5 +5,5 @@ format="table {{.Repository}}\t{{.Tag}}\t{{.ID}}\t{{.CreatedSince}}\t{{.Size}}"
 if [ $# -eq 0 ]; then
     docker images --format "$format"
 else
-    docker images --format "$format" | grep "$1"
+    docker images --format "$format" | rg "$1"
 fi

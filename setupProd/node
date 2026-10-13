@@ -26,7 +26,7 @@ installNode() {
     apt-get install -y nodejs
     useNodeSourceExecutables
 
-    if ! grep -qxF 'export NODE_OPTIONS="--trace-deprecation"' ~/.bashrc; then
+    if ! rg -qxF 'export NODE_OPTIONS="--trace-deprecation"' ~/.bashrc; then
         echo 'export NODE_OPTIONS="--trace-deprecation"' >> ~/.bashrc
     fi
     export NODE_OPTIONS="--trace-deprecation"

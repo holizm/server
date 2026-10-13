@@ -32,13 +32,13 @@ registerHolismCommands() {
     local bashLine='export PATH="/holism/server/commands:$PATH"'
     local environmentLine="PATH=\"/holism/server/commands:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:$nodeBinDirectory\""
 
-    if grep -Fq '/holism/server/commands' /etc/environment; then
+    if rg -Fq '/holism/server/commands' /etc/environment; then
         sed -i "\|/holism/server/commands|c\\$environmentLine" /etc/environment
     else
         chmod 644 /etc/environment
         printf '%s\n' "$environmentLine" | tee -a /etc/environment > /dev/null
     fi
-    if grep -Fq '/holism/server/commands' /etc/bash.bashrc; then
+    if rg -Fq '/holism/server/commands' /etc/bash.bashrc; then
         sed -i "\|/holism/server/commands|c\\$bashLine" /etc/bash.bashrc
     else
         chmod 644 /etc/bash.bashrc
@@ -48,7 +48,7 @@ registerHolismCommands() {
 }
 
 setTimeZone() {
-    if timedatectl | grep -q "Time zone: UTC"; then
+    if timedatectl | rg -q "Time zone: UTC"; then
         check 'Time Zone'
         return
     fi
@@ -61,11 +61,13 @@ addSbinToUserPath() {
     local file="/etc/bash.bashrc"
     local line='export PATH=$PATH:/usr/sbin'
 
-    if ! grep -Fxq "$line" "$file"; then
+    if ! rg -Fxq "$line" "$file"; then
         echo "$line" | tee -a "$file" > /dev/null
         check "/usr/sbin added to PATH in $file"
     fi
 }
+
+install rg ripgrep
 
 if [[ -f /etc/apt/sources.list.d/nginx.list ]]; then
     "$setupProd/nginxRepositoryKey"

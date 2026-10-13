@@ -72,7 +72,7 @@ export default (params, tenant) => {
     }
     else if (process === 'storage') {
         const result = runOnTerminal(
-            `cat ~/${instance}/siteApi/compose.yaml | grep :5000 | cut -d ':' -f2 | cut -d '-' -f2`
+            `cat ~/${instance}/siteApi/compose.yaml | rg :5000 | cut -d ':' -f2 | cut -d '-' -f2`
         ).trim()
         replacements.deterministicPort = result
         files.push('storage')

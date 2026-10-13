@@ -25,7 +25,7 @@ fi
 homeDir=$(getent passwd "$user" | cut -d: -f6)
 authorizedKeys="$homeDir/.ssh/authorized_keys"
 
-if ! grep -qxF -- "$publicKey" "$authorizedKeys"; then
+if ! rg -qxF -- "$publicKey" "$authorizedKeys"; then
     printf '%s\n' "$publicKey" >> "$authorizedKeys"
 fi
 
