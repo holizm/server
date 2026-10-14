@@ -1,6 +1,6 @@
 services:
     database:
-        image: mongo:latest
+        image: ${databaseImage}
         container_name: ${instance}Databases
         hostname: ${instance}Databases
         volumes:

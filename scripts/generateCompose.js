@@ -1,5 +1,6 @@
 import findIamThemeMounts from './findIamThemeMounts.js'
 import formatIamThemeMounts from './formatIamThemeMounts.js'
+import getDatabaseImage from './getDatabaseImage.js'
 import getRandomPort from './getRandomPort.js'
 import isControlProcess from './isControlProcess.js'
 import { errorAndExit } from './logger.js'
@@ -54,6 +55,7 @@ const getFileAndParams = params => {
             errorAndExit('database.user and database.password are required in private settings')
         }
         params.file = 'databases'
+        params.databaseImage = getDatabaseImage(params.processPath)
     } else if (process.endsWith('Api') || (isControlProcess(params) && process === 'api')) {
         params.file = 'api'
     } else {

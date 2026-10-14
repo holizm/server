@@ -1,0 +1,15 @@
+#!/usr/bin/env node
+
+import execute from '../scripts/databaseUpgrade/execute.js'
+import parseArguments from '../scripts/databaseUpgrade/parseArguments.js'
+
+try {
+    const options = parseArguments(process.argv.slice(2))
+    const report = await execute(options)
+    console.log(JSON.stringify(report, null, 4))
+    if (report.targets.some(target => target.status === 'blocked')) process.exitCode = 1
+}
+catch (e) {
+    console.error(e.message)
+    process.exitCode = 1
+}
