@@ -1,0 +1,87 @@
+.illustration {
+    align-items: center;
+    aspect-ratio: 1;
+    display: flex;
+    flex: 0 0 clamp(240px, 28vw, 380px);
+    justify-content: center;
+    position: relative;
+
+    .orbit {
+        border: 1px solid var(--borderColor);
+        border-radius: 50%;
+        inset: 0;
+        position: absolute;
+
+        &.inner {
+            inset: 12%;
+        }
+    }
+
+    .window {
+        background: var(--windowSurface);
+        border: 1px solid var(--borderColor);
+        border-radius: 14px;
+        box-shadow: 0 18px 50px var(--windowShadow);
+        height: 64%;
+        transform: rotate(-8deg);
+        width: 72%;
+    }
+
+    .bar {
+        border-bottom: 1px solid var(--borderColor);
+        display: flex;
+        gap: 5px;
+        padding: 14px;
+
+        i {
+            background: var(--detailColor);
+            border-radius: 50%;
+            height: 5px;
+            width: 5px;
+        }
+    }
+
+    .symbol {
+        background: var(--symbolSurface);
+        border-radius: 16px;
+        color: var(--accentText);
+        font-size: 36px;
+        font-weight: 200;
+        line-height: 48px;
+        margin: 16px auto 12px;
+        text-align: center;
+        width: 48px;
+    }
+
+    .line {
+        background: var(--borderColor);
+        border-radius: 4px;
+        height: 5px;
+        margin: 9px auto;
+        width: 40%;
+
+        &.short {
+            opacity: 0.6;
+            width: 26%;
+        }
+    }
+
+    .spark {
+        color: var(--accentText);
+        font-size: 58px;
+        inset-block-start: 5%;
+        inset-inline-end: 2%;
+        position: absolute;
+    }
+
+    .point {
+        background: var(--detailColor);
+        border: 7px solid var(--pageSurface);
+        border-radius: 50%;
+        height: 25px;
+        inset-block-end: 12%;
+        inset-inline-start: 5%;
+        position: absolute;
+        width: 25px;
+    }
+}

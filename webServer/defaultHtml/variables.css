@@ -1,0 +1,12 @@
+:root {
+    --pageSurface: #f7f7f0;
+    --headingText: #243b32;
+    --bodyText: #626d64;
+    --accentText: #3d775b;
+    --accentSurface: #e5eddf;
+    --borderColor: #dce1d5;
+    --windowSurface: #fffef9;
+    --windowShadow: #273d3012;
+    --symbolSurface: #eef2e7;
+    --detailColor: #bbcbb2;
+}

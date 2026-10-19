@@ -1,0 +1,49 @@
+.note {
+    .number {
+        color: var(--accentText);
+        flex-shrink: 0;
+        font-size: 12px;
+        padding-block-start: 4px;
+    }
+
+    p {
+        color: var(--bodyText);
+        font-size: 12px;
+        line-height: 1.9;
+        margin: 0;
+    }
+}
+
+footer {
+    border-top: 1px solid var(--borderColor);
+    color: var(--bodyText);
+    font-size: 12px;
+    padding-block-start: 22px;
+}
+
+@media (max-width: 760px) {
+    .page {
+        padding-block-start: 24px;
+    }
+
+    main {
+        flex-direction: column;
+        gap: 40px;
+        padding-block: 48px;
+    }
+
+    .illustration {
+        flex: none;
+        width: 240px;
+    }
+
+    .content {
+        width: 100%;
+    }
+
+    footer {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 12px;
+    }
+}
