@@ -49,6 +49,13 @@ params.home = process.env.HOME
 params.user = process.env.USER
 validateDepth(params)
 
+if (process.argv[2] === '--backupOnly') {
+    if (process.argv.length !== 3) errorAndExit('Usage: generate --backupOnly')
+    params.directoryPath = baseDir
+    generateBackupAndRestore(extract(params))
+    process.exit(0)
+}
+
 const tenantNames = parseGenerateArguments(process.argv.slice(2))
 const directories = findDirectories()
 const tenants = readGeneratorTenants(tenantNames)
