@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-pm2 update
+timeout --foreground --kill-after=30s 15m pm2 update
 pm2 save
