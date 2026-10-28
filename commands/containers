@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+clear
 containerFormat='table {{.ID}}\t{{.Image}}\t{{.RunningFor}}\t{{.Status}}\t{{.Ports}}\t{{.Names}}'
 
 if [ $# -eq 0 ]; then

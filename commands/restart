@@ -11,7 +11,12 @@ import {
     getDirs,
     isFile,
 } from '../scripts/os.js'
-import { runOnTerminal } from '../scripts/terminal.js'
+import {
+    clear,
+    runOnTerminal,
+} from '../scripts/terminal.js'
+
+clear()
 
 const restartProcess = params => {
     const {

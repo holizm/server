@@ -10,6 +10,9 @@ import {
 } from '../scripts/logger.js'
 import dnsProviders from '../scripts/dnsProviders.js'
 import { writeFileSync } from 'fs'
+import { clear } from '../scripts/terminal.js'
+
+clear()
 
 const currentNameservers = getContent('/etc/resolv.conf')
     .split('\n')

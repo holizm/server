@@ -8,6 +8,9 @@ import startRenamedDeployment from '../scripts/deploymentRename/startRenamedDepl
 import stopDeploymentWorkers from '../scripts/deploymentRename/stopDeploymentWorkers.js'
 import stopDeploymentForRename from '../scripts/deploymentRename/stopDeploymentForRename.js'
 import { loadRenamePlan } from '../scripts/deploymentRename/renamePlan.js'
+import { clear } from '../scripts/terminal.js'
+
+clear()
 
 const [oldName, newName, stage] = process.argv.slice(2)
 if (!/^[a-z][A-Za-z0-9]*$/.test(oldName || '') || !/^[a-z][A-Za-z0-9]*$/.test(newName || '') || oldName === newName) {

@@ -1,3 +1,4 @@
 #!/usr/bin/env bash
 
+clear
 du -ahx . | sort -rh | head -n 30

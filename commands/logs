@@ -3,7 +3,12 @@
 import camelize from '../scripts/camelize.js'
 import extract from '../scripts/extract.js'
 import { isFile } from '../scripts/os.js'
-import { runStreaming } from '../scripts/terminal.js'
+import {
+    clear,
+    runStreaming,
+} from '../scripts/terminal.js'
+
+clear()
 
 const count = process.argv[2]
 const params = extract({ directoryPath: process.cwd() })

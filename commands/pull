@@ -7,7 +7,12 @@ import {
     isFile,
 } from '../scripts/os.js'
 import extract from '../scripts/extract.js'
-import { runOnTerminal } from '../scripts/terminal.js'
+import {
+    clear,
+    runOnTerminal,
+} from '../scripts/terminal.js'
+
+clear()
 
 const pull = async params => {
     const {

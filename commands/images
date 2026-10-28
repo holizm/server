@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+clear
 format="table {{.Repository}}\t{{.Tag}}\t{{.ID}}\t{{.CreatedSince}}\t{{.Size}}"
 
 if [ $# -eq 0 ]; then

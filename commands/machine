@@ -1,4 +1,7 @@
 #!/usr/bin/env node
+import { clear } from '../scripts/terminal.js'
+
+clear()
 
 import { writeFileSync, readFileSync } from "fs"
 import { hostname } from "os"

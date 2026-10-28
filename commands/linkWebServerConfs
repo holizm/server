@@ -1,8 +1,13 @@
 #!/usr/bin/env node
 
 import path from 'path'
-import { runOnTerminal } from '../scripts/terminal.js'
+import {
+    clear,
+    runOnTerminal,
+} from '../scripts/terminal.js'
 import { createDirIfNotExists } from '../scripts/os.js'
+
+clear()
 
 const home = process.env.HOME
 const cwd = process.cwd()

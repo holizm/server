@@ -1,4 +1,7 @@
 #!/usr/bin/env node
+import { clear } from '../scripts/terminal.js'
+
+clear()
 
 const fs = require('fs')
 const { spawnSync } = require('child_process')

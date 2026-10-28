@@ -7,7 +7,10 @@ import {
     isSite,
 } from '../scripts/os.js'
 import extract from '../scripts/extract.js'
-import { runOnTerminal } from '../scripts/terminal.js'
+import {
+    clear,
+    runOnTerminal,
+} from '../scripts/terminal.js'
 import {
     errorAndExit,
     info,
@@ -16,6 +19,8 @@ import {
 import getComposePort from '../scripts/getComposePort.js'
 import getListeningPort from '../scripts/getListeningPort.js'
 import startInstance from '../scripts/startInstance.js'
+
+clear()
 
 const startProcess = params => {
     const {

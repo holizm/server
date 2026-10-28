@@ -2,6 +2,9 @@
 
 import execute from '../scripts/databaseUpgrade/execute.js'
 import parseArguments from '../scripts/databaseUpgrade/parseArguments.js'
+import { clear } from '../scripts/terminal.js'
+
+clear()
 
 try {
     const options = parseArguments(process.argv.slice(2))

@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+clear
 . "/holism/server/scripts/logger.sh"
 . "/holism/server/scripts/certificateStatus.sh"
 

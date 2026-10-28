@@ -9,6 +9,9 @@ import {
     unlinkSync,
 } from 'fs'
 import path from 'path'
+import { clear } from '../scripts/terminal.js'
+
+clear()
 
 const [home, oldName, newName] = process.argv.slice(2)
 if (process.getuid() !== 0 || !home?.startsWith('/home/') || !/^[a-z][A-Za-z0-9]*$/.test(oldName || '') || !/^[a-z][A-Za-z0-9]*$/.test(newName || '')) throw new Error('Administrator and canonical deployment paths are required')

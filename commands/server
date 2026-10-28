@@ -4,6 +4,9 @@ import cpu from '../scripts/serverInfo/cpu.js'
 import ram from '../scripts/serverInfo/ram.js'
 import storage from '../scripts/serverInfo/storage.js'
 import system from '../scripts/serverInfo/system.js'
+import { clear } from '../scripts/terminal.js'
+
+clear()
 
 system()
 cpu()

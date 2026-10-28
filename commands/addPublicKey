@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+
+clear
 set -euo pipefail
 
 . /holism/server/scripts/createUser.sh

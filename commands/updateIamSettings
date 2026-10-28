@@ -2,6 +2,9 @@
 
 import fs from 'fs'
 import path from 'path'
+import { clear } from '../scripts/terminal.js'
+
+clear()
 
 const [instance, source] = process.argv.slice(2)
 if (!/^[a-z][a-zA-Z0-9]*$/.test(instance || '') || !source) throw new Error('Usage: updateIamSettings instance source')

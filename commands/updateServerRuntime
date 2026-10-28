@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+
+clear
 set -euo pipefail
 
 timeout --foreground --kill-after=30s 15m pm2 update
