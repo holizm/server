@@ -1,8 +1,8 @@
 import assert from 'assert/strict'
 import test from 'node:test'
-import calculateSubdomain from './calculateSubdomain.js'
-import camelize from './camelize.js'
-import isControlProcess from './isControlProcess.js'
+import calculateSubdomain from '../../scripts/calculateSubdomain.js'
+import camelize from '../../scripts/camelize.js'
+import isControlProcess from '../../scripts/isControlProcess.js'
 
 test('control process directories are identified from the deployment instance', () => {
     assert.equal(isControlProcess({

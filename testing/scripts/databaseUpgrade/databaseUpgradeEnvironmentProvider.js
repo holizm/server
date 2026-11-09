@@ -6,8 +6,8 @@ import {
 } from 'fs'
 import { tmpdir } from 'os'
 import { join } from 'path'
-import run from './run.js'
-import waitReady from './waitReady.js'
+import run from '../../../scripts/databaseUpgrade/run.js'
+import waitReady from '../../../scripts/databaseUpgrade/waitReady.js'
 
 const credential = () => {
     const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'

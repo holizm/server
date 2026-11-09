@@ -5,12 +5,12 @@ import {
 } from 'fs'
 import { join } from 'path'
 import test from 'node:test'
-import databaseCommand from './databaseCommand.js'
-import execute from './execute.js'
-import integrationFixture from './integrationFixture.js'
-import parseArguments from './parseArguments.js'
-import run from './run.js'
-import verifyBackupRestore from './verifyBackupRestore.js'
+import databaseCommand from '../../../scripts/databaseUpgrade/databaseCommand.js'
+import execute from '../../../scripts/databaseUpgrade/execute.js'
+import integrationFixture from '../../../testing/scripts/databaseUpgrade/databaseUpgradeEnvironmentProvider.js'
+import parseArguments from '../../../scripts/databaseUpgrade/parseArguments.js'
+import run from '../../../scripts/databaseUpgrade/run.js'
+import verifyBackupRestore from '../../../scripts/databaseUpgrade/verifyBackupRestore.js'
 
 test('cold backup, full upgrade, observation, activation and rerun preserve data', {
     skip: process.env.runDatabaseUpgradeIntegration !== 'true',
