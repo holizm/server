@@ -74,8 +74,7 @@ if (level === 'instance') {
         ).trim().split('\n').at(-1)
 
         const listeningPort = getListeningPort(pid)
-        const list = runOnTerminal('pm2 list', true)
-        const isRunning = list.includes(params.fullProcessName)
+        const isRunning = /^[1-9]\d*$/.test(pid)
         if (!isRunning) {
             startProcess(params)
         }

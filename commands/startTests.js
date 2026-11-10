@@ -30,6 +30,7 @@ mock.module('../scripts/terminal.js', { exports: {
             if (throwOnError || !hideError) throw Error('Unregistered PM2 process')
             return ''
         }
+        if (command === 'pm2 list') return 'sampleSiteApi'
         return ''
     },
 } })
