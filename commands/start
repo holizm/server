@@ -69,7 +69,8 @@ if (level === 'instance') {
         params.port = getComposePort(params)
         const pid = runOnTerminal(
             `pm2 pid ${params.fullProcessName}`,
-            true
+            false,
+            true,
         ).trim().split('\n').at(-1)
 
         const listeningPort = getListeningPort(pid)
