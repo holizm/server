@@ -1,6 +1,10 @@
 import { errorAndExit } from './logger.js'
 import generateTenantWebServerConfig from './generateTenantWebServerConfig.js'
-import { remove } from './os.js'
+import getProcessRuntimeSettings from './getProcessRuntimeSettings.js'
+import {
+    getContent,
+    remove,
+} from './os.js'
 
 export default params => {
     const {
@@ -16,6 +20,10 @@ export default params => {
     if (!tenantOnly) {
         remove(webServerPath)
     }
+    if (getProcessRuntimeSettings({
+        processPath,
+        readContent: getContent,
+    }).internal) return
     for (const tenant of tenants) {
         if (tenant.length !== 4 && tenant.length !== 5) {
             errorAndExit(`Incomplete tenant line: ${tenant.join(' ')}`)

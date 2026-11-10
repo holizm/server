@@ -2,10 +2,13 @@ import findIamThemeMounts from './findIamThemeMounts.js'
 import formatIamThemeMounts from './formatIamThemeMounts.js'
 import getDatabaseImage from './getDatabaseImage.js'
 import getRandomPort from './getRandomPort.js'
+import getProcessComposeSettings from './getProcessComposeSettings.js'
+import getProcessRuntimeSettings from './getProcessRuntimeSettings.js'
 import isControlProcess from './isControlProcess.js'
 import { errorAndExit } from './logger.js'
 import {
     isFile,
+    getContent,
     replaceVariables,
 } from './os.js'
 
@@ -81,5 +84,16 @@ export default params => {
     }
     const sourceFile = `${isDev ? home : '/holism'}/server/composes/${file}`
     const targetFile = `${processPath}/compose.yaml`
-    replaceVariables(sourceFile, targetFile, params)
+    const settings = file === 'api' ? getProcessComposeSettings({
+        isBuild: false,
+        port: params.deterministicPort,
+        runtime: getProcessRuntimeSettings({
+            processPath,
+            readContent: getContent,
+        }),
+    }) : {}
+    replaceVariables(sourceFile, targetFile, {
+        ...params,
+        ...settings,
+    })
 }
