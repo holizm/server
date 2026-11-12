@@ -118,6 +118,8 @@ Perform this step as `root` after cloning the shared repositories.
 
 ---
 
+> **Stop here. Step 6 and all subsequent steps must not be performed yet.**
+
 ## 6. Docker Login
 
 ```bash
