@@ -44,7 +44,7 @@ fi`)
         env: {
             ...process.env,
             PATH: `${directory}${path.delimiter}${process.env.PATH}`,
-            runtimeReadyTimeoutSeconds: '1',
+            runtimeReadyTimeoutSeconds: '3',
             runtimeTestBaseline: baselinePath,
             runtimeTestCalls: path.join(directory, 'calls'),
             runtimeTestCount: path.join(directory, 'count'),

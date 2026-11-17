@@ -8,11 +8,14 @@ import {
 } from './os.js'
 
 const getSavedRuntimeProcessExpectations = states => {
-    const processes = states.map(state => ({
-        name: state.name,
-        pid: state.pid,
-        pm2_env: state,
-    }))
+    const processes = states.map(state => {
+        const process = {
+            name: state.name,
+            pid: state.pid,
+            pm2_env: state,
+        }
+        return process
+    })
     const expected = getRuntimeProcessExpectations(processes, (pid, process) => {
         const composeFile = path.join(process.pm2_env.pm_cwd, 'compose.yaml')
         return isFile(composeFile) ? getComposePort({ composeFile }) : ''
