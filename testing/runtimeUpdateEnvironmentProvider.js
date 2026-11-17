@@ -6,6 +6,7 @@ export default () => {
     const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'runtimeUpdateTest'))
     const userHome = path.join(directory, 'home')
     fs.mkdirSync(path.join(userHome, '.pm2'), { recursive: true })
+    fs.writeFileSync(path.join(userHome, '.pm2/pm2.pid'), '123')
     const writeCommand = (name, content) => fs.writeFileSync(path.join(directory, name), `#!/bin/bash\n${content}\n`, { mode: 0o755 })
     writeCommand('id', 'if [[ $1 == -u ]]; then echo 0; else echo dev; fi')
     writeCommand('getent', 'printf "ownerabcdefghijklmno:x:1:1::%s:/bin/bash\\n" "$runtimeTestHome"')
@@ -14,7 +15,8 @@ export default () => {
     writeCommand('timeout', 'while [[ $1 == --* ]]; do shift; done\nshift\nexec "$@"')
     writeCommand('sleep', ':')
     writeCommand('ss', 'echo "LISTEN 0 128 127.0.0.1:4000 0.0.0.0:* users:((node,pid=123,fd=1))"')
-    writeCommand('pm2', `printf 'pm2 %s\\n' "$*" >> "$runtimeTestCalls"
+    writeCommand('pm2', `[[ $PWD == "$runtimeTestHome" ]] || exit 126
+printf 'pm2 %s\\n' "$*" >> "$runtimeTestCalls"
 case $1 in
     jlist) if [[ \${runtimeTestScenario:-} == empty || \${runtimeTestScenario:-} == partialRecovery && $(cat "$runtimeTestCount" 2>/dev/null) == 1 ]]; then echo '[]'; else cat "$runtimeTestBaseline"; fi ;;
     save) cp "$runtimeTestBaseline" "$HOME/.pm2/dump.pm2" ;;

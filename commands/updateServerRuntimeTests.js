@@ -30,6 +30,12 @@ for (const scenario of ['success', 'startFailure', 'partialRecovery', 'permanent
                 const retry = spawnSync('bash', [command, 'ownerabcdefghijklmno'], { env: environment.env })
                 assert.equal(retry.status, 1)
                 assert.equal(fs.readFileSync(environment.snapshot, 'utf8'), snapshot)
+                const recovery = spawnSync('bash', [command, 'ownerabcdefghijklmno', '--recover'], {
+                    encoding: 'utf8',
+                    env: environment.env,
+                })
+                assert.equal(recovery.status, 0, recovery.stderr)
+                assert.equal(fs.existsSync(environment.snapshot), false)
             }
         } finally {
             fs.rmSync(environment.directory, {
