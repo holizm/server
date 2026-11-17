@@ -24,7 +24,7 @@ snapshot="$userHome/.pm2/runtimeRecovery.json"
 }
 directory=$(mktemp -d /tmp/runtimeUpdateXXXXXX)
 trap 'rm -rf -- "$directory"' EXIT
-runAsUser pm2 jlist > "$directory/before.json"
+runAsUser timeout --foreground --kill-after=5s 30s pm2 jlist > "$directory/before.json"
 node "$scriptDirectory/getRuntimeProcessExpectations.js" "$directory/before.json" > "$directory/expected.json"
 node "$scriptDirectory/verifyRuntimeProcesses.js" "$directory/expected.json" "$directory/before.json" || {
     printf 'ALERT: Existing PM2 applications are not ready for maintenance: %s\n' "$userName" >&2
@@ -34,7 +34,7 @@ if [[ $(node -p 'JSON.parse(require("fs").readFileSync(process.argv[1])).length'
     printf 'No online PM2 applications for %s; saved state preserved\n' "$userName"
     exit 0
 fi
-runAsUser pm2 save
+runAsUser timeout --foreground --kill-after=5s 30s pm2 save
 install -m 0600 -o "$userName" -g "$(id -gn "$userName")" "$userHome/.pm2/dump.pm2" "$snapshot"
 restartRuntime() {
     timeout --foreground --kill-after=10s 120s systemctl stop "$serviceName" || return
@@ -45,7 +45,7 @@ verifyRuntime() {
     local deadline=$((SECONDS + readyTimeout))
     local healthyChecks=0
     while ((SECONDS < deadline)); do
-        if runAsUser pm2 jlist > "$directory/after.json" &&
+        if runAsUser timeout --foreground --kill-after=5s 15s pm2 jlist > "$directory/after.json" &&
             node "$scriptDirectory/verifyRuntimeProcesses.js" "$directory/expected.json" "$directory/after.json" &&
             systemctl is-active --quiet "$serviceName"; then
             healthyChecks=$((healthyChecks + 1))
@@ -69,7 +69,7 @@ recoverRuntime() {
 }
 trap 'trap - HUP INT TERM; recoverRuntime; exit 1' HUP INT TERM
 if restartRuntime && verifyRuntime; then
-    runAsUser pm2 save
+    runAsUser timeout --foreground --kill-after=5s 30s pm2 save
     rm -- "$snapshot"
     printf 'PM2 applications verified for %s\n' "$userName"
     exit 0
