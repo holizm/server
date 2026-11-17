@@ -6,7 +6,7 @@ const getRuntimeProcessExpectations = (processes, getPort = getListeningPort) =>
     const expected = processes.filter(process => process.pm2_env?.status === 'online').map(process => {
         const item = {
             name: process.name,
-            port: getPort(String(process.pid)),
+            port: getPort(String(process.pid), process),
             requiresPort: /(?:api|panel|site)$/i.test(process.name),
         }
         return item
