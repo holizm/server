@@ -1,32 +1,41 @@
 import assert from 'assert/strict'
 import { spawnSync } from 'child_process'
 import fs from 'fs'
-import os from 'os'
-import path from 'path'
 import test from 'node:test'
+import createEnvironment from '../testing/runtimeUpdateEnvironmentProvider.js'
 
-test('runtime updates have a foreground timeout and do not save after a timeout', () => {
-    const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'runtimeTimeout'))
-    const capture = path.join(directory, 'calls')
-    try {
-        fs.writeFileSync(path.join(directory, 'timeout'), '#!/bin/sh\nprintf "%s\\n" "$@" >> "$capture"\n[ "$failTimeout" != true ] || exit 124\n', { mode: 0o755 })
-        fs.writeFileSync(path.join(directory, 'pm2'), '#!/bin/sh\nprintf "%s\\n" "$@" >> "$capture"\n', { mode: 0o755 })
-        const env = {
-            ...process.env,
-            PATH: directory + path.delimiter + process.env.PATH,
-            capture,
+for (const scenario of ['success', 'startFailure', 'partialRecovery', 'permanentFailure', 'interrupted', 'empty']) {
+    test(`runtime update preserves applications during ${scenario}`, () => {
+        const environment = createEnvironment()
+        try {
+            const command = new URL('./updateServerRuntime', import.meta.url).pathname
+            const result = spawnSync('bash', [command, 'ownerabcdefghijklmno'], {
+                encoding: 'utf8',
+                env: {
+                    ...environment.env,
+                    runtimeTestScenario: scenario,
+                },
+                timeout: 10000,
+            })
+            assert.equal(result.status, ['success', 'empty'].includes(scenario) ? 0 : 1, result.stderr)
+            const calls = fs.readFileSync(environment.env.runtimeTestCalls, 'utf8')
+            assert.doesNotMatch(calls, /pm2 update|docker/)
+            assert.equal((calls.match(/pm2 save/g) || []).length, scenario === 'empty' ? 0 : scenario === 'success' ? 2 : 1)
+            assert.equal(fs.existsSync(environment.snapshot), scenario === 'permanentFailure')
+            if (['startFailure', 'partialRecovery', 'interrupted'].includes(scenario)) assert.match(result.stderr, /Recovery verified/)
+            if (scenario === 'permanentFailure') {
+                assert.match(result.stderr, /ALERT/)
+                const snapshot = fs.readFileSync(environment.snapshot, 'utf8')
+                assert.equal(snapshot, fs.readFileSync(environment.env.runtimeTestBaseline, 'utf8'))
+                const retry = spawnSync('bash', [command, 'ownerabcdefghijklmno'], { env: environment.env })
+                assert.equal(retry.status, 1)
+                assert.equal(fs.readFileSync(environment.snapshot, 'utf8'), snapshot)
+            }
+        } finally {
+            fs.rmSync(environment.directory, {
+                force: true,
+                recursive: true,
+            })
         }
-        const script = new URL('./updateServerRuntime', import.meta.url)
-        assert.equal(spawnSync('bash', [script.pathname], { env }).status, 0)
-        assert.deepEqual(fs.readFileSync(capture, 'utf8').trim().split('\n'), ['--foreground', '--kill-after=30s', '15m', 'pm2', 'update', 'save'])
-        fs.writeFileSync(capture, '')
-        env.failTimeout = 'true'
-        assert.equal(spawnSync('bash', [script.pathname], { env }).status, 124)
-        assert.equal(fs.readFileSync(capture, 'utf8').split('\n').includes('save'), false)
-    } finally {
-        fs.rmSync(directory, {
-            force: true,
-            recursive: true,
-        })
-    }
-})
+    })
+}

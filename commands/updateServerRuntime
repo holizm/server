@@ -1,7 +1,74 @@
 #!/usr/bin/env bash
 
-clear
 set -euo pipefail
 
-timeout --foreground --kill-after=30s 15m pm2 update
-pm2 save
+userName=${1:-}
+readyTimeout=${runtimeReadyTimeoutSeconds:-120}
+[[ $readyTimeout =~ ^[1-9][0-9]{0,2}$ ]] || exit 1
+[[ $(id -u) == 0 && $userName =~ ^[a-z][a-z0-9]{19}$ ]] || {
+    printf '%s\n' 'Run as administrator: updateServerRuntime deploymentUser' >&2
+    exit 1
+}
+userHome=$(getent passwd "$userName" | cut -d: -f6)
+[[ $userHome == /* && $userHome != / && -d $userHome ]] || exit 1
+serviceName="pm2-$userName.service"
+scriptDirectory=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/../scripts" && pwd)
+runAsUser() {
+    runuser --user "$userName" -- env HOME="$userHome" PM2_HOME="$userHome/.pm2" "$@"
+}
+systemctl cat "$serviceName" >/dev/null
+snapshot="$userHome/.pm2/runtimeRecovery.json"
+[[ ! -e $snapshot ]] || {
+    printf 'ALERT: Resolve preserved PM2 recovery snapshot first: %s\n' "$snapshot" >&2
+    exit 1
+}
+directory=$(mktemp -d /tmp/runtimeUpdateXXXXXX)
+trap 'rm -rf -- "$directory"' EXIT
+runAsUser pm2 jlist > "$directory/before.json"
+node "$scriptDirectory/getRuntimeProcessExpectations.js" "$directory/before.json" > "$directory/expected.json"
+if [[ $(node -p 'JSON.parse(require("fs").readFileSync(process.argv[1])).length' "$directory/expected.json") == 0 ]]; then
+    printf 'No online PM2 applications for %s; saved state preserved\n' "$userName"
+    exit 0
+fi
+runAsUser pm2 save
+install -m 0600 -o "$userName" -g "$(id -gn "$userName")" "$userHome/.pm2/dump.pm2" "$snapshot"
+restartRuntime() {
+    timeout --foreground --kill-after=10s 120s systemctl stop "$serviceName" || return
+    timeout --foreground --kill-after=10s 30s runuser --user "$userName" -- env HOME="$userHome" PM2_HOME="$userHome/.pm2" pm2 kill || return
+    timeout --foreground --kill-after=10s 120s systemctl start "$serviceName"
+}
+verifyRuntime() {
+    local deadline=$((SECONDS + readyTimeout))
+    local healthyChecks=0
+    while ((SECONDS < deadline)); do
+        if runAsUser pm2 jlist > "$directory/after.json" &&
+            node "$scriptDirectory/verifyRuntimeProcesses.js" "$directory/expected.json" "$directory/after.json" &&
+            systemctl is-active --quiet "$serviceName"; then
+            healthyChecks=$((healthyChecks + 1))
+            ((healthyChecks < 3)) || return 0
+        else
+            healthyChecks=0
+        fi
+        sleep 2
+    done
+    return 1
+}
+recoverRuntime() {
+    printf 'Runtime update failed for %s; restoring preserved process list\n' "$userName" >&2
+    install -m 0600 -o "$userName" -g "$(id -gn "$userName")" "$snapshot" "$userHome/.pm2/dump.pm2"
+    if restartRuntime && verifyRuntime; then
+        rm -- "$snapshot"
+        printf 'Recovery verified for %s\n' "$userName" >&2
+    else
+        printf 'ALERT: PM2 recovery failed for %s; snapshot retained at %s\n' "$userName" "$snapshot" >&2
+    fi
+}
+trap 'trap - HUP INT TERM; recoverRuntime; exit 1' HUP INT TERM
+if restartRuntime && verifyRuntime; then
+    runAsUser pm2 save
+    rm -- "$snapshot"
+    printf 'PM2 applications verified for %s\n' "$userName"
+    exit 0
+fi
+recoverRuntime
+exit 1

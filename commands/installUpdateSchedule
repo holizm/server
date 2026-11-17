@@ -15,6 +15,7 @@ installUserSchedule() {
     local userName=$1
     local userHome
     local backupLock='/tmp/osBackup.lock'
+    local runtimeSchedule=''
 
     [[ ${#userName} -eq 20 && $userName =~ ^[a-z][a-z0-9]+$ ]] || return 1
     userHome=$(getent passwd "$userName" | cut -d: -f6)
@@ -23,11 +24,15 @@ installUserSchedule() {
         backupLock="/tmp/osBackup${userName}.lock"
     fi
 
+    if systemctl cat "pm2-$userName.service" >/dev/null 2>&1; then
+        runtimeSchedule="0 0 * * 0 root /usr/bin/flock -n $backupLock /holism/server/commands/updateServerRuntime $userName >> $userHome/serverUpdates.log 2>&1"
+    fi
+
     cat > "/etc/cron.d/holismUserUpdates${userName}" <<EOF
 SHELL=/bin/bash
 PATH=/holism/server/commands:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 HOME=$userHome
-0 0 * * 0 $userName /usr/bin/flock -n $backupLock /holism/server/commands/updateServerRuntime >> $userHome/serverUpdates.log 2>&1
+$runtimeSchedule
 0 1 * * 0 $userName /usr/bin/flock -n $backupLock /holism/server/commands/updateServerImages >> $userHome/serverUpdates.log 2>&1
 EOF
     chmod 0644 "/etc/cron.d/holismUserUpdates${userName}"
