@@ -7,6 +7,7 @@ const getRuntimeProcessExpectations = (processes, getPort = getListeningPort) =>
         const item = {
             name: process.name,
             port: getPort(String(process.pid)),
+            requiresPort: /(?:api|panel|site)$/i.test(process.name),
         }
         return item
     })

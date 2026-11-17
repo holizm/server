@@ -3,9 +3,10 @@ import getListeningPort from './getListeningPort.js'
 import { getContent } from './os.js'
 
 const verifyRuntimeProcesses = (expected, current, getPort = getListeningPort) => expected.every(item => {
-    const process = current.find(process => process.name === item.name)
-    return process?.pm2_env?.status === 'online' && process.pid > 0
-        && (!item.port || getPort(String(process.pid)) === item.port)
+    return current.some(process => process.name === item.name
+        && process.pm2_env?.status === 'online' && process.pid > 0
+        && (!item.requiresPort || Boolean(item.port))
+        && (!item.port || getPort(String(process.pid)) === item.port))
 })
 
 export default verifyRuntimeProcesses

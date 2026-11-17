@@ -18,4 +18,15 @@ test('partial restores, stopped applications and changed ports fail readiness', 
     assert.equal(verifyRuntimeProcesses(expected, current, () => '5000'), false)
     current[0].pm2_env.status = 'stopped'
     assert.equal(verifyRuntimeProcesses(expected, current, () => '4000'), false)
+    current.push({
+        name: 'site',
+        pid: 456,
+        pm2_env: { status: 'online' },
+    })
+    assert.equal(verifyRuntimeProcesses(expected, current, () => '4000'), true)
+    assert.equal(verifyRuntimeProcesses([{
+        name: 'site',
+        port: '',
+        requiresPort: true,
+    }], current), false)
 })

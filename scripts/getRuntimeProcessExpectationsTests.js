@@ -18,5 +18,6 @@ test('only running applications enter the recovery contract', () => {
     assert.deepEqual(getRuntimeProcessExpectations(processes, () => '4000'), [{
         name: 'site',
         port: '4000',
+        requiresPort: true,
     }])
 })

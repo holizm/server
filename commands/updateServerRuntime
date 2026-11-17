@@ -26,6 +26,10 @@ directory=$(mktemp -d /tmp/runtimeUpdateXXXXXX)
 trap 'rm -rf -- "$directory"' EXIT
 runAsUser pm2 jlist > "$directory/before.json"
 node "$scriptDirectory/getRuntimeProcessExpectations.js" "$directory/before.json" > "$directory/expected.json"
+node "$scriptDirectory/verifyRuntimeProcesses.js" "$directory/expected.json" "$directory/before.json" || {
+    printf 'ALERT: Existing PM2 applications are not ready for maintenance: %s\n' "$userName" >&2
+    exit 1
+}
 if [[ $(node -p 'JSON.parse(require("fs").readFileSync(process.argv[1])).length' "$directory/expected.json") == 0 ]]; then
     printf 'No online PM2 applications for %s; saved state preserved\n' "$userName"
     exit 0
