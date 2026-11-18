@@ -51,6 +51,8 @@ const getFileAndParams = params => {
     } else if (process.endsWith('Panel') || (isControlProcess(params) && process === 'panel')) {
         params.file = 'panel'
     } else if (process === 'cache') {
+        params.cacheContainerMemoryLimit = params.cache?.containerMemoryLimit ?? params.cacheContainerMemoryLimit ?? '256m'
+        params.cacheMemoryLimit = params.cache?.memoryLimit ?? params.cacheMemoryLimit ?? '128mb'
         params.cacheServerPassword = getCacheServerPassword(params)
         params.file = 'cacheServer'
     } else if (process === 'databases') {
