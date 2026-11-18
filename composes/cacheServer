@@ -7,6 +7,15 @@ services:
             - redis-server
             - --requirepass
             - ${cacheServerPassword}
+            - --maxmemory
+            - 128mb
+            - --maxmemory-policy
+            - allkeys-lru
+            - --save
+            - ''
+            - --appendonly
+            - 'no'
+        mem_limit: 256m
         ports:
             - 127.0.0.1:${deterministicPort}:6379
         networks:

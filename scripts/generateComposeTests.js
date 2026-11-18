@@ -35,3 +35,26 @@ test('server composition mounts declared host logs read-only and keeps the API p
     assert.match(output, /create_host_path: false/)
     assert.match(output, /127\.0\.0\.1:42000:5000/)
 })
+
+test('cache composition bounds memory, evicts entries and disables persistence', t => {
+    const processPath = mkdtempSync(path.join(tmpdir(), 'cacheRuntime'))
+    t.after(() => rmSync(processPath, {
+        force: true,
+        recursive: true,
+    }))
+    generateCompose({
+        cache: { serverPassword: 'testPassword' },
+        deterministicPort: 42000,
+        home: path.resolve(import.meta.dirname, '../..'),
+        instance: 'sample',
+        isDev: true,
+        process: 'cache',
+        processPath,
+    })
+    const output = readFileSync(path.join(processPath, 'compose.yaml'), 'utf8')
+    assert.match(output, /--maxmemory\n\s+- 128mb/)
+    assert.match(output, /--maxmemory-policy\n\s+- allkeys-lru/)
+    assert.match(output, /--save\n\s+- ''/)
+    assert.match(output, /--appendonly\n\s+- 'no'/)
+    assert.match(output, /mem_limit: 256m/)
+})
