@@ -20,6 +20,7 @@ const prepareUserHome = async t => {
     for (const path of [tools, join(userHome, '.npm/_cacache'), join(userHome, '.npm/_logs'), join(userHome, '.pm2/logs')]) {
         await mkdir(path, { recursive: true })
     }
+    await writeFile(join(tools, 'find'), '#!/bin/sh\n[ "$PWD" = "$userHome" ] || exit 2\nexec /usr/bin/find "$@"\n', { mode: 0o755 })
     await writeFile(join(tools, 'id'), '#!/bin/sh\nprintf "4294967294\\n"\n', { mode: 0o755 })
     await writeFile(join(tools, 'npm'), '#!/bin/sh\nprintf "%s\\n" "$@"\n', { mode: 0o755 })
     const addFile = async (relativePath, hoursOld) => {
@@ -34,6 +35,7 @@ const prepareUserHome = async t => {
     const run = async npmIsRunning => {
         await writeFile(join(tools, 'pgrep'), npmIsRunning ? '#!/bin/sh\nexit 0\n' : '#!/bin/sh\nexit 1\n', { mode: 0o755 })
         return runOnTerminalAsync('bash "$cleanupScript" "$userHome"', {
+            cwd: directory,
             env: {
                 ...process.env,
                 cleanupScript: fileURLToPath(new URL('./cleanUserFiles.sh', import.meta.url)),
@@ -65,7 +67,15 @@ test('user cleanup flushes PM2 logs while preserving PM2 state and recent npm lo
     const processState = await addFile('.pm2/dump.pm2', 480)
 
     const output = await run(false)
-    assert.deepEqual(output.split('\n'), ['cache', 'clean', '--force', '--cache', join(userHome, '.npm')])
+    assert.deepEqual(output.split('\n'), [
+        'cache',
+        'clean',
+        '--force',
+        '--cache',
+        join(userHome, '.npm'),
+        'Removed 1 rotated PM2 log files.',
+        'Flushed 2 PM2 log files.',
+    ])
     await assert.rejects(readFile(oldNpmLog), { code: 'ENOENT' })
     await assert.rejects(readFile(rotatedLog), { code: 'ENOENT' })
     assert.equal(await readFile(oldPmLog, 'utf8'), '')
@@ -76,5 +86,9 @@ test('user cleanup flushes PM2 logs while preserving PM2 state and recent npm lo
 
 test('user cleanup skips npm cache when npm is active', async t => {
     const { run } = await prepareUserHome(t)
-    assert.equal(await run(true), 'Skipped npm cache while npm is running.')
+    assert.deepEqual((await run(true)).split('\n'), [
+        'Skipped npm cache while npm is running.',
+        'Removed 0 rotated PM2 log files.',
+        'Flushed 0 PM2 log files.',
+    ])
 })
