@@ -20,6 +20,7 @@ const prepareUserHome = async t => {
     for (const path of [tools, join(userHome, '.npm/_cacache'), join(userHome, '.npm/_logs'), join(userHome, '.pm2/logs')]) {
         await mkdir(path, { recursive: true })
     }
+    await writeFile(join(tools, 'id'), '#!/bin/sh\nprintf "4294967294\\n"\n', { mode: 0o755 })
     await writeFile(join(tools, 'npm'), '#!/bin/sh\nprintf "%s\\n" "$@"\n', { mode: 0o755 })
     const addFile = async (relativePath, stale) => {
         const path = join(userHome, relativePath)

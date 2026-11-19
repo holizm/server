@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+scriptDirectory=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
+. "$scriptDirectory/cleanDocker.sh"
+
 userHome=$1
 status=0
 npmDirectory="$userHome/.npm"
@@ -24,5 +27,7 @@ if [[ -d $logsDirectory && ! -L $userHome/.pm2 && ! -L $logsDirectory ]]; then
     find "$logsDirectory" -xdev -maxdepth 1 -type f -name '*.log' -mtime +14 -size +0c \
         -exec truncate --no-create --size 0 -- {} + || status=1
 fi
+
+cleanDocker "/run/user/$(id -u)/docker.sock" || status=1
 
 exit "$status"
