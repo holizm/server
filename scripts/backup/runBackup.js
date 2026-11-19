@@ -20,6 +20,10 @@ export default async ({
     config,
 }) => {
     if (args.length > 1) throw new Error('Usage: backup [database]')
+    if (/(Themes|Control)$/.test(config.instance)) {
+        info('Skipping backup for auxiliary deployment instance: ' + config.instance)
+        return
+    }
     const instancePath = path.join(config.home, config.instance)
     const backupDirectory = path.join(instancePath, 'backupDirectory')
     const databaseToBackup = args[0] || ''

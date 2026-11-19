@@ -7,6 +7,15 @@ import path from 'path'
 import test from 'node:test'
 import runBackup from './runBackup.js'
 
+test('auxiliary instances skip backup before accessing storage', async () => {
+    for (const instance of ['exampleThemes', 'exampleControl']) {
+        await runBackup({
+            args: [],
+            config: { instance },
+        })
+    }
+})
+
 test('configuration snapshots need no MongoDB and never complete after a failed cloud upload', async t => {
     const home = fs.mkdtempSync(path.join(os.tmpdir(), 'runBackup'))
     const calls = []
@@ -19,7 +28,7 @@ test('configuration snapshots need no MongoDB and never complete after a failed 
     })
     syncBuiltinESMExports()
     try {
-        for (const instance of ['successfulControl', 'failedControl']) {
+        for (const instance of ['successfulInstance', 'failedInstance']) {
             const directory = path.join(home, instance)
             fs.mkdirSync(path.join(directory, 'common'), { recursive: true })
             fs.writeFileSync(path.join(directory, 'org'), 'organization')
@@ -28,7 +37,7 @@ test('configuration snapshots need no MongoDB and never complete after a failed 
                 storageConnectionString: 'privateConnection',
                 storageProvider: 'azure',
             }))
-            failUpload = instance === 'failedControl'
+            failUpload = instance === 'failedInstance'
             const backup = runBackup({
                 args: [],
                 config: {
