@@ -1,0 +1,52 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [[ $(id -u) != 0 ]]; then
+    printf '%s\n' 'Run clean as root after connecting with manage.' >&2
+    exit 1
+fi
+
+exec {lockDescriptor}>/run/holismClean.lock
+if ! flock -n "$lockDescriptor"; then
+    printf '%s\n' 'Server cleanup is already running.' >&2
+    exit 1
+fi
+
+scriptPath=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/../scripts" && pwd)/cleanUserFiles.sh
+status=0
+runCleanup() {
+    local label=$1
+    shift
+    printf '\n%s\n' "$label"
+    if ! "$@"; then
+        printf 'Cleanup failed: %s\n' "$label" >&2
+        status=1
+    fi
+}
+
+df -h /
+runCleanup 'Clear downloaded Debian packages' apt-get clean
+runCleanup 'Clean expired temporary files' systemd-tmpfiles --clean
+
+if command -v logrotate >/dev/null && [[ -f /etc/logrotate.conf ]]; then
+    runCleanup 'Rotate system logs' logrotate /etc/logrotate.conf
+fi
+runCleanup 'Remove journal archives older than 14 days' journalctl --rotate --vacuum-time=14d
+
+containerEngine=(docker --host unix:///var/run/docker.sock)
+if command -v docker >/dev/null && "${containerEngine[@]}" info >/dev/null 2>&1; then
+    runCleanup 'Remove dangling container images older than seven days' "${containerEngine[@]}" image prune --force --filter until=168h
+    runCleanup 'Remove unused build cache older than seven days' "${containerEngine[@]}" builder prune --force --filter until=168h
+fi
+
+accounts=$(getent passwd)
+while IFS=: read -r userName password userId groupId description userHome shell; do
+    [[ $userHome == /* && $userHome != / && -d $userHome && ! -L $userHome ]] || continue
+    [[ $(stat -c %u -- "$userHome") == "$userId" ]] || continue
+    runCleanup "Clean caches and stale logs for $userName" \
+        runuser --user "$userName" -- bash "$scriptPath" "$userHome"
+done <<< "$accounts"
+
+printf '\n%s\n' 'Disk usage after cleanup'
+df -h /
+exit "$status"
