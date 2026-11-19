@@ -22,11 +22,11 @@ const prepareUserHome = async t => {
     }
     await writeFile(join(tools, 'id'), '#!/bin/sh\nprintf "4294967294\\n"\n', { mode: 0o755 })
     await writeFile(join(tools, 'npm'), '#!/bin/sh\nprintf "%s\\n" "$@"\n', { mode: 0o755 })
-    const addFile = async (relativePath, stale) => {
+    const addFile = async (relativePath, hoursOld) => {
         const path = join(userHome, relativePath)
         await writeFile(path, 'contents')
-        if (stale) {
-            const age = new Date(Date.now() - 20 * 86_400_000)
+        if (hoursOld) {
+            const age = new Date(Date.now() - hoursOld * 3_600_000)
             await utimes(path, age, age)
         }
         return path
@@ -57,17 +57,19 @@ test('user cleanup clears disposable npm cache and old logs while preserving PM2
         run,
         userHome,
     } = await prepareUserHome(t)
-    const oldNpmLog = await addFile('.npm/_logs/old.log', true)
-    const oldPmLog = await addFile('.pm2/logs/app-out.log', true)
-    const rotatedLog = await addFile('.pm2/logs/app-out.log.1.gz', true)
-    const recentLog = await addFile('.pm2/logs/app-error.log', false)
-    const processState = await addFile('.pm2/dump.pm2', true)
+    const oldNpmLog = await addFile('.npm/_logs/old.log', 480)
+    const recentNpmLog = await addFile('.npm/_logs/recent.log', 25)
+    const oldPmLog = await addFile('.pm2/logs/app-out.log', 25)
+    const rotatedLog = await addFile('.pm2/logs/app-out.log.1.gz', 25)
+    const recentLog = await addFile('.pm2/logs/app-error.log', 23)
+    const processState = await addFile('.pm2/dump.pm2', 480)
 
     const output = await run(false)
     assert.deepEqual(output.split('\n'), ['cache', 'clean', '--force', '--cache', join(userHome, '.npm')])
     await assert.rejects(readFile(oldNpmLog), { code: 'ENOENT' })
     await assert.rejects(readFile(rotatedLog), { code: 'ENOENT' })
     assert.equal(await readFile(oldPmLog, 'utf8'), '')
+    assert.equal(await readFile(recentNpmLog, 'utf8'), 'contents')
     assert.equal(await readFile(recentLog, 'utf8'), 'contents')
     assert.equal(await readFile(processState, 'utf8'), 'contents')
 })
