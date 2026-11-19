@@ -79,6 +79,7 @@ install curl
 install crontab cron
 install git
 install jq
+install ncdu
 install nethogs
 install rsync
 install telnet
