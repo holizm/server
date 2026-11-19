@@ -3,9 +3,10 @@ import getBackupRetainingDates from './getBackupRetainingDates.js'
 
 export default ({
     now,
+    retainingDates,
     storage,
 }) => {
-    const dates = getBackupRetainingDates(now)
+    const dates = retainingDates ?? getBackupRetainingDates(now)
     const timestamps = [...new Set(storage.listPaths().split(/\r?\n/)
         .filter(Boolean).map(value => value.split('/')[0]))].sort()
     for (const timestamp of timestamps) {

@@ -13,3 +13,16 @@ test('deletes only expired timestamp paths and ignores unrelated cloud files', (
     })
     assert.deepEqual(removed, ['2024-01-02_03-00-00'])
 })
+
+test('uses the exact dates supplied by the instance policy', () => {
+    const removed = []
+    applyBackupRetention({
+        now: new Date(2026, 9, 27),
+        retainingDates: new Set(['2026-10-26']),
+        storage: {
+            listPaths: () => '2026-10-27_03-00-00/\n2026-10-26_03-00-00/\n',
+            removeSnapshot: timestamp => removed.push(timestamp),
+        },
+    })
+    assert.deepEqual(removed, ['2026-10-27_03-00-00'])
+})

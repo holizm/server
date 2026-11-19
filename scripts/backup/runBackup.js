@@ -12,6 +12,7 @@ import backupMongoDatabases from './backupMongoDatabases.js'
 import createBackupStorage from './createBackupStorage.js'
 import formatBackupLogTime from './formatBackupLogTime.js'
 import formatBackupTimestamp from './formatBackupTimestamp.js'
+import loadBackupRetentionDays from './loadBackupRetentionDays.js'
 import prepareBackupDirectory from './prepareBackupDirectory.js'
 
 export default async ({
@@ -54,6 +55,7 @@ export default async ({
     storage.markCompleted(timestamp)
     applyBackupRetention({
         now,
+        retainingDates: await loadBackupRetentionDays(instancePath, now),
         storage,
     })
     fs.appendFileSync(path.join(instancePath, 'backupLog'), formatBackupLogTime(new Date()) + '\n')
