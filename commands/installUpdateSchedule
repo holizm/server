@@ -11,6 +11,14 @@ EOF
 
 chmod 0644 /etc/cron.d/holismPackageUpdates
 
+cat > /etc/cron.d/holismCleanup <<'EOF'
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/usr/local/node/bin:/usr/sbin:/usr/bin:/sbin:/bin
+30 3 * * * root set -o pipefail; /holism/server/commands/clean 2>&1 | /usr/bin/logger -t holismClean
+EOF
+
+chmod 0644 /etc/cron.d/holismCleanup
+
 installUserSchedule() {
     local userName=$1
     local userHome
