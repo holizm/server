@@ -22,9 +22,9 @@ fi
 
 logsDirectory="$userHome/.pm2/logs"
 if [[ -d $logsDirectory && ! -L $userHome/.pm2 && ! -L $logsDirectory ]]; then
-    find "$logsDirectory" -xdev -maxdepth 1 -type f -mtime +0 \
+    find "$logsDirectory" -xdev -maxdepth 1 -type f \
         \( -name '*.log.*' -o -name '*__[0-9][0-9][0-9][0-9]-*.log*' \) -delete || status=1
-    find "$logsDirectory" -xdev -maxdepth 1 -type f -name '*.log' -mtime +0 -size +0c \
+    find "$logsDirectory" -xdev -maxdepth 1 -type f -name '*.log' -size +0c \
         -exec truncate --no-create --size 0 -- {} + || status=1
 fi
 

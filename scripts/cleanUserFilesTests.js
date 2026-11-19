@@ -51,7 +51,7 @@ const prepareUserHome = async t => {
     return fixture
 }
 
-test('user cleanup clears disposable npm cache and old logs while preserving PM2 state and recent logs', async t => {
+test('user cleanup flushes PM2 logs while preserving PM2 state and recent npm logs', async t => {
     const {
         addFile,
         run,
@@ -60,7 +60,7 @@ test('user cleanup clears disposable npm cache and old logs while preserving PM2
     const oldNpmLog = await addFile('.npm/_logs/old.log', 480)
     const recentNpmLog = await addFile('.npm/_logs/recent.log', 25)
     const oldPmLog = await addFile('.pm2/logs/app-out.log', 25)
-    const rotatedLog = await addFile('.pm2/logs/app-out.log.1.gz', 25)
+    const rotatedLog = await addFile('.pm2/logs/app-out.log.1.gz', 1)
     const recentLog = await addFile('.pm2/logs/app-error.log', 23)
     const processState = await addFile('.pm2/dump.pm2', 480)
 
@@ -70,7 +70,7 @@ test('user cleanup clears disposable npm cache and old logs while preserving PM2
     await assert.rejects(readFile(rotatedLog), { code: 'ENOENT' })
     assert.equal(await readFile(oldPmLog, 'utf8'), '')
     assert.equal(await readFile(recentNpmLog, 'utf8'), 'contents')
-    assert.equal(await readFile(recentLog, 'utf8'), 'contents')
+    assert.equal(await readFile(recentLog, 'utf8'), '')
     assert.equal(await readFile(processState, 'utf8'), 'contents')
 })
 
