@@ -13,7 +13,7 @@ test('loads an instance policy and leaves the default in place when it is absent
     const now = new Date(2026, 10, 22)
     assert.equal(await loadBackupRetentionDays(directory.path, now), undefined)
     writeFileSync(path.join(directory.path, 'backupRetentionDays.js'),
-        "export default now => new Set([now.getFullYear() + '-11-22'])")
+        'export default (now, formatBackupDate) => new Set([formatBackupDate(now)])')
     assert.deepEqual(await loadBackupRetentionDays(directory.path, now), new Set(['2026-11-22']))
 })
 
