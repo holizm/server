@@ -21,3 +21,18 @@ test('alerts once per sustained period of high CPU usage', () => {
     assert.equal(sample(181_999, 85), null)
     assert.match(sample(182_000, 85), /CPU/)
 })
+
+test('one resource recovering does not reset another resource timer', () => {
+    const { getAlert } = sustainedUsage(100)
+    const sample = (resource, now, usagePercent) => getAlert({
+        now,
+        resource,
+        thresholdPercent: 80,
+        usagePercent,
+    })
+    assert.equal(sample('CPU', 0, 80), null)
+    assert.equal(sample('Memory', 10, 80), null)
+    assert.equal(sample('CPU', 90, 20), null)
+    assert.equal(sample('Memory', 100, 80), null)
+    assert.match(sample('Memory', 110, 80), /Memory/)
+})
